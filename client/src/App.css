@@ -1,0 +1,48 @@
+#root {
+  /* max-width: 1280px; */
+  margin: 0 auto;
+  text-align: center;
+}
+
+.snap-container {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+}
+
+.snap-container > * {
+  scroll-snap-align: start;
+}
+
+.snap-section {
+  scroll-snap-align: start;
+  margin-top: 20px;
+  /* Full viewport height minus navbar height */
+  height: calc(100vh - 55px);
+  width: 100%;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 20px; /* Height set for snap-container and snap-section dependencies */
+  width: 100%;
+  background-color: #333;
+  color: white;
+  color: hsl(201, 100%, 50%);
+  display: flex;
+  justify-content: space-around;
+  padding: 1rem;
+  z-index: 5;
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}

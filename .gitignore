@@ -1,0 +1,14 @@
+*.log
+.data/
+.idea/
+.direnv/
+**/.env
+logfile
+Notes.txt
+**/dist/
+**/node_modules/
+**/__pycache__/
+.s.PGSQL.5432
+.s.PGSQL.5432.lock
+**/eventsUrlScraper.py
+**/aggregatorShow.py

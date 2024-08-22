@@ -1,0 +1,128 @@
+.songs-list-view-container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    min-height: fit-content;
+}
+/* Map Style */
+.map-container {
+    /* border: solid red; */
+    position: relative;
+    width: 60%;
+    height: 99%;
+}
+#mapUI {
+    margin: 5px;
+    height: 99%;
+    border-radius: 10px;
+}
+.map-container .address-search {
+    position: absolute;
+    top: 2%;
+    left: 2.5%;
+    z-index: 1; /* Ensure the input is on top of the map */
+    border-radius: 4px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+}
+/* Song List Stlye */
+.songs-list-container {
+    width: 40%;
+    height: 100%;
+    /* border-left: solid black; */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* border: solid ; */
+    overflow-y: auto;
+}
+ul.songs-container {
+    height: 95%;
+    /* border: solid green; */
+    margin: 0;
+    margin-top: 5px;
+    overflow-y: auto;
+    bottom: 0px;
+    top: 50px;
+    /* Remove default inline padding */
+    padding-inline-start: 0px;
+}
+/* Song Item Style */
+ul.songs-container .songs-list-item {
+    background: #fff;
+    color: #333;
+    border-radius: 10px;
+    box-sizing: border-box;
+    margin-top: 5px;
+    max-height: fit-content;
+    min-height: 8.5%;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+    transition: background 0.3s, color 0.3s;
+}
+ul.songs-container .songs-list-item.dark-mode {
+    background: #333;
+    color: #fff;
+}
+.songs-list-item > div {
+    display: flex;
+    align-self: stretch;
+    flex: 1;
+}
+.songs-list-item .text-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    max-width: 100%; /* Ensure text container does not exceed item width */
+    overflow: hidden; /* Hide overflow content */
+}
+.songs-list-item p {
+    /* Remove default margin to better control spacing */
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: small;
+    padding-left: 10px;
+    padding-top: 2.5px;
+    text-align: start;
+    /* Allow the paragraph to take up available space */
+    flex: 1;
+    cursor: pointer;
+}
+.songs-list-item p:hover {
+    /* Display full text on hover */
+    white-space: normal; /* Allow text to wrap */
+    overflow: visible;   /* Ensure the overflow is visible */
+    text-overflow: clip; /* Disable ellipsis */
+    max-width: max-content; 
+}
+.filter-toggle-btn {
+    background: #e0e0e0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+.filter-toggle-btn.dark-mode {
+    background: #444;
+}
+.expand-toggle-btn {
+    background: #555555;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.svg-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+}

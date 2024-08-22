@@ -1,0 +1,180 @@
+#filter-btn {
+    width: 100%;
+}
+
+.modal-container {
+    position: absolute;
+    top: 10%;
+    right: 5%;
+    z-index: 4;
+    border: 1px solid #888;
+    background-color: hsl(0, 0%, 41%);
+    height: 80%;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: scroll;
+}
+
+.filter-inputs {
+    flex: 2;
+}
+
+.filter-lists {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+p {
+    /* border: 1px solid red; */
+    margin: 8px;
+    text-align: center;
+}
+.reqex-list-container {
+    /* border: 1px solid red; */
+    flex: 1;
+    height: 95%;
+    overflow-y: scroll;
+    margin: 4px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: inset -5px -5px 10px hsl(145, 28%, 15%), inset 1px 1px 3px #ffffff;
+}
+
+.reqfilters-list {
+    /* border: 1px solid #ff00e6; */
+    height: 74%;
+    width: 90%;
+    border-radius: 15px;
+}
+.exfilters-list {
+    /* border: 1px solid #e5ff00; */
+    height: 74%;
+    width: 90%;
+    border-radius: 15px;
+}
+
+/* Neuomorphic styles */
+.neuomorphic-input {
+    display: flex;
+    /* border: 5px solid green; */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    /* align-items: center; */
+    /* justify-content: center; */
+    margin: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 10px;
+    color: #333;
+    width: 95%;
+    border-radius: 15px;
+    box-shadow: -2px -2px 2px #b8b8b8, 2px 2px 1px #ffffff;
+}
+
+.neuomorphic-input input {
+    /* flex: 1; */
+    border: none;
+    outline: none;
+    background-color: #add8e600;
+    color: white;
+    cursor: pointer;
+
+}
+
+/* Date input */
+.neuomorphic-input input[type="date"] {
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: inset -2px -2px 3px #b8b8b8, inset 2px 2px 3px #ffffff;
+}
+
+/* Name input */
+.neuomorphic-input input[type="text"] {
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: inset -2px -2px 2px #b8b8b8, inset 2px 2px 6px #ffffff;
+}
+
+/* Neuomorphic buttons */
+.neuomorphic-btn {
+    padding: 10px 20px;
+    /* margin-left: 10px; */
+    margin-top: 4px;
+    margin-bottom: 4px;
+    text-align: center;
+    border: none;
+    border-radius: 10px;
+    flex: 1;
+    cursor: pointer;
+    color: hsla(0, 0%, 100%, 0.812);
+}
+
+/* #da3a34 */
+.ex-btn {
+    margin: 4px;
+    background-color: #da3a34;
+    box-shadow: inset -5px -5px 10px hsl(2, 69%, 30%), inset 1px 1px 3px #ffffff;
+
+}
+.ex-btn:hover {
+    box-shadow: inset 5px 5px 10px hsl(2, 69%, 30%), inset -1px -1px 3px #ffffff;
+}
+/* #3b694e */
+.require-btn {
+    margin: 4px;
+    background-color: #3b694e;
+    box-shadow: inset -5px -5px 10px hsl(145, 28%, 15%), inset 1px 1px 3px #ffffff;
+}
+.require-btn:hover {
+    box-shadow: inset 5px 5px 10px hsl(145, 28%, 15%), inset -1px -1px 3px #ffffff;
+}
+.input-label {
+    display: inline-block;
+    font-size: 20px;
+    padding: 7px;
+    margin-top: 5px;
+    margin-bottom: 1px;
+    border-radius: 10px;
+    text-align: center;
+    color: hsla(0, 0%, 100%, 0.812);
+    width: 100%;
+}
+.exreq-input {
+    width: 37%;
+}
+.filter-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 16px;
+}
+.exreq-date-container {
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+.exreq-date-label {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    width: 100%;
+}
+.exreq-date-switch {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 10px;
+}
