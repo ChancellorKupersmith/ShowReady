@@ -3,6 +3,12 @@ const fetch = require('node-fetch');
 
 const router = express.Router();
 
+router.get('client_api_key', async (req, res) => {
+    res.json({
+        apiKey: process.env.GOOGLE_MAPS_API_KEY_CLIENT
+    });
+});
+
 router.get('/map', async (req, res, next) => {
     console.log('Hit')
     try {
