@@ -36,10 +36,12 @@
             redis
           ];
           shellHook = ''
-            chmod +x ./init_client_app.sh
-            ./init_client_app.sh
-            chmod +x ./init_server.sh
-            ./init_server.sh
+            chmod +x ./env_scripts/init_client_app.sh
+            ./env_scripts/init_client_app.sh
+            chmod +x ./env_scripts/init_server.sh
+            ./env_scripts/init_server.sh
+            chmod +x ./env_scripts/start_pg.sh
+            chmod +x ./env_scripts/stop_pg.sh
           '';
         };
       });
