@@ -53,7 +53,7 @@ class PostgresClient:
             self.connection.commit()
             self.connection.close()
     
-    def query(self, query, data=None, fetchall=False):
+    def query(self, query, data=None, fetchall=False, fetchone=False):
         try:
             if data:
                 execute_values(self.cursor, query, data)
@@ -61,6 +61,8 @@ class PostgresClient:
                 self.cursor.execute(query)
             if fetchall:
                 return self.cursor.fetchall()
+            if fetchone:
+                return self.cursor.fetchone()
         except Exception as e:
             self.log(1, f"Database error: {e}")
             raise
@@ -80,8 +82,8 @@ class LastFmClient:
             url_req += f"&{p}"
         url_req += f"&{self.api_resp_format}&api_key={self.apikey}"
         self.log(0, f"LastFM Request: {url_req}")
-        try:
-            for attempt in range(max_retries):
+        for attempt in range(max_retries):
+            try:
                 if self.last_req_time is not None:
                     elapsed = time.time() - self.last_req_time
                     if elapsed < 1:
@@ -89,6 +91,8 @@ class LastFmClient:
                 async with httpx.AsyncClient() as client:
                     response = await client.get(url_req)
                     self.last_req_time = time.time()
+                    if response.status_code == 200:
+                        return response
                     # Handle rate limiter
                     if response.status_code == 429:
                         self.log(2, f"Rate limit exceeded, headers: {pformat(dict(response.headers))}")
@@ -100,12 +104,11 @@ class LastFmClient:
                         else:
                             self.log(1, f"Rate limit exceeded. but retry-after header not found.")
                             raise Exception("RATE LIMIT EXCEEDED")
-                    else:
-                        return response
-            raise Exception(f"RETRIES EXCEEDED > {max_retries}")
-        except Exception as e:
-            self.log(1, f"ERROR: Failed to send lastfm request: {e}")
-            return -1
+            except Exception as e:
+                self.log(1, f"ERROR: Failed to send lastfm request: {e}")
+                # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
+                time.sleep(300)
+        raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class SpotifyClient:
     def __init__(self, log=None):
@@ -139,18 +142,20 @@ class SpotifyClient:
         for p in params:
             url_req += f"{p}&"
         url = url_req.rstrip("&")
-        try:
-            for attempt in range(max_retries):
+        for attempt in range(max_retries):
+            try:
                 # reassign access token each time inorder to keep update with each retry
                 headers = { 'Authorization': f'Bearer {self.access_token}' }
                 if self.last_req_time is not None:
                     elapsed = time.time() - self.last_req_time
-                    if elapsed < 2:
-                        time.sleep(2 - elapsed)
+                    if elapsed < 3:
+                        time.sleep(3 - elapsed)
                 async with httpx.AsyncClient() as client:
                     self.log(0, f"Spotify Request: {url}")
                     response = await client.get(url, headers=headers)
                     self.last_req_time = time.time()
+                    if response.status_code == 200:
+                        return response
                     # Handle rate limiting
                     if response.status_code == 429:
                         retry_after = response.headers.get("retry-after")
@@ -164,12 +169,11 @@ class SpotifyClient:
                     # Handle expired access token
                     elif response.status_code == 401:
                         await self.init_access_token()
-                    else:
-                        return response
-            raise Exception(f"RETRIES EXCEEDED > {max_retries}")
-        except Exception as e:
-            self.log(1, f"ERROR: Failed to send spotify request: {e}")
-            return -1
+            except Exception as e:
+                self.log(1, f"ERROR: Failed to send spotify request: {e}")
+                # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
+                time.sleep(300)
+        raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class Artist:
     def __init__(self, id=None, name=None, lastfm_url=None, spotify_id=None, spotify_popular=None, dictionary=None):
@@ -221,6 +225,28 @@ class Song:
         self.lastfm_url = lastfmurl
         self.yt_url = yturl
     
-    def to_tuple():
+    def to_tuple(self):
         # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorSong.save_songs_to_db() !!!
-        return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url, self.lastfm_url)
+        return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url)
+
+class Event:
+    def __init__(self, id=None, name=None, url=None, eventdate=None, eventtime=None, summary=None, agerestrictions=None, venueid=None):
+        self.id = id
+        self.name = name
+        self.url = url
+        self.date = eventdate
+        self.time = eventtime
+        self.summary = summary
+        self.age_restrictions = agerestrictions
+        self.venue_id = venueid
+
+class Venue:
+    def __init__(self, id=None, name=None, venueurl=None, venueaddress=None, hood=None, summary=None, eourl=None, phone=None):
+        self.id = id
+        self.name = name
+        self.venue_url = venueurl
+        self.venue_address = venueaddress
+        self.hood= hood
+        self.summary = summary
+        self.eourl = eourl
+        self.phone = phone
