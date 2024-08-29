@@ -8,13 +8,14 @@
     right: 5%;
     z-index: 4;
     border: 1px solid #888;
-    background-color: hsl(0, 0%, 41%);
+    border-radius: 7px;
+    background-color: white;
+    /* background-color: hsl(0, 0%, 41%); */
     height: 80%;
     width: 90%;
     display: flex;
     flex-direction: column;
 }
-
 .modal-content {
     display: flex;
     flex-direction: column;
@@ -22,17 +23,91 @@
     overflow-y: scroll;
 }
 
+.filter-title {
+    flex: 1;
+    border-radius: 5px;
+    border-bottom: solid #33333320;
+}
+.filter-title h1 {
+    font-size: 17px;
+    font-weight: 540;
+    color: black;
+    margin-bottom: 5px;
+    margin-left: 5px;
+}
+.filter-title p {
+    color: black;
+    font-size: 11px;
+    text-align: start;
+    margin: 0px;
+    margin-left: 5px;
+    margin-bottom: 5px;
+}
+.filter-title button {
+    background-color: transparent;
+    color: #5b616a;
+    border: none;
+    margin-right: 2px;
+    font-size: 18px;
+}
+
+.filter-list {
+    flex: 1;
+    border-radius: 2px;
+    border-right: solid #33333320;
+    overflow-y: auto;
+}
+.filter-list h2 {
+    font-size: 14px;
+    font-weight: 540;
+    color: black;
+}
+.filter-label {
+    border: solid #6b6b6b69;
+    border-radius: 10px;
+    margin-left: 3px;
+    margin-right: 3px;
+    margin-bottom: 10px;
+    padding-left: 2px;
+    /* padding-right: 2px; */
+}
+.filter-label h3 {
+    color: black;
+    font-size: 14px;
+    font-weight: 400;
+}
+.filter-label button {
+    border: transparent;
+    background-color: transparent;
+}
+
+.filter-menu {
+    flex: 2;
+    color: black;
+    background-color: #efefef;
+}
+
+.filter-footer {
+    flex: 1;
+    border-radius: 5px;
+    border-top: solid #33333320;
+    display: flex;
+    height: 10%;
+}
+
+
+
+
+/* vv Deprecated vv */
 .filter-inputs {
     flex: 2;
 }
-
 .filter-lists {
     flex: 1;
     width: 100%;
     display: flex;
     flex-direction: row;
 }
-
 p {
     /* border: 1px solid red; */
     margin: 8px;
@@ -50,7 +125,6 @@ p {
     align-items: center;
     box-shadow: inset -5px -5px 10px hsl(145, 28%, 15%), inset 1px 1px 3px #ffffff;
 }
-
 .reqfilters-list {
     /* border: 1px solid #ff00e6; */
     height: 74%;
@@ -63,7 +137,6 @@ p {
     width: 90%;
     border-radius: 15px;
 }
-
 /* Neuomorphic styles */
 .neuomorphic-input {
     display: flex;
@@ -82,7 +155,6 @@ p {
     border-radius: 15px;
     box-shadow: -2px -2px 2px #b8b8b8, 2px 2px 1px #ffffff;
 }
-
 .neuomorphic-input input {
     /* flex: 1; */
     border: none;
@@ -92,21 +164,18 @@ p {
     cursor: pointer;
 
 }
-
 /* Date input */
 .neuomorphic-input input[type="date"] {
     padding: 10px;
     border-radius: 10px;
     box-shadow: inset -2px -2px 3px #b8b8b8, inset 2px 2px 3px #ffffff;
 }
-
 /* Name input */
 .neuomorphic-input input[type="text"] {
     padding: 10px;
     border-radius: 10px;
     box-shadow: inset -2px -2px 2px #b8b8b8, inset 2px 2px 6px #ffffff;
 }
-
 /* Neuomorphic buttons */
 .neuomorphic-btn {
     padding: 10px 20px;
@@ -120,7 +189,6 @@ p {
     cursor: pointer;
     color: hsla(0, 0%, 100%, 0.812);
 }
-
 /* #da3a34 */
 .ex-btn {
     margin: 4px;
@@ -153,12 +221,6 @@ p {
 }
 .exreq-input {
     width: 37%;
-}
-.filter-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 16px;
 }
 .exreq-date-container {
     position: relative;

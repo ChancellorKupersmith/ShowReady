@@ -26,7 +26,7 @@ const SeattleMap = () => {
         const { Map } = await google.maps.importLibrary("maps");
         mapUI = new Map(document.getElementById("mapUI"), {
           center: center,
-          zoom: 10,
+          zoom: 11,
           mapTypeControl: false,
         });
       } catch (err) {

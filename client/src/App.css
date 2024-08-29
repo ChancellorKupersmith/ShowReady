@@ -6,7 +6,7 @@
 
 .snap-container {
   position: absolute;
-  top: 50px;
+  top: 30px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -20,9 +20,9 @@
 
 .snap-section {
   scroll-snap-align: start;
-  margin-top: 20px;
+  margin-top: 10px;
   /* Full viewport height minus navbar height */
-  height: calc(100vh - 55px);
+  height: calc(100vh - 35px);
   width: 100%;
 }
 
@@ -30,14 +30,13 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 20px; /* Height set for snap-container and snap-section dependencies */
+  height: 30px; /* Height set for snap-container and snap-section dependencies */
   width: 100%;
   background-color: #333;
-  color: white;
-  color: hsl(201, 100%, 50%);
   display: flex;
   justify-content: space-around;
-  padding: 1rem;
+  /* padding: 1rem; */
+  padding-top: 5px;
   z-index: 5;
 }
 

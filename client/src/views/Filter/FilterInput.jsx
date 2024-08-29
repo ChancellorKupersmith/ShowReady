@@ -262,7 +262,6 @@ const FilterInput = () => {
     // // number of songs per venue
     return (
         <div className="filter-inputs modal-content">
-            <h2 className="filter-title">Filters</h2>
             <ExReqDate />
             <ExReqArtist />
             <ExReqVenue />

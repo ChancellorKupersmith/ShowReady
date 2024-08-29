@@ -16,23 +16,74 @@ export const FilterContextProvider = ({ children }) => {
     let monthFromToday = new Date();
     monthFromToday.setDate(today.getDate() + 30)
     const defaultFilters = {
+        total: 0,
+        dateGThan: formatDate(today),
+        dateLThan: formatDate(monthFromToday),
+        priceGThan: '',
+        priceLThan: '',
+        // spotifyPopularityGThan: '',
+        // spotifyPopularityLThan: '',
         ex: {
-            minDate: '',
-            maxDate:'',
-            dates: [],
-            artists: [],
-            venues: [],
-            songs: [],
-            hoods: [],
+            date: {
+                dates: [],
+                eventTimes: [],
+            },
+            location: {
+                venues: [],
+                hoods: [],
+                // addresses: [],
+            },
+            event: {
+                names: [],
+                // ageRestrictions: [],
+            },
+            artist: {
+                names: [],
+                // fromEach: '',
+                // musicbrainz meta
+            },
+            album: {
+                names: [],
+                fromEach: '',
+            },
+            song: {
+                names: [],
+            },
+            source: {
+                spotify: false,
+                // youtube: false,
+            },
         },
         req: {
-            minDate: formatDate(today),
-            maxDate: formatDate(monthFromToday),
-            dates: [],
-            artists: [],
-            venues: [],
-            songs: [],
-            hoods: [],
+            date: {
+                dates: [],
+                eventTimes: [],
+            },
+            location: {
+                venues: [],
+                hoods: [],
+                addresses: [],
+            },
+            event: {
+                names: [],
+                // ageRestrictions: [],
+            },
+            artist: {
+                names: [],
+                fromEach: '',
+                // musicbrainz meta
+            },
+            album: {
+                names: [],
+                fromEach: '',
+            },
+            song: {
+                names: [],
+            },
+            source: {
+                spotify: false,
+                // youtube: false,
+            },
         },
     };
     const [filters, setFilters] = useState(defaultFilters);

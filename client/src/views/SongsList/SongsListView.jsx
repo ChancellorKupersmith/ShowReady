@@ -1,5 +1,4 @@
-import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import SongsListItem from './SongsListItem';
 import SeattleMap from './SeattleMapView';
 import { useSongsFilter } from '../Filter/FilterContext';
@@ -7,13 +6,11 @@ import FilterView from '../Filter/FilterView';
 
 const Save2ClientContext = createContext();
 const BgColorContext = createContext();
-
 const Save2ClientBtn = ({clientType}) => {
     const {save2Client, setSave2Client} = useContext(Save2ClientContext);
     const {bgColor, setBgColor}= useContext(BgColorContext);
 
     const handleSave2ClientChange = () => {
-        console.log(clientType)
         switch(clientType.toLowerCase()){
             case 'spotify':
                 setBgColor('#18c49e');
@@ -24,7 +21,7 @@ const Save2ClientBtn = ({clientType}) => {
                 setSave2Client(2);
                 break;
             default:
-                setBgColor('hsl(201, 100%, 50%)');
+                setBgColor('#8fdaed');
                 setSave2Client(0);
         }
     };
@@ -34,11 +31,14 @@ const Save2ClientBtn = ({clientType}) => {
 };
 
 const SongsListView = () => {
+    const [bgColor, setBgColor] = useState('#8fdaed');
+    const [save2Client, setSave2Client] = useState(0);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const { filters } = useSongsFilter();
+    const [totalPages, setTotalPages] = useState(1);
     const [songs, setSongs] = useState([]);
-    // Update songs on: first load, page change, pageSize change, filter change
+    // Fetch songs on: first load, page change, pageSize change, filter change
     useEffect(() => {
         const fetchSongs = async () => {
             try{
@@ -47,7 +47,6 @@ const SongsListView = () => {
                     limit: pageSize,
                     filters: filters
                 };
-                // console.log(postData)
                 const response = await fetch('/songs_list', {
                     method: 'POST',
                     headers: {
@@ -56,8 +55,9 @@ const SongsListView = () => {
                     body: JSON.stringify(postData)
                 });
                 const data = await response.json();
-
-                console.log(data)
+                // console.log(data)
+                if(data.length > 0)
+                    setTotalPages(Math.ceil(data[0].total / pageSize))
                 setSongs([...data]);
             }catch(err){
                 console.log(err)
@@ -66,18 +66,6 @@ const SongsListView = () => {
 
         fetchSongs();
     }, [page, pageSize, filters]);
-
-    const [totalPages, setTotalPages] = useState(10);
-    useEffect(()=> {
-        if(songs.length > 0)
-            setTotalPages(Math.ceil(songs[0].total / pageSize))
-    }, [filters]);
-
-    const [loading, setLoading] = useState(false);
-    const [isFetching, setIsFetching] = useState(false);
-    const songsRef = useRef(null);
-    const [bgColor, setBgColor] = useState('hsl(201, 100%, 30%)');
-    const [save2Client, setSave2Client] = useState(0);
 
     const handlePageChange = newPage => {
         if(newPage != page && newPage >= 1 && newPage <= totalPages)
@@ -98,6 +86,7 @@ const SongsListView = () => {
                                 <Save2ClientBtn clientType={'YouTube'}/>
                             </div>
                             <FilterView />
+                            {/* TODO: Make songs lists page size dynamic to window size */}
                             <div style={{minHeight: 'fit-content', height: '100%'}}>
                                 <ul className='songs-container'>
                                     {songs.length > 0 && songs.map((song, index) => (<SongsListItem key={index} songTitle={song.title} artistName={song.artist} eventLocation={songs.venue} date={song.eventdate}/>))}
