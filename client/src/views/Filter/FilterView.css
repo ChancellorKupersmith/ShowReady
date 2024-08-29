@@ -85,6 +85,87 @@
     flex: 2;
     color: black;
     background-color: #efefef;
+    height: 100%;
+}
+.menu-input {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.reqex-input-container {
+    flex: 3;
+}
+.reqex-btn-container {
+    flex: 1;
+    display: flex;
+}
+.reqex-btn {
+    margin: 4px;
+    margin-left: 2px;
+    margin-right: 2px;
+    padding: 7px 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: center;
+    color: hsla(0, 0%, 100%, 0.812);
+}
+.req-btn {
+    background-color: #3b694e;
+    box-shadow: inset -5px -5px 10px hsl(145, 28%, 15%), inset 1px 1px 3px #ffffff;
+}
+.req-btn:hover {
+    box-shadow: inset 5px 5px 10px hsl(145, 28%, 15%), inset -1px -1px 3px #ffffff;
+}
+.ex-btn {
+    background-color: #da3a34;
+    box-shadow: inset -5px -5px 10px hsl(2, 69%, 30%), inset 1px 1px 3px #ffffff;
+
+}
+.ex-btn:hover {
+    box-shadow: inset 5px 5px 10px hsl(2, 69%, 30%), inset -1px -1px 3px #ffffff;
+}
+.reqex-list {
+    flex: 1;
+    /* border: solid; */
+    overflow-y: hidden;
+    display: flex;
+    align-items: center;
+}
+.reqfilters-list {
+    flex: 1;
+    /* display: flex; */
+    height: 100%;
+    overflow-y: auto;
+    background-color: #3b694e;
+}
+.exfilters-list {
+    background-color: #da3a34;
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+}
+.reqex-filter-tab {
+    border: 1px solid;
+    display: flex;
+    border-radius: 15px;
+    margin: 5px;
+    padding: 2px 4px 2px 6px;
+    font-size: 12px;
+    align-items: center;
+    color: #ffffff;
+}
+.reqex-filter-tab span {
+    flex: 2;
+    width: fit-content;
+}
+.reqex-filter-tab button {
+    flex: 1;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    text-align: end;
 }
 
 .filter-footer {
@@ -112,30 +193,6 @@ p {
     /* border: 1px solid red; */
     margin: 8px;
     text-align: center;
-}
-.reqex-list-container {
-    /* border: 1px solid red; */
-    flex: 1;
-    height: 95%;
-    overflow-y: scroll;
-    margin: 4px;
-    border-radius: 15px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: inset -5px -5px 10px hsl(145, 28%, 15%), inset 1px 1px 3px #ffffff;
-}
-.reqfilters-list {
-    /* border: 1px solid #ff00e6; */
-    height: 74%;
-    width: 90%;
-    border-radius: 15px;
-}
-.exfilters-list {
-    /* border: 1px solid #e5ff00; */
-    height: 74%;
-    width: 90%;
-    border-radius: 15px;
 }
 /* Neuomorphic styles */
 .neuomorphic-input {
@@ -178,36 +235,14 @@ p {
 }
 /* Neuomorphic buttons */
 .neuomorphic-btn {
-    padding: 10px 20px;
-    /* margin-left: 10px; */
-    margin-top: 4px;
-    margin-bottom: 4px;
+    padding: 7px 10px;
     text-align: center;
     border: none;
     border-radius: 10px;
-    flex: 1;
     cursor: pointer;
     color: hsla(0, 0%, 100%, 0.812);
 }
-/* #da3a34 */
-.ex-btn {
-    margin: 4px;
-    background-color: #da3a34;
-    box-shadow: inset -5px -5px 10px hsl(2, 69%, 30%), inset 1px 1px 3px #ffffff;
 
-}
-.ex-btn:hover {
-    box-shadow: inset 5px 5px 10px hsl(2, 69%, 30%), inset -1px -1px 3px #ffffff;
-}
-/* #3b694e */
-.require-btn {
-    margin: 4px;
-    background-color: #3b694e;
-    box-shadow: inset -5px -5px 10px hsl(145, 28%, 15%), inset 1px 1px 3px #ffffff;
-}
-.require-btn:hover {
-    box-shadow: inset 5px 5px 10px hsl(145, 28%, 15%), inset -1px -1px 3px #ffffff;
-}
 .input-label {
     display: inline-block;
     font-size: 20px;

@@ -4,7 +4,7 @@ import './FilterView.css';
 import FilterTitle from './FilterTitle';
 import FilterList from './FilterList';
 import FilterFooter from "./FilterFooter";
-import FilterMenu from './FilterMenu';
+import FilterMenu from './Menus/FilterMenu';
 
 const FilterBtn = ({onClick}) => <button id='filter-btn' onClick={onClick}>Filter</button>
 
@@ -41,9 +41,9 @@ const FilterView = () => {
         }
     }
 
+    // Hide scrollbar in Chrome, Safari, and newer versions of Edge
     const webkitStyles = `
         ::-webkit-scrollbar {
-            /* make scrollbar transparent */ /* Hide scrollbar in Chrome, Safari, and newer versions of Edge */
             width: 0px;
             background: transparent;
         }
