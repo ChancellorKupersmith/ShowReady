@@ -7,9 +7,7 @@ import AlbumMenu from './AlbumMenu';
 import SongMenu from './SongMenu';
 import SourceMenu from './SourceMenu';
 
-
 const FilterMenu = ({filterMenu}) => {
-    
     let menu;
     switch(filterMenu){
         case 'date':
@@ -37,13 +35,11 @@ const FilterMenu = ({filterMenu}) => {
             <div>Error Loading Menu.</div>
     }
 
-
     return (
         <div className='filter-menu'>
             {menu}
         </div>
     )
 }
-
 
 export default FilterMenu;

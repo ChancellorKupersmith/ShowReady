@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
-import { useSongsFilter } from "./FilterContext";
+import React from 'react';
+import { useTempSongsFilter } from "./FilterContext";
 
+const FilterFooter = ({closeModal}) => {
+    const { tempFilters, revertTempFilters, saveTempFilters } = useTempSongsFilter();
 
-const FilterFooter = () => {
-
+    const handleCancel = () => {
+        revertTempFilters();
+        closeModal();
+    }
+    const handleSave = () => {
+        saveTempFilters();
+        closeModal();
+    }
     return (
         <div className='filter-footer'>
-            {/* results */}
-            {/* cancel btn */}
-            {/* apply btn */}
-            footer
+            <div>
+                <label>Results: </label>
+                {tempFilters.total}
+            </div>
+            <div>
+                <button onClick={handleCancel}>Cancel</button>
+                <button onClick={handleSave}>Apply</button>
+            </div>
         </div>
     )
 }

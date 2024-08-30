@@ -1,31 +1,31 @@
 import React from 'react';
-import { useSongsFilter } from '../FilterContext';
+import { useTempSongsFilter } from '../FilterContext';
 import { Toggle } from './MenuUtils';
 
 
 const SourceMenu = () => {
-    const { filters, updateFilters } = useSongsFilter();
+    const { tempFilters, updateTempFilters } = useTempSongsFilter();
     // input funcs
     const handleChangeReqSpotify = () => {
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             req: {
-                ...filters.req,
+                ...tempFilters.req,
                 source: {
-                    ...filters.req.source,
-                    spotify: !filters.req.source.spotify
+                    ...tempFilters.req.source,
+                    spotify: !tempFilters.req.source.spotify
                 }
             }
         });
     }
     const handleChangeExSpotify = () => {
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             ex: {
-                ...filters.ex,
+                ...tempFilters.ex,
                 source: {
-                    ...filters.ex.source,
-                    spotify: !filters.ex.source.spotify
+                    ...tempFilters.ex.source,
+                    spotify: !tempFilters.ex.source.spotify
                 }
             }
         });
@@ -39,7 +39,7 @@ const SourceMenu = () => {
                         <Toggle
                             id={'toggle-req-spotify'}
                             label={'Require Spotify Songs'}
-                            toggled={filters.req.source.spotify}
+                            toggled={tempFilters.req.source.spotify}
                             onClick={handleChangeReqSpotify}
                         />
                     </div>
@@ -49,7 +49,7 @@ const SourceMenu = () => {
                         <Toggle
                             id={'toggle-ex-spotify'}
                             label={'Exclude Spotify Songs'}
-                            toggled={filters.ex.source.spotify}
+                            toggled={tempFilters.ex.source.spotify}
                             onClick={handleChangeExSpotify}
                         />
                     </div>

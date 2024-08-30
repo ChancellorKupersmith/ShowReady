@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useSongsFilter } from '../FilterContext';
+import { useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const EventMenu = () => {
-    const { filters, updateFilters } = useSongsFilter();
+    const { tempFilters, updateTempFilters } = useTempSongsFilter();
     const [eventInput, setEventInput] = useState('');
     const [gPriceInput, setGPriceInput] = useState('');
     const [lPriceInput, setLPriceInput] = useState('');
@@ -22,13 +22,13 @@ const EventMenu = () => {
     // reqex btn funcs
     const reqEvent = () => {
         if(!eventInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             req: {
-                ...filters.req,
+                ...tempFilters.req,
                 event: {
-                    ...filters.req.event,
-                    names: [...filters.req.event.names, eventInput]
+                    ...tempFilters.req.event,
+                    names: [...tempFilters.req.event.names, eventInput]
                 }
             }
         });
@@ -36,13 +36,13 @@ const EventMenu = () => {
     }
     const exEvent = () => {
         if(!eventInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             ex: {
-                ...filters.ex,
+                ...tempFilters.ex,
                 event: {
-                    ...filters.ex.event,
-                    names: [...filters.ex.event.names, eventInput]
+                    ...tempFilters.ex.event,
+                    names: [...tempFilters.ex.event.names, eventInput]
                 }
             }
         });
@@ -50,61 +50,61 @@ const EventMenu = () => {
     }
     const reqGPrice = () => {
         if(!gPriceInput) return;
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             priceGThan: gPriceInput
         });
         setGPriceInput('')
     }
     const reqLPrice = () => {
         if(!lPriceInput) return;
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             priceLThan: lPriceInput
         });
         setLPriceInput('')
     }
     // reqex filter tab funcs
-    const removeReqEvent = (event) => updateFilters({
-        ...filters, 
+    const removeReqEvent = (event) => updateTempFilters({
+        ...tempFilters, 
         req: {
-            ...filters.req,
+            ...tempFilters.req,
             event: {
-                ...filters.req.event,
-                names: filters.req.event.names.filter(v => v != event)
+                ...tempFilters.req.event,
+                names: tempFilters.req.event.names.filter(v => v != event)
             }
         }
     });
-    const removeExEvent = (event) => updateFilters({
-        ...filters, 
+    const removeExEvent = (event) => updateTempFilters({
+        ...tempFilters, 
         ex: {
-            ...filters.ex,
+            ...tempFilters.ex,
             event: {
-                ...filters.ex.event,
-                names: filters.ex.event.names.filter(v => v != event)
+                ...tempFilters.ex.event,
+                names: tempFilters.ex.event.names.filter(v => v != event)
             }
         }
     });
     const removeReqGPrice = () => {
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             priceGThan: ''
         });
     }
     const removeReqLPrice = () => {
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             priceLThan: ''
         });
     }
-    const reqEvents = filters.req.event.names.map((event, index) =>
+    const reqEvents = tempFilters.req.event.names.map((event, index) =>
         <ReqExFilterTab 
             key={`reqfilter-event${index}`}
             label={'Event: '} value={event}
             onClickFunc={() => removeReqEvent(event)}
         />
     );
-    const exEvents = filters.ex.event.names.map((event, index) =>
+    const exEvents = tempFilters.ex.event.names.map((event, index) =>
         <ReqExFilterTab 
             key={`exfilter-event${index}`}
             label={'Event: '} value={event}
@@ -113,8 +113,8 @@ const EventMenu = () => {
     );
 
     const reqChildren = [
-        (filters.priceGThan && <ReqExFilterTab key={'reqfilter-gprice'} label={'Price >'} value={`$${filters.priceGThan}`} onClickFunc={removeReqGPrice}/>),
-        (filters.priceLThan && <ReqExFilterTab key={'reqfilter-lprice'} label={'Price <'} value={`$${filters.priceLThan}`} onClickFunc={removeReqLPrice}/>),
+        (tempFilters.priceGThan && <ReqExFilterTab key={'reqfilter-gprice'} label={'Price >'} value={`$${tempFilters.priceGThan}`} onClickFunc={removeReqGPrice}/>),
+        (tempFilters.priceLThan && <ReqExFilterTab key={'reqfilter-lprice'} label={'Price <'} value={`$${tempFilters.priceLThan}`} onClickFunc={removeReqLPrice}/>),
         ...reqEvents
     ];
     const exChildren = [...exEvents];

@@ -1,7 +1,6 @@
 #filter-btn {
     width: 100%;
 }
-
 .modal-container {
     position: absolute;
     top: 10%;
@@ -22,7 +21,7 @@
     align-items: center;
     overflow-y: scroll;
 }
-
+/* Filter Title css */
 .filter-title {
     flex: 1;
     border-radius: 5px;
@@ -50,7 +49,7 @@
     margin-right: 2px;
     font-size: 18px;
 }
-
+/* Filter list css */
 .filter-list {
     flex: 1;
     border-radius: 2px;
@@ -80,7 +79,7 @@
     border: transparent;
     background-color: transparent;
 }
-
+/* Filter menu css */
 .filter-menu {
     flex: 2;
     color: black;
@@ -210,112 +209,20 @@ label.toggle {
 .toggle input:checked + span::before {
     transform: translateX(25px);
 }
-
-
-.filter-footer {
-    flex: 1;
-    border-radius: 5px;
-    border-top: solid #33333320;
-    display: flex;
-    height: 10%;
-}
-
-
-
-
-/* vv Deprecated vv */
-.filter-inputs {
-    flex: 2;
-}
-.filter-lists {
-    flex: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-}
 p {
-    /* border: 1px solid red; */
     margin: 8px;
     text-align: center;
 }
-/* Neuomorphic styles */
-.neuomorphic-input {
-    display: flex;
-    /* border: 5px solid green; */
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    /* align-items: center; */
-    /* justify-content: center; */
-    margin: 5px;
-    padding-left: 5px;
-    padding-right: 5px;
-    padding-bottom: 10px;
-    color: #333;
-    width: 95%;
-    border-radius: 15px;
-    box-shadow: -2px -2px 2px #b8b8b8, 2px 2px 1px #ffffff;
-}
-.neuomorphic-input input {
-    /* flex: 1; */
-    border: none;
-    outline: none;
-    background-color: #add8e600;
-    color: white;
-    cursor: pointer;
-
-}
-/* Date input */
-.neuomorphic-input input[type="date"] {
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: inset -2px -2px 3px #b8b8b8, inset 2px 2px 3px #ffffff;
-}
-/* Name input */
-.neuomorphic-input input[type="text"] {
-    padding: 10px;
-    border-radius: 10px;
-    box-shadow: inset -2px -2px 2px #b8b8b8, inset 2px 2px 6px #ffffff;
-}
-/* Neuomorphic buttons */
-.neuomorphic-btn {
-    padding: 7px 10px;
-    text-align: center;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    color: hsla(0, 0%, 100%, 0.812);
-}
-
-.input-label {
-    display: inline-block;
-    font-size: 20px;
-    padding: 7px;
-    margin-top: 5px;
-    margin-bottom: 1px;
-    border-radius: 10px;
-    text-align: center;
-    color: hsla(0, 0%, 100%, 0.812);
-    width: 100%;
-}
-.exreq-input {
-    width: 37%;
-}
-.exreq-date-container {
-    position: relative;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-}
-.exreq-date-label {
+/* Filter footer css */
+.filter-footer {
+    flex: 1;
     display: flex;
     align-items: center;
-    padding: 10px;
-    width: 100%;
+    justify-content: space-between;
+    height: 10%;
+    border-top: solid #33333320;
+    border-radius: 5px;
+    padding: 0px 10px 0px 10px;
+    color: black;
 }
-.exreq-date-switch {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 10px;
-}
+

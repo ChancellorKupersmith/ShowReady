@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useSongsFilter } from '../FilterContext';
+import { useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const LocationMenu = () => {
-    const { filters, updateFilters } = useSongsFilter();
+    const { tempFilters, updateTempFilters } = useTempSongsFilter();
     const [venueInput, setVenueInput] = useState('');
     const [hoodInput, setHoodInput] = useState('');
     // input funcs
@@ -13,13 +13,13 @@ const LocationMenu = () => {
     // reqex btn funcs
     const reqVenue = () => {
         if(!venueInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             req: {
-                ...filters.req,
+                ...tempFilters.req,
                 location: {
-                    ...filters.req.location,
-                    venues: [...filters.req.location.venues, venueInput]
+                    ...tempFilters.req.location,
+                    venues: [...tempFilters.req.location.venues, venueInput]
                 }
             }
         });
@@ -27,13 +27,13 @@ const LocationMenu = () => {
     }
     const exVenue = () => {
         if(!venueInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             ex: {
-                ...filters.ex,
+                ...tempFilters.ex,
                 location: {
-                    ...filters.ex.location,
-                    venues: [...filters.ex.location.venues, venueInput]
+                    ...tempFilters.ex.location,
+                    venues: [...tempFilters.ex.location.venues, venueInput]
                 }
             }
         });
@@ -41,13 +41,13 @@ const LocationMenu = () => {
     }
     const reqHood = () => {
         if(!hoodInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             req: {
-                ...filters.req,
+                ...tempFilters.req,
                 location: {
-                    ...filters.req.location,
-                    hoods: [...filters.req.location.hoods, hoodInput]
+                    ...tempFilters.req.location,
+                    hoods: [...tempFilters.req.location.hoods, hoodInput]
                 }
             }
         });
@@ -55,81 +55,81 @@ const LocationMenu = () => {
     }
     const exHood = () => {
         if(!hoodInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             ex: {
-                ...filters.ex,
+                ...tempFilters.ex,
                 location: {
-                    ...filters.ex.location,
-                    hoods: [...filters.ex.location.hoods, hoodInput]
+                    ...tempFilters.ex.location,
+                    hoods: [...tempFilters.ex.location.hoods, hoodInput]
                 }
             }
         });
         setHoodInput('')
     }
     // reqex filter tab funcs
-    const removeReqVenue = (venue) => updateFilters({
-        ...filters, 
+    const removeReqVenue = (venue) => updateTempFilters({
+        ...tempFilters, 
         req: {
-            ...filters.req,
+            ...tempFilters.req,
             location: {
-                ...filters.req.location,
-                venues: filters.req.location.venues.filter(v => v != venue)
+                ...tempFilters.req.location,
+                venues: tempFilters.req.location.venues.filter(v => v != venue)
             }
         }
     });
-    const removeExVenue = (venue) => updateFilters({
-        ...filters, 
+    const removeExVenue = (venue) => updateTempFilters({
+        ...tempFilters, 
         ex: {
-            ...filters.ex,
+            ...tempFilters.ex,
             location: {
-                ...filters.ex.location,
-                venues: filters.ex.location.venues.filter(v => v != venue)
+                ...tempFilters.ex.location,
+                venues: tempFilters.ex.location.venues.filter(v => v != venue)
             }
         }
     });
-    const removeReqHood = (hood) => updateFilters({
-        ...filters, 
+    const removeReqHood = (hood) => updateTempFilters({
+        ...tempFilters, 
         req: {
-            ...filters.req,
+            ...tempFilters.req,
             location: {
-                ...filters.req.location,
-                hoods: filters.req.location.hoods.filter(h => h != hood)
+                ...tempFilters.req.location,
+                hoods: tempFilters.req.location.hoods.filter(h => h != hood)
             }
         }
     });
-    const removeExHood = (hood) => updateFilters({
-        ...filters, 
+    const removeExHood = (hood) => updateTempFilters({
+        ...tempFilters, 
         ex: {
-            ...filters.ex,
+            ...tempFilters.ex,
             location: {
-                ...filters.ex.location,
-                hoods: filters.ex.location.hoods.filter(h => h != hood)
+                ...tempFilters.ex.location,
+                hoods: tempFilters.ex.location.hoods.filter(h => h != hood)
             }
         }
     });
-    const reqVenues = filters.req.location.venues.map((venue, index) =>
+    const reqVenues = tempFilters.req.location.venues.map((venue, index) =>
         <ReqExFilterTab 
             key={`reqfilter-venue${index}`}
             label={'Venue: '} value={venue}
             onClickFunc={() => removeReqVenue(venue)}
         />
     );
-    const exVenues = filters.ex.location.venues.map((venue, index) =>
+    const exVenues = tempFilters.ex.location.venues.map((venue, index) =>
         <ReqExFilterTab 
             key={`exfilter-venue${index}`}
             label={'Venue: '} value={venue}
             onClickFunc={() => removeExVenue(venue)}
         />
     );
-    const reqHoods = filters.req.location.hoods.map((hood, index) =>
+    const reqHoods = tempFilters.req.location.hoods.map((hood, index) =>
         <ReqExFilterTab 
             key={`reqfilter-hood${index}`}
             label={'Hood: '} value={hood}
             onClickFunc={() => removeReqHood(hood)}
         />
     );
-    const exHoods = filters.ex.location.hoods.map((hood, index) =>
+    const exHoods = tempFilters.ex.location.hoods.map((hood, index) =>
         <ReqExFilterTab 
             key={`exfilter-hood${index}`}
             label={'Hood: '} value={hood}

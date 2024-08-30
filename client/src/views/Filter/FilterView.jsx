@@ -5,16 +5,13 @@ import FilterTitle from './FilterTitle';
 import FilterList from './FilterList';
 import FilterFooter from "./FilterFooter";
 import FilterMenu from './Menus/FilterMenu';
+import { TempFilterContextProvider } from './FilterContext';
 
 const FilterBtn = ({onClick}) => <button id='filter-btn' onClick={onClick}>Filter</button>
 
 const FilterView = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const closeModal = () => {
-        console.log(isOpen)
-        setIsOpen(!isOpen)
-    };
-
+    const closeModal = () => setIsOpen(!isOpen)
     const [filterMenu, setFilterMenu] = useState('date')
     const handleFilterMenu = (label) => {
         switch(label.toLowerCase()){
@@ -60,15 +57,17 @@ const FilterView = () => {
         <div>
             <FilterBtn onClick={() => closeModal()}/>
             {isOpen && createPortal(
-                <div className='modal-container'>
-                    <FilterTitle closeModal={closeModal} />
-                    <style>{webkitStyles}</style>
-                    <div style={scrollableStyle}>
-                        <FilterList handleFilterMenu={handleFilterMenu}/>
-                        <FilterMenu filterMenu={filterMenu}/>
+                <TempFilterContextProvider>
+                    <div className='modal-container'>
+                        <FilterTitle closeModal={closeModal} />
+                        <style>{webkitStyles}</style>
+                        <div style={scrollableStyle}>
+                            <FilterList handleFilterMenu={handleFilterMenu}/>
+                            <FilterMenu filterMenu={filterMenu}/>
+                        </div>
+                        <FilterFooter closeModal={closeModal} />
                     </div>
-                    <FilterFooter />
-                </div>,
+                </TempFilterContextProvider>,
                 document.body
             )}
         </div>

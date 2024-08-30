@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
-import { useSongsFilter } from '../FilterContext';
+import { useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const ArtistMenu = () => {
-    const { filters, updateFilters } = useSongsFilter();
+    const { tempFilters, updateTempFilters } = useTempSongsFilter();
     const [artistInput, setArtistInput] = useState('');
     // input funcs
     const handleArtistChange = (event) => setArtistInput(event.target.value);
     // reqex btn funcs
     const reqArtist = () => {
         if(!artistInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             req: {
-                ...filters.req,
+                ...tempFilters.req,
                 artist: {
-                    ...filters.req.artist,
-                    names: [...filters.req.artist.names, artistInput]
+                    ...tempFilters.req.artist,
+                    names: [...tempFilters.req.artist.names, artistInput]
                 }
             }
         });
@@ -25,47 +25,47 @@ const ArtistMenu = () => {
     }
     const exArtist = () => {
         if(!artistInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             ex: {
-                ...filters.ex,
+                ...tempFilters.ex,
                 artist: {
-                    ...filters.ex.artist,
-                    names: [...filters.ex.artist.names, artistInput]
+                    ...tempFilters.ex.artist,
+                    names: [...tempFilters.ex.artist.names, artistInput]
                 }
             }
         });
         setArtistInput('')
     }
     // reqex filter tab funcs
-    const removeReqArtist = (artist) => updateFilters({
-        ...filters, 
+    const removeReqArtist = (artist) => updateTempFilters({
+        ...tempFilters, 
         req: {
-            ...filters.req,
+            ...tempFilters.req,
             artist: {
-                ...filters.req.artist,
-                names: filters.req.artist.names.filter(v => v != artist)
+                ...tempFilters.req.artist,
+                names: tempFilters.req.artist.names.filter(v => v != artist)
             }
         }
     });
-    const removeExArtist = (artist) => updateFilters({
-        ...filters, 
+    const removeExArtist = (artist) => updateTempFilters({
+        ...tempFilters, 
         ex: {
-            ...filters.ex,
+            ...tempFilters.ex,
             artist: {
-                ...filters.ex.artist,
-                names: filters.ex.artist.names.filter(v => v != artist)
+                ...tempFilters.ex.artist,
+                names: tempFilters.ex.artist.names.filter(v => v != artist)
             }
         }
     });
-    const reqArtists = filters.req.artist.names.map((artist, index) =>
+    const reqArtists = tempFilters.req.artist.names.map((artist, index) =>
         <ReqExFilterTab 
             key={`reqfilter-artist${index}`}
             label={'Artist: '} value={artist}
             onClickFunc={() => removeReqArtist(artist)}
         />
     );
-    const exArtists = filters.ex.artist.names.map((artist, index) =>
+    const exArtists = tempFilters.ex.artist.names.map((artist, index) =>
         <ReqExFilterTab 
             key={`exfilter-artist${index}`}
             label={'Artist: '} value={artist}

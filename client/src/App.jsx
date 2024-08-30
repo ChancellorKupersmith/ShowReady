@@ -8,12 +8,12 @@ function App() {
   const containerRef = useRef(null);
 
   const scrollToTop = () => {
-    console.log('Scroll Top')
+    // console.log('Scroll Top')
     document.getElementById('landing-view').scrollIntoView({ behavior: 'smooth' });
   };
 
   const scrollToBottom = () => {
-    console.log(`Scroll Botom: ${containerRef.current.scrollHeight}`)
+    // console.log(`Scroll Botom: ${containerRef.current.scrollHeight}`)
     document.getElementById('songs-list-view').scrollIntoView({ behavior: 'smooth' });
 
   };

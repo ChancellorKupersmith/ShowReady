@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useSongsFilter } from '../FilterContext';
+import { useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 const DateMenu = () => {
-    const { filters, updateFilters } = useSongsFilter();
+    const { tempFilters, updateTempFilters } = useTempSongsFilter();
     const [dateInput, setDateInput] = useState('');
     const [gThanDateInput, setGThanDateInput] = useState('');
     const [lThanDateInput, setLThanDateInput] = useState('');
@@ -16,13 +16,13 @@ const DateMenu = () => {
     // reqex btn funcs
     const reqDate = () => {
         if(!dateInput) return;
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             req: {
-                ...filters.req,
+                ...tempFilters.req,
                 date: {
-                    ...filters.req.date,
-                    dates: [...filters.req.date.dates, dateInput]
+                    ...tempFilters.req.date,
+                    dates: [...tempFilters.req.date.dates, dateInput]
                 }
             }
         });
@@ -30,13 +30,13 @@ const DateMenu = () => {
     }
     const exDate = () => {
         if(!dateInput) return
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             ex: {
-                ...filters.ex,
+                ...tempFilters.ex,
                 date: {
-                    ...filters.ex.date,
-                    dates: [...filters.ex.date.dates, dateInput]
+                    ...tempFilters.ex.date,
+                    dates: [...tempFilters.ex.date.dates, dateInput]
                 }
             }
         });
@@ -44,29 +44,29 @@ const DateMenu = () => {
     }
     const reqGThanDate = () => {
         if(!gThanDateInput) return
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             dateGThan: gThanDateInput
         });
         setGThanDateInput('')    
     }
     const reqLThanDate = () => {
         if(!lThanDateInput) return
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             dateLThan: lThanDateInput
         });
         setLThanDateInput('')
     }
     const reqTime = () => {
         if(!timeInput) return
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             req: {
-                ...filters.req,
+                ...tempFilters.req,
                 date: {
-                    ...filters.req.date,
-                    eventTimes: [...filters.req.date.eventTimes, timeInput]
+                    ...tempFilters.req.date,
+                    eventTimes: [...tempFilters.req.date.eventTimes, timeInput]
                 }
             }
         });
@@ -74,13 +74,13 @@ const DateMenu = () => {
     }
     const exTime = () => {
         if(!timeInput) return
-        updateFilters({
-            ...filters, 
+        updateTempFilters({
+            ...tempFilters, 
             ex: {
-                ...filters.ex,
+                ...tempFilters.ex,
                 date: {
-                    ...filters.ex.date,
-                    eventTimes: [...filters.ex.date.eventTimes, timeInput]
+                    ...tempFilters.ex.date,
+                    eventTimes: [...tempFilters.ex.date.eventTimes, timeInput]
                 }
             }
         });
@@ -88,79 +88,79 @@ const DateMenu = () => {
     }
     // reqex filter tab funcs
     const removeGThanDate = () => {
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             dateGThan: ''
         });
     }
     const removeLThanDate = () => {
-        updateFilters({
-            ...filters,
+        updateTempFilters({
+            ...tempFilters,
             dateLThan: ''
         });
     }
-    const removeReqDate = date => updateFilters({
-        ...filters, 
+    const removeReqDate = date => updateTempFilters({
+        ...tempFilters, 
         req: {
-            ...filters.req,
+            ...tempFilters.req,
             date: {
-                ...filters.req.date,
-                dates: filters.req.date.dates.filter(d => d != date)
+                ...tempFilters.req.date,
+                dates: tempFilters.req.date.dates.filter(d => d != date)
             }
         }
     });
-    const removeExDate = date => updateFilters({
-        ...filters, 
+    const removeExDate = date => updateTempFilters({
+        ...tempFilters, 
         ex: {
-            ...filters.ex,
+            ...tempFilters.ex,
             date: {
-                ...filters.ex.date,
-                dates: filters.ex.date.dates.filter(d => d != date)
+                ...tempFilters.ex.date,
+                dates: tempFilters.ex.date.dates.filter(d => d != date)
             }
         }
     });
-    const removeReqTime = time => updateFilters({
-        ...filters, 
+    const removeReqTime = time => updateTempFilters({
+        ...tempFilters, 
         req: {
-            ...filters.req,
+            ...tempFilters.req,
             date: {
-                ...filters.req.date,
-                eventTimes: filters.req.date.eventTimes.filter(t => t != time)
+                ...tempFilters.req.date,
+                eventTimes: tempFilters.req.date.eventTimes.filter(t => t != time)
             }
         }
     });
-    const removeExTime = time => updateFilters({
-        ...filters, 
+    const removeExTime = time => updateTempFilters({
+        ...tempFilters, 
         ex: {
-            ...filters.ex,
+            ...tempFilters.ex,
             date: {
-                ...filters.ex.date,
-                eventTimes: filters.ex.date.eventTimes.filter(t => t != time)
+                ...tempFilters.ex.date,
+                eventTimes: tempFilters.ex.date.eventTimes.filter(t => t != time)
             }
         }
     });
-    const reqDates = filters.req.date.dates.map((date, index) => 
+    const reqDates = tempFilters.req.date.dates.map((date, index) => 
         <ReqExFilterTab 
             key={`reqfilter-date${index}`}
             label={'Date: '} value={date}
             onClickFunc={() => removeReqDate(date)}
         />
     );
-    const exDates = filters.ex.date.dates.map((date, index) => 
+    const exDates = tempFilters.ex.date.dates.map((date, index) => 
         <ReqExFilterTab 
             key={`exfilter-date${index}`}
             label={'Date: '} value={date}
             onClickFunc={() => removeExDate(date)}
         />
     );
-    const reqTimes = filters.req.date.eventTimes.map((time, index) =>
+    const reqTimes = tempFilters.req.date.eventTimes.map((time, index) =>
         <ReqExFilterTab
             key={`reqfilter-time${index}`}
             label={'Time: '} value={time}
             onClickFunc={() => removeReqTime(time)}
         />
     );
-    const exTimes = filters.ex.date.eventTimes.map((time, index) =>
+    const exTimes = tempFilters.ex.date.eventTimes.map((time, index) =>
         <ReqExFilterTab
             key={`reqfilter-time${index}`}
             label={'Time: '} value={time}
@@ -169,8 +169,8 @@ const DateMenu = () => {
     );
 
     const reqChildren = [
-        (filters.dateGThan && <ReqExFilterTab key={'reqfilter-gThan'} label={'After: '} value={filters.dateGThan} onClickFunc={removeGThanDate}/>),
-        (filters.dateLThan && <ReqExFilterTab key={'reqfilter-lThan'}  label={'Before: '} value={filters.dateLThan} onClickFunc={removeLThanDate}/>),
+        (tempFilters.dateGThan && <ReqExFilterTab key={'reqfilter-gThan'} label={'After: '} value={tempFilters.dateGThan} onClickFunc={removeGThanDate}/>),
+        (tempFilters.dateLThan && <ReqExFilterTab key={'reqfilter-lThan'}  label={'Before: '} value={tempFilters.dateLThan} onClickFunc={removeLThanDate}/>),
         ...reqDates,
         ...reqTimes
     ];

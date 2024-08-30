@@ -1,9 +1,9 @@
 import React from 'react';
-import { useSongsFilter } from "./FilterContext";
+import { useTempSongsFilter } from "./FilterContext";
 import RightArrow from '../../assets/right-arrow.svg'
 
 const FilterLabel = ({label, handleFilterMenu}) => {
-    const { filters, updateFilters } = useSongsFilter();
+    const { tempFilters, updateTempFilters } = useTempSongsFilter();
     return (
         <div className='filter-label' onClick={() => handleFilterMenu(label)}>
             <div style={{display: 'flex', justifyContent: 'space-between'}}>
@@ -17,23 +17,23 @@ const FilterLabel = ({label, handleFilterMenu}) => {
                     />
                 </button>
             </div>
-            {/* truncated list of applied filters */}
+            {/* truncated list of applied tempFilters */}
         </div>
     )
 }
 
 
 const FilterList = ({handleFilterMenu}) => {
-    const { filters, updateFilters } = useSongsFilter();
+    const { tempFilters, updateTempFilters } = useTempSongsFilter();
     /*
-        - Title, list of filter labels, total filters/clear btn
+        - Title, list of filter labels, total tempFilters/clear btn
     */
 
     return (
         <div className='filter-list'>
             <div style={{display: 'flex', justifyContent: 'space-around'}}>
                 <h2>Filters</h2>
-                {/* total filters / clear */}
+                {/* total tempFilters / clear */}
             </div>
             <FilterLabel label={'Date'} handleFilterMenu={handleFilterMenu}/>
             <FilterLabel label={'Location'} handleFilterMenu={handleFilterMenu}/>

@@ -1,10 +1,9 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 
 const formatDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 const SongsFilterContext = createContext();
 export const useSongsFilter = () => useContext(SongsFilterContext);
-
 export const FilterContextProvider = ({ children }) => {
     // TODO: Filter States to implement
     // - set # from each artist
@@ -87,10 +86,9 @@ export const FilterContextProvider = ({ children }) => {
         },
     };
     const [filters, setFilters] = useState(defaultFilters);
-    console.log(filters)
     const updateFilters = (newFiltersObj) => {
         setFilters(newFiltersObj);
-        console.log(filters)
+        // console.log(filters)
     }
 
     return (
@@ -99,3 +97,24 @@ export const FilterContextProvider = ({ children }) => {
         </SongsFilterContext.Provider>
     );
 };
+
+// Copy of filter state for filter menu
+const TempSongsFilterContext = createContext();
+export const useTempSongsFilter = () => useContext(TempSongsFilterContext);
+export const TempFilterContextProvider = ({ children }) => {
+    const { filters, updateFilters } = useSongsFilter();
+    const [tempFilters, setTempFilters] = useState(filters);
+
+    const revertTempFilters = () => setTempFilters(filters);
+    const saveTempFilters = () => updateFilters(tempFilters);
+    const updateTempFilters = (newFiltersObj) => {
+        setTempFilters(newFiltersObj);
+        console.log(tempFilters)
+    }
+
+    return (
+        <TempSongsFilterContext.Provider value={{ tempFilters, updateTempFilters, revertTempFilters, saveTempFilters }}>
+            { children }
+        </TempSongsFilterContext.Provider>
+    );
+}
