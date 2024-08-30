@@ -1,8 +1,8 @@
-import React from 'react';
+import React, {useState} from 'react';
 
-export const ReqExFilterTab = ({keyVal, label, value, onClickFunc}) => {
+export const ReqExFilterTab = ({label, value, onClickFunc}) => {
     return (
-        <div key={keyVal} className='reqex-filter-tab'>
+        <div className='reqex-filter-tab'>
             <span>{label}</span>
             <span>{value}</span>
             <button onClick={onClickFunc}>X</button>
@@ -22,5 +22,22 @@ export const ReqExList = ({reqChildren, exChildren}) => {
                 {exChildren}
             </div>
         </div>
+    )
+}
+
+export const Toggle = ({label, toggled, onClick, id}) => {
+    const [isToggled, toggle] = useState(toggled)
+
+    const callback = () => {
+        toggle(!isToggled)
+        onClick(!isToggled)
+    }
+
+    return (
+        <label className='toggle'>
+            <strong>{label}</strong>
+            <input style={{display: 'none'}} type="checkbox" defaultChecked={isToggled} onClick={callback} />
+            <span id={id} />
+        </label>
     )
 }

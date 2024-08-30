@@ -15,7 +15,7 @@ const DateMenu = () => {
     const handleTimeChange = (event) => setTimeInput(event.target.value);
     // reqex btn funcs
     const reqDate = () => {
-        if(!dateInput) return
+        if(!dateInput) return;
         updateFilters({
             ...filters, 
             req: {
@@ -141,36 +141,36 @@ const DateMenu = () => {
     });
     const reqDates = filters.req.date.dates.map((date, index) => 
         <ReqExFilterTab 
-            keyVal={`reqfilter-date${index}`}
+            key={`reqfilter-date${index}`}
             label={'Date: '} value={date}
             onClickFunc={() => removeReqDate(date)}
         />
     );
     const exDates = filters.ex.date.dates.map((date, index) => 
         <ReqExFilterTab 
-            keyVal={`exfilter-date${index}`}
+            key={`exfilter-date${index}`}
             label={'Date: '} value={date}
             onClickFunc={() => removeExDate(date)}
         />
     );
     const reqTimes = filters.req.date.eventTimes.map((time, index) =>
         <ReqExFilterTab
-            keyVal={`reqfilter-time${index}`}
+            key={`reqfilter-time${index}`}
             label={'Time: '} value={time}
             onClickFunc={() => removeReqTime(time)}
         />
     );
     const exTimes = filters.ex.date.eventTimes.map((time, index) =>
         <ReqExFilterTab
-            keyVal={`reqfilter-time${index}`}
+            key={`reqfilter-time${index}`}
             label={'Time: '} value={time}
             onClickFunc={() => removeExTime(time)}
         />
     );
 
     const reqChildren = [
-        (filters.dateGThan && <ReqExFilterTab keyVal={'reqfilter-gThan'} label={'After: '} value={filters.dateGThan} onClickFunc={removeGThanDate}/>),
-        (filters.dateLThan && <ReqExFilterTab keyVal={'reqfilter-lThan'}  label={'Before: '} value={filters.dateLThan} onClickFunc={removeLThanDate}/>),
+        (filters.dateGThan && <ReqExFilterTab key={'reqfilter-gThan'} label={'After: '} value={filters.dateGThan} onClickFunc={removeGThanDate}/>),
+        (filters.dateLThan && <ReqExFilterTab key={'reqfilter-lThan'}  label={'Before: '} value={filters.dateLThan} onClickFunc={removeLThanDate}/>),
         ...reqDates,
         ...reqTimes
     ];

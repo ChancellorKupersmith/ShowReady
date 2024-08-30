@@ -44,7 +44,7 @@ export const FilterContextProvider = ({ children }) => {
             },
             album: {
                 names: [],
-                fromEach: '',
+                // fromEach: '',
             },
             song: {
                 names: [],
