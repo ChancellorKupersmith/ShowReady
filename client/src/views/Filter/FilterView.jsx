@@ -62,7 +62,7 @@ const FilterView = () => {
                         <FilterTitle closeModal={closeModal} />
                         <style>{webkitStyles}</style>
                         <div style={scrollableStyle}>
-                            <FilterList handleFilterMenu={handleFilterMenu}/>
+                            <FilterList selectedMenu={filterMenu} handleFilterMenu={handleFilterMenu}/>
                             <FilterMenu filterMenu={filterMenu}/>
                         </div>
                         <FilterFooter closeModal={closeModal} />

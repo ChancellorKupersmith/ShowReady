@@ -12,7 +12,8 @@ const AlbumMenu = () => {
     const reqAlbum = () => {
         if(!albumInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             req: {
                 ...tempFilters.req,
                 album: {
@@ -26,7 +27,8 @@ const AlbumMenu = () => {
     const exAlbum = () => {
         if(!albumInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 album: {
@@ -39,7 +41,8 @@ const AlbumMenu = () => {
     }
     // reqex filter tab funcs
     const removeReqAlbum = (album) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1,
         req: {
             ...tempFilters.req,
             album: {
@@ -49,7 +52,8 @@ const AlbumMenu = () => {
         }
     });
     const removeExAlbum = (album) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total + 1,
         ex: {
             ...tempFilters.ex,
             album: {
@@ -80,15 +84,14 @@ const AlbumMenu = () => {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
             <div className='menu-inputs'>
                 <div className='menu-input'>
-                    <div className='reqex-input-container'>
-                        <label htmlFor='albumInput'>Album: </label>
-                        <input
-                            type='text'
-                            id='albumInput'
-                            value={albumInput}
-                            onChange={handleAlbumChange}
-                        />
-                    </div>
+                    <label htmlFor='albumInput'>Album: </label>
+                    <input
+                        className='reqex-input-container'
+                        type='text'
+                        id='albumInput'
+                        value={albumInput}
+                        onChange={handleAlbumChange}
+                    />
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqAlbum}>Require</button>
                         <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exAlbum}>Exclude</button>

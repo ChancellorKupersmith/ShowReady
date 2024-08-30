@@ -15,7 +15,7 @@ export const FilterContextProvider = ({ children }) => {
     let monthFromToday = new Date();
     monthFromToday.setDate(today.getDate() + 30)
     const defaultFilters = {
-        total: 0,
+        total: 2,
         dateGThan: formatDate(today),
         dateLThan: formatDate(monthFromToday),
         priceGThan: '',
@@ -109,7 +109,6 @@ export const TempFilterContextProvider = ({ children }) => {
     const saveTempFilters = () => updateFilters(tempFilters);
     const updateTempFilters = (newFiltersObj) => {
         setTempFilters(newFiltersObj);
-        console.log(tempFilters)
     }
 
     return (

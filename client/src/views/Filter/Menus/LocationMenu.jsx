@@ -14,7 +14,8 @@ const LocationMenu = () => {
     const reqVenue = () => {
         if(!venueInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1, 
             req: {
                 ...tempFilters.req,
                 location: {
@@ -28,7 +29,8 @@ const LocationMenu = () => {
     const exVenue = () => {
         if(!venueInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 location: {
@@ -42,7 +44,8 @@ const LocationMenu = () => {
     const reqHood = () => {
         if(!hoodInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             req: {
                 ...tempFilters.req,
                 location: {
@@ -56,7 +59,8 @@ const LocationMenu = () => {
     const exHood = () => {
         if(!hoodInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 location: {
@@ -69,7 +73,8 @@ const LocationMenu = () => {
     }
     // reqex filter tab funcs
     const removeReqVenue = (venue) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1,
         req: {
             ...tempFilters.req,
             location: {
@@ -79,7 +84,8 @@ const LocationMenu = () => {
         }
     });
     const removeExVenue = (venue) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1, 
         ex: {
             ...tempFilters.ex,
             location: {
@@ -89,7 +95,8 @@ const LocationMenu = () => {
         }
     });
     const removeReqHood = (hood) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1,
         req: {
             ...tempFilters.req,
             location: {
@@ -99,7 +106,8 @@ const LocationMenu = () => {
         }
     });
     const removeExHood = (hood) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1,
         ex: {
             ...tempFilters.ex,
             location: {
@@ -144,30 +152,28 @@ const LocationMenu = () => {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
             <div className='menu-inputs'>
                 <div className='menu-input'>
-                    <div className='reqex-input-container'>
-                        <label htmlFor='venueInput'>Venue: </label>
-                        <input
-                            type='text'
-                            id='venueInput'
-                            value={venueInput}
-                            onChange={handleVenueChange}
-                        />
-                    </div>
+                    <label htmlFor='venueInput'>Venue: </label>
+                    <input
+                        className='reqex-input-container'
+                        type='text'
+                        id='venueInput'
+                        value={venueInput}
+                        onChange={handleVenueChange}
+                    />
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqVenue}>Require</button>
                         <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exVenue}>Exclude</button>
                     </div>
                 </div>
                 <div className='menu-input'>
-                    <div className='reqex-input-container'>
-                        <label htmlFor='hoodInput'>Hood: </label>
-                        <input
-                            type='text'
-                            id='hoodInput'
-                            value={hoodInput}
-                            onChange={handleHoodChange}
-                        />
-                    </div>
+                    <label htmlFor='hoodInput'>Hood: </label>
+                    <input
+                        className='reqex-input-container'
+                        type='text'
+                        id='hoodInput'
+                        value={hoodInput}
+                        onChange={handleHoodChange}
+                    />
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqHood}>Require</button>
                         <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exHood}>Exclude</button>

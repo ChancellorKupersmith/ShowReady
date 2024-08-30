@@ -12,7 +12,8 @@ const SongMenu = () => {
     const reqSong = () => {
         if(!songInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1, 
             req: {
                 ...tempFilters.req,
                 song: {
@@ -26,7 +27,8 @@ const SongMenu = () => {
     const exSong = () => {
         if(!songInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 song: {
@@ -39,7 +41,8 @@ const SongMenu = () => {
     }
     // reqex filter tab funcs
     const removeReqSong = (song) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1,
         req: {
             ...tempFilters.req,
             song: {
@@ -49,7 +52,8 @@ const SongMenu = () => {
         }
     });
     const removeExSong = (song) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1,
         ex: {
             ...tempFilters.ex,
             song: {
@@ -80,15 +84,14 @@ const SongMenu = () => {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
             <div className='menu-inputs'>
                 <div className='menu-input'>
-                    <div className='reqex-input-container'>
-                        <label htmlFor='songInput'>Song: </label>
-                        <input
-                            type='text'
-                            id='songInput'
-                            value={songInput}
-                            onChange={handleSongChange}
-                        />
-                    </div>
+                    <label htmlFor='songInput'>Song: </label>
+                    <input
+                        className='reqex-input-container'
+                        type='text'
+                        id='songInput'
+                        value={songInput}
+                        onChange={handleSongChange}
+                    />
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqSong}>Require</button>
                         <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exSong}>Exclude</button>

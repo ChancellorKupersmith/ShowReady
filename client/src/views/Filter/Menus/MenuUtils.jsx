@@ -3,9 +3,9 @@ import React, {useState} from 'react';
 export const ReqExFilterTab = ({label, value, onClickFunc}) => {
     return (
         <div className='reqex-filter-tab'>
-            <span>{label}</span>
+            {(label && <span>{label}</span>)}
             <span>{value}</span>
-            <button onClick={onClickFunc}>X</button>
+            {(onClickFunc && <button onClick={onClickFunc}>X</button>)}
         </div>
     )
 }

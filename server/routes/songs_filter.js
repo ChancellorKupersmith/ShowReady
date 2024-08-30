@@ -106,6 +106,21 @@ const querySongsList = async (whereConditional, queryParms) => {
   return result;
 };
 
+const queryTotalResults = async (whereConditional, queryParms) => {
+  const client = await pool.connect();
+  query = `
+    SELECT COUNT(*) FROM Songs
+    JOIN Artists AS a ON a.ID = Songs.ArtistID
+    JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
+    JOIN Events AS e ON e.ID = ea.EventID
+    JOIN Venues AS v ON v.ID = e.VenueID
+    ${whereConditional}
+  `;
+  const result = await client.query(query, queryParms);
+  client.release();
+  return result;
+};
+
 const whereConditionBuilder = async (req, res, next) => {
   try {
     let whereConditional = 'WHERE ';
@@ -139,7 +154,10 @@ const whereConditionBuilder = async (req, res, next) => {
     if(filters.ex.source.spotify) whereConditional += `Songs.SpotifyExternalId IS NULL AND `;
     if(filters.req.source.spotify) whereConditional += `Songs.SpotifyExternalId IS NOT NULL AND `;
     // remove trailing 'AND'
-    whereConditional = whereConditional.substring(0, whereConditional.length - 4);
+    if(whereConditional != 'WHERE ')
+      whereConditional = whereConditional.substring(0, whereConditional.length - 4);
+    else
+      whereConditional = ''
     req.whereConditional = whereConditional;
     next();
   } catch (err) {
@@ -156,6 +174,17 @@ router.post('/', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, 
     const result = await querySongsList(req.whereConditional, req.cParams);
     const songsList = result.rows;
     res.json(songsList);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/total_results', whereConditionBuilder, async (req, res, next) => {
+  try{
+    console.log(req.whereConditional);
+    const result = await queryTotalResults(req.whereConditional);
+    const total = result.rows[0];
+    res.json(total)
   } catch (err) {
     next(err);
   }

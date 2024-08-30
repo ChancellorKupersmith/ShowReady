@@ -7,8 +7,10 @@ const SourceMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
     // input funcs
     const handleChangeReqSpotify = () => {
+        const newTotal = tempFilters.req.source.spotify ? tempFilters.total - 1 : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
+            total: newTotal,
             req: {
                 ...tempFilters.req,
                 source: {
@@ -19,8 +21,10 @@ const SourceMenu = () => {
         });
     }
     const handleChangeExSpotify = () => {
+        const newTotal = tempFilters.ex.source.spotify ? tempFilters.total - 1 : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
+            total: newTotal,
             ex: {
                 ...tempFilters.ex,
                 source: {

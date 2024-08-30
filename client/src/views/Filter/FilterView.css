@@ -57,18 +57,18 @@
     overflow-y: auto;
 }
 .filter-list h2 {
+    padding-left: 5px;
     font-size: 14px;
     font-weight: 540;
     color: black;
 }
 .filter-label {
-    border: solid #6b6b6b69;
     border-radius: 10px;
     margin-left: 3px;
     margin-right: 3px;
     margin-bottom: 10px;
     padding-left: 2px;
-    /* padding-right: 2px; */
+    cursor: pointer;
 }
 .filter-label h3 {
     color: black;
@@ -78,6 +78,20 @@
 .filter-label button {
     border: transparent;
     background-color: transparent;
+    cursor: pointer;
+}
+.filter-list .reqex-filter-tab {
+    color: black;
+    padding: 0px 2px 0px 2px;
+    /* max-width: fit-content; */
+    flex: 1 0 fit-content;
+    text-align: center;
+}
+.filter-list .reqex-filter-tab span {
+    margin: 2px;
+}
+.filter-list .reqex-filter-tab button {
+    color: black;
 }
 /* Filter menu css */
 .filter-menu {
@@ -93,17 +107,20 @@
     justify-content: space-between;
 }
 .reqex-input-container {
-    flex: 3;
+    flex: 2;
     display: flex;
+    margin-right: 4px;
+    margin-left: 2px;
+    padding: 2px;
 }
 .reqex-btn-container {
     flex: 1;
     display: flex;
+    padding: 4px;
+    padding-left: 0px;
+    padding-right: 4px;
 }
 .reqex-btn {
-    margin: 4px;
-    margin-left: 2px;
-    margin-right: 2px;
     padding: 7px 10px;
     border: none;
     border-radius: 10px;
@@ -112,6 +129,7 @@
     color: hsla(0, 0%, 100%, 0.812);
 }
 .req-btn {
+    margin-left: 2px;
     background-color: #3b694e;
     box-shadow: inset -5px -5px 10px hsl(145, 28%, 15%), inset 1px 1px 3px #ffffff;
 }
@@ -166,6 +184,7 @@
     background-color: transparent;
     cursor: pointer;
     text-align: end;
+    font-size: 14px;
 }
 label.toggle {
     width: 100%;
@@ -223,6 +242,7 @@ p {
     border-top: solid #33333320;
     border-radius: 5px;
     padding: 0px 10px 0px 10px;
+    font-size: 16px;
     color: black;
 }
 

@@ -7,8 +7,8 @@ import FilterView from '../Filter/FilterView';
 const Save2ClientContext = createContext();
 const BgColorContext = createContext();
 const Save2ClientBtn = ({clientType}) => {
-    const {save2Client, setSave2Client} = useContext(Save2ClientContext);
-    const {bgColor, setBgColor}= useContext(BgColorContext);
+    const {setSave2Client} = useContext(Save2ClientContext);
+    const {setBgColor}= useContext(BgColorContext);
 
     const handleSave2ClientChange = () => {
         switch(clientType.toLowerCase()){

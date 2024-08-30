@@ -12,7 +12,8 @@ const ArtistMenu = () => {
     const reqArtist = () => {
         if(!artistInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             req: {
                 ...tempFilters.req,
                 artist: {
@@ -26,7 +27,8 @@ const ArtistMenu = () => {
     const exArtist = () => {
         if(!artistInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 artist: {
@@ -39,7 +41,8 @@ const ArtistMenu = () => {
     }
     // reqex filter tab funcs
     const removeReqArtist = (artist) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1,
         req: {
             ...tempFilters.req,
             artist: {
@@ -49,7 +52,8 @@ const ArtistMenu = () => {
         }
     });
     const removeExArtist = (artist) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1, 
         ex: {
             ...tempFilters.ex,
             artist: {
@@ -80,15 +84,14 @@ const ArtistMenu = () => {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
             <div className='menu-inputs'>
                 <div className='menu-input'>
-                    <div className='reqex-input-container'>
-                        <label htmlFor='artistInput'>Artist: </label>
-                        <input
-                            type='text'
-                            id='artistInput'
-                            value={artistInput}
-                            onChange={handleArtistChange}
-                        />
-                    </div>
+                    <label htmlFor='artistInput'>Artist: </label>
+                    <input
+                        className='reqex-input-container'
+                        type='text'
+                        id='artistInput'
+                        value={artistInput}
+                        onChange={handleArtistChange}
+                    />
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqArtist}>Require</button>
                         <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exArtist}>Exclude</button>

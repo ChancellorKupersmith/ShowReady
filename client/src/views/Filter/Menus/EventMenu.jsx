@@ -23,7 +23,8 @@ const EventMenu = () => {
     const reqEvent = () => {
         if(!eventInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             req: {
                 ...tempFilters.req,
                 event: {
@@ -37,7 +38,8 @@ const EventMenu = () => {
     const exEvent = () => {
         if(!eventInput) return;
         updateTempFilters({
-            ...tempFilters, 
+            ...tempFilters,
+            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 event: {
@@ -50,23 +52,28 @@ const EventMenu = () => {
     }
     const reqGPrice = () => {
         if(!gPriceInput) return;
+        const newTotal = tempFilters.priceGThan ? tempFilters.total : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
+            total: newTotal,
             priceGThan: gPriceInput
         });
         setGPriceInput('')
     }
     const reqLPrice = () => {
         if(!lPriceInput) return;
+        const newTotal = tempFilters.priceLThan ? tempFilters.total : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
+            total: newTotal,
             priceLThan: lPriceInput
         });
         setLPriceInput('')
     }
     // reqex filter tab funcs
     const removeReqEvent = (event) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1, 
         req: {
             ...tempFilters.req,
             event: {
@@ -76,7 +83,8 @@ const EventMenu = () => {
         }
     });
     const removeExEvent = (event) => updateTempFilters({
-        ...tempFilters, 
+        ...tempFilters,
+        total: tempFilters.total - 1,
         ex: {
             ...tempFilters.ex,
             event: {
@@ -88,12 +96,14 @@ const EventMenu = () => {
     const removeReqGPrice = () => {
         updateTempFilters({
             ...tempFilters,
+            total: tempFilters.total - 1,
             priceGThan: ''
         });
     }
     const removeReqLPrice = () => {
         updateTempFilters({
             ...tempFilters,
+            total: tempFilters.total - 1,
             priceLThan: ''
         });
     }
@@ -123,46 +133,43 @@ const EventMenu = () => {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
             <div className='menu-inputs'>
                 <div className='menu-input'>
-                    <div className='reqex-input-container'>
-                        <label htmlFor='eventInput'>Event: </label>
-                        <input
-                            type='text'
-                            id='eventInput'
-                            value={eventInput}
-                            onChange={handleEventChange}
-                        />
-                    </div>
+                    <label htmlFor='eventInput'>Event: </label>
+                    <input
+                        className='reqex-input-container'
+                        type='text'
+                        id='eventInput'
+                        value={eventInput}
+                        onChange={handleEventChange}
+                    />
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqEvent}>Require</button>
                         <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exEvent}>Exclude</button>
                     </div>
                 </div>
                 <div className='menu-input'>
-                    <div className='reqex-input-container'>
-                        <label htmlFor='gThanDateInput'>{`Tickets > `}</label>
-                        <input
-                            type='text'
-                            id='gPriceInput'
-                            value={gPriceInput ? `$${gPriceInput}` : ''}
-                            placeholder="$0.00"
-                            onChange={handleGPriceChange}
-                        />
-                    </div>
+                    <label htmlFor='gThanDateInput'>{`Tickets > `}</label>
+                    <input
+                        className='reqex-input-container'
+                        type='text'
+                        id='gPriceInput'
+                        value={gPriceInput ? `$${gPriceInput}` : ''}
+                        placeholder="$0.00"
+                        onChange={handleGPriceChange}
+                    />
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' style={{width: '100%'}} onClick={reqGPrice}>Require</button>
                     </div>
                 </div>
                 <div className='menu-input'>
-                    <div className='reqex-input-container'>
-                        <label htmlFor='lThanDateInput'>{`Tickets < `}</label>
-                        <input
-                            type='text'
-                            id='lPriceInput'
-                            value={lPriceInput ? `$${lPriceInput}` : ''}
-                            placeholder="$0.00"
-                            onChange={handleLPriceChange}
-                        />
-                    </div>
+                    <label htmlFor='lThanDateInput'>{`Tickets < `}</label>
+                    <input
+                        className='reqex-input-container'
+                        type='text'
+                        id='lPriceInput'
+                        value={lPriceInput ? `$${lPriceInput}` : ''}
+                        placeholder="$0.00"
+                        onChange={handleLPriceChange}
+                    />
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' style={{width: '100%'}} onClick={reqLPrice}>Require</button>
                     </div>
