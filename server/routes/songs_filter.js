@@ -190,6 +190,7 @@ router.post('/total_results', whereConditionBuilder, async (req, res, next) => {
   }
 });
 
+// Redirect function
 router.post('/save-list', async (req, res, next) => {
   try {
     const client = await pool.connect();

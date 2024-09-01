@@ -1,13 +1,17 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
+var cookieParser = require('cookie-parser');
 const path = require('path');
 const songsRouter = require('./routes/songs_filter');
-const googleApiRouter = require('./routes/googleApi')
-
+const googleApiRouter = require('./routes/googleApi');
+const spotifyApiRouter = require('./routes/spotifyApi');
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, '../client/dist')))
+   .use(cookieParser())
+   .use(cors({ origin: ['https://accounts.spotify.com', 'https://api.spotify.com', 'https://spotify.com']}));
 
 // TODO: handle multiple err types: 400
 app.use((err, req, res, next) => {
@@ -21,6 +25,7 @@ app.use((err, req, res, next) => {
 
 app.use('/songs_list', songsRouter);
 app.use('/google_api', googleApiRouter);
+app.use('/spotify', spotifyApiRouter);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
