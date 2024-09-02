@@ -1,43 +1,43 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useState, createContext,  useContext  } from 'react';
+import { HashRouter as Router, Route, Routes, Link, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 import LandingView from './views/Landing/LandingView';
 import SongsListView from './views/SongsList/SongsListView';
 import { FilterContextProvider } from './views/Filter/FilterContext';
 
+
 function App() {
   const containerRef = useRef(null);
-
-  const scrollToTop = () => {
-    // console.log('Scroll Top')
-    document.getElementById('landing-view').scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const scrollToBottom = () => {
-    // console.log(`Scroll Botom: ${containerRef.current.scrollHeight}`)
-    document.getElementById('songs-list-view').scrollIntoView({ behavior: 'smooth' });
-
-  };
+  
 
   return (
-    <>
-      <Navbar scrollToTop={scrollToTop} scrollToBottom={scrollToBottom} />
+    <Router>
+      <Navbar />element
       <div className='snap-container' ref={containerRef}>
-        <LandingView />
-        <FilterContextProvider>
-          <SongsListView />
-        </FilterContextProvider>
+        <Routes>
+          <Route path='/' element={<LandingView />}/>
+          <Route path='/playlist_gen' element={<PlaylistGen />}/>
+        </Routes>
       </div>
-    </>
+    </Router>
   );
 };
 
+const PlaylistGen = () => {
 
-const Navbar = ({ scrollToTop, scrollToBottom }) => {
   return (
-    <div id="navbar" className="navbar">
-      <a onClick={scrollToTop}>Seattle Live Radio</a>
-      <a onClick={scrollToBottom}>Playlist Generator</a>
-    </div>
+    <FilterContextProvider>
+        <SongsListView />
+    </FilterContextProvider>
+  );
+}
+
+const Navbar = () => {
+  return (
+    <nav id="navbar" className="navbar">
+      <Link to='/' >Seattle Live Radio</Link>
+      <Link to='/playlist_gen'>Playlist Generator</Link>
+    </nav>
   );
 };
 

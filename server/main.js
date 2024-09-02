@@ -11,7 +11,10 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../client/dist')))
    .use(cookieParser())
-   .use(cors({ origin: ['https://accounts.spotify.com', 'https://api.spotify.com', 'https://spotify.com']}));
+   .use(cors({ 
+        origin: ['http://localhost:5173','https://accounts.spotify.com', 'https://api.spotify.com', 'https://spotify.com'],
+        credentials: true
+    }));
 
 // TODO: handle multiple err types: 400
 app.use((err, req, res, next) => {

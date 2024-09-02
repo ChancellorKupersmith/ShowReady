@@ -1,11 +1,16 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import SongsListItem from './SongsListItem';
 import SeattleMap from './SeattleMapView';
-import { useSongsFilter } from '../Filter/FilterContext';
+import { FilterContextProvider, useSongsFilter } from '../Filter/FilterContext';
 import FilterView from '../Filter/FilterView';
+import { SpotifyBtn } from './Spotify';
+import { SpotifyContextProvider, useSpotifyData } from './Spotify'
+
 
 const Save2ClientContext = createContext();
 const BgColorContext = createContext();
+export const useSave2Client = () => useContext(Save2ClientContext);
+export const useBgColor = () => useContext(BgColorContext);
 const Save2ClientBtn = ({clientType}) => {
     const {setSave2Client} = useContext(Save2ClientContext);
     const {setBgColor}= useContext(BgColorContext);
@@ -31,7 +36,10 @@ const Save2ClientBtn = ({clientType}) => {
 };
 
 const SongsListView = () => {
-    const [bgColor, setBgColor] = useState('#8fdaed');
+    const SPOTIFY_COLOR = '#18c49e';
+    const YOUTUBE_COLOR = '#e76265';
+    const CSV_COLOR = '#8fdaed';
+    const [bgColor, setBgColor] = useState(CSV_COLOR);
     const [save2Client, setSave2Client] = useState(0);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -67,6 +75,8 @@ const SongsListView = () => {
         fetchSongs();
     }, [page, pageSize, filters]);
 
+    
+
     const handlePageChange = newPage => {
         if(newPage != page && newPage >= 1 && newPage <= totalPages)
             setPage(newPage);    
@@ -76,37 +86,39 @@ const SongsListView = () => {
     return (
         <div id='songs-list-view'  className='snap-section' style={{backgroundColor: bgColor}}>
             <div className='songs-list-view-container'>
-                <SeattleMap/>
-                <Save2ClientContext.Provider value={{save2Client, setSave2Client}} style={{width: '100%'}}>
-                    <BgColorContext.Provider value={{bgColor, setBgColor}} style={{width: '100%'}}>
-                        <div className='songs-list-container'>
-                            <div style={{display: 'flex', justifyContent: 'space-around', width: '100%'}}>
-                                <Save2ClientBtn clientType={'CSV'}/>
-                                <Save2ClientBtn clientType={'Spotify'}/>
-                                <Save2ClientBtn clientType={'YouTube'}/>
-                            </div>
-                            <FilterView />
-                            {/* TODO: Make songs lists page size dynamic to window size */}
-                            <div style={{minHeight: 'fit-content', height: '100%'}}>
-                                <ul className='songs-container'>
-                                    {songs.length > 0 && songs.map((song, index) => (<SongsListItem key={index} songTitle={song.title} artistName={song.artist} eventLocation={songs.venue} date={song.eventdate}/>))}
-                                </ul>
-                                <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                                    <button onClick={() => handlePageChange(page - 1)} disabled={page === 1} >
-                                        Previous
-                                    </button>
-                                    <span>
-                                        Page {page} of {totalPages}
-                                    </span>
-                                    <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} >
-                                        Next
-                                    </button>
+                    <SeattleMap/>
+                    <Save2ClientContext.Provider value={{save2Client, setSave2Client}}>
+                        <BgColorContext.Provider value={{bgColor, setBgColor, SPOTIFY_COLOR, YOUTUBE_COLOR, CSV_COLOR}}>
+                            <SpotifyContextProvider>
+                                <div className='songs-list-container'>
+                                    <div style={{display: 'flex', justifyContent: 'space-around', width: '100%'}}>
+                                        <Save2ClientBtn clientType={'CSV'}/>
+                                        <SpotifyBtn />
+                                        <Save2ClientBtn clientType={'YouTube'}/>
+                                    </div>
+                                    <FilterView />
+                                    {/* TODO: Make songs lists page size dynamic to window size */}
+                                    <div style={{minHeight: 'fit-content', height: '100%'}}>
+                                        <ul className='songs-container'>
+                                            {songs.length > 0 && songs.map((song, index) => (<SongsListItem key={index} songTitle={song.title} artistName={song.artist} eventLocation={songs.venue} date={song.eventdate}/>))}
+                                        </ul>
+                                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                            <button onClick={() => handlePageChange(page - 1)} disabled={page === 1} >
+                                                Previous
+                                            </button>
+                                            <span>
+                                                Page {page} of {totalPages}
+                                            </span>
+                                            <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} >
+                                                Next
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button>Save Playlist</button>
                                 </div>
-                            </div>
-                            <button>Save Playlist</button>
-                        </div>
-                    </BgColorContext.Provider>
-                </Save2ClientContext.Provider>
+                            </SpotifyContextProvider>
+                        </BgColorContext.Provider>
+                    </Save2ClientContext.Provider>
             </div>
         </div>
     );

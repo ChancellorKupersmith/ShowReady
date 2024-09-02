@@ -3,6 +3,7 @@ const fetch = require('node-fetch');
 const crypto = require('crypto');
 const querystring = require('querystring');
 
+
 const LOGIN_REDIRECT_URI = 'http://localhost:3000/spotify/login_callback';
 const STATE_KEY = 'spotify_auth_state';
 const generateRandomString = (length) => {
@@ -27,7 +28,7 @@ const getAccessToken = async (req, res, next) => {
             method: 'POST',
             headers: {
                 'content-type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Basic ' + (new Buffer.from(SPOTIFY_API_CLIENT_ID + ':' + process.env.SPOTIFY_API_CLIENT_SECRET).toString('base64'))
+                'Authorization': 'Basic ' + (new Buffer.from(process.env.SPOTIFY_API_CLIENT_ID + ':' + process.env.SPOTIFY_API_CLIENT_SECRET).toString('base64'))
             },
             body: new URLSearchParams({
                 code: code,
@@ -88,13 +89,14 @@ router.get('/login_callback', getAccessToken, async (req, res, next) => {
         const userData = {
             username: data['display_name'],
             id: data['id'],
-            sp_url: data['href'],
-            profile_img: imgs.length > 0 ? imgs[0] : null,
-            access_token: req.accessToken,
-            refresh_token: req.refreshToken,
+            spUrl: data['href'],
+            profileImg: imgs.length > 0 ? imgs[0] : null,
+            accessToken: req.accessToken,
+            refreshToken: req.refreshToken,
             expiration: req.expiration
         };
-        res.json(userData)
+        // http://localhost:5173/spotify_callback
+        res.redirect('http://localhost:5173/#/playlist_gen?' + new URLSearchParams(userData).toString())
     } catch(err) {
         next(err);
     }
@@ -107,7 +109,7 @@ router.get('/refresh_token', async (req, res, next) => {
             method: 'POST',
             headers: { 
                 'content-type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Basic ' + (new Buffer.from(SPOTIFY_API_CLIENT_ID + ':' + SPOTIFY_API_CLIENT_SECRET).toString('base64')) 
+                'Authorization': 'Basic ' + (new Buffer.from(process.env.SPOTIFY_API_CLIENT_ID + ':' + process.env.SPOTIFY_API_CLIENT_SECRET).toString('base64')) 
             },
             body: new URLSearchParams({
                 grant_type: 'refresh_token',
