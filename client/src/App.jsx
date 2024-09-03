@@ -1,36 +1,10 @@
-import React, { useRef, useEffect, useState, createContext,  useContext  } from 'react';
-import { HashRouter as Router, Route, Routes, Link, useLocation, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { HashRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import './App.css';
+import './views/PlaylistGen/PlaylistGen.css'
 import LandingView from './views/Landing/LandingView';
-import SongsListView from './views/SongsList/SongsListView';
-import { FilterContextProvider } from './views/Filter/FilterContext';
-
-
-function App() {
-  const containerRef = useRef(null);
-  
-
-  return (
-    <Router>
-      <Navbar />element
-      <div className='snap-container' ref={containerRef}>
-        <Routes>
-          <Route path='/' element={<LandingView />}/>
-          <Route path='/playlist_gen' element={<PlaylistGen />}/>
-        </Routes>
-      </div>
-    </Router>
-  );
-};
-
-const PlaylistGen = () => {
-
-  return (
-    <FilterContextProvider>
-        <SongsListView />
-    </FilterContextProvider>
-  );
-}
+import PlaylistGenView from './views/PlaylistGen/PlaylistGenView';
+import { SourceContextProvider } from './views/PlaylistGen/Source/SourceContext';
 
 const Navbar = () => {
   return (
@@ -40,5 +14,22 @@ const Navbar = () => {
     </nav>
   );
 };
+
+function App() {
+  return (
+    <Router>
+      <Navbar />
+        <Routes>
+          <Route path='/' element={<LandingView />}/>
+          <Route path='/playlist_gen' element={
+              <SourceContextProvider>
+                <PlaylistGenView />
+              </SourceContextProvider>
+          }/>
+        </Routes>
+    </Router>
+  );
+}
+
 
 export default App;

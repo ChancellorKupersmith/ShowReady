@@ -1,8 +1,9 @@
-.songs-list-view-container {
+.playlist-gen-view-container {
     display: flex;
     flex-direction: row;
     height: 100%;
     min-height: fit-content;
+    margin-top: 35px;
 }
 /* Map Style */
 .map-container {
@@ -50,8 +51,8 @@ ul.songs-container {
 }
 /* Song Item Style */
 ul.songs-container .songs-list-item {
-    background: #fff;
-    color: #333;
+    background: #333;
+    color: #fff;
     border-radius: 10px;
     box-sizing: border-box;
     margin-top: 5px;
@@ -65,7 +66,7 @@ ul.songs-container .songs-list-item {
     transition: background 0.3s, color 0.3s;
 }
 ul.songs-container .songs-list-item.dark-mode {
-    background: #333;
+    background: #33333374;
     color: #fff;
 }
 .songs-list-item > div {
@@ -101,22 +102,32 @@ ul.songs-container .songs-list-item.dark-mode {
     text-overflow: clip; /* Disable ellipsis */
     max-width: max-content; 
 }
+#filter-btn {
+    background-color: #333;
+    border: none;
+}
 .filter-toggle-btn {
-    background: #e0e0e0;
+    background: #ebe8e8;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background 0.3s, color 0.3s;
+    transition: background 0.2s, color 1s;
 }
 .filter-toggle-btn.dark-mode {
-    background: #444;
+    background: #333;
 }
 .expand-toggle-btn {
-    background: #555555;
+    background: #333;
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
+
+.expand-toggle-btn.dark-mode {
+    background: #ffffff00;
+}
+
+
 
 .svg-container {
     display: flex;
@@ -127,6 +138,9 @@ ul.songs-container .songs-list-item.dark-mode {
     height: 100%;
 }
 
-.save-2-client button {
+button.source-btn {
+    flex: 1;
     width: 100%;
+    background-color: #333;
+    border: none;
 }

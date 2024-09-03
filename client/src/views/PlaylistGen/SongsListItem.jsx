@@ -1,16 +1,29 @@
 import { useState } from "react";
-import './SongsList.css';
 import AddSvg from '../../assets/add-circle.svg'
 import SubSvg from '../../assets/trash.svg'
 import MaximizeSvg from '../../assets/maximize.svg'
 import MinimizeSvg from '../../assets/minimize.svg'
+import { useSongsFilter } from "../Filter/FilterContext";
 
 
-const SongsListItem = ({songTitle, artistName, eventLocation, date}) => {
+const SongsListItem = ({songId, songTitle, artistName, eventLocation, date}) => {
+    const { filters, updateFilters } = useSongsFilter();
     const [isIncluded, setIsIncluded] = useState(true);
-    const toggleIsInclude = () => setIsIncluded(!isIncluded);
     const [isExpanded, setIsExpanded] = useState(false);
     const toggleIsExpanded = () => setIsExpanded(!isExpanded);
+    const toggleIsInclude = () => {
+        updateFilters({
+            ...filters,
+            ex: {
+                ...filters.ex,
+                song: {
+                    ...filters.ex.song,
+                    ids: isIncluded ? [...filters.ex.song.ids, songId] : filters.ex.song.ids.filter(id => id !== songId)
+                }
+            }
+        });
+        setIsIncluded(!isIncluded);
+    };
 
     const AddImg = () => (
         <div className="svg-container">
@@ -48,11 +61,13 @@ const SongsListItem = ({songTitle, artistName, eventLocation, date}) => {
             />
         </div>
     );
+
+
     
     return (
-        <div className={`songs-list-item ${isIncluded ? 'dark-mode' : ''}`}>
+        <div className={`songs-list-item ${isIncluded ? '' : 'dark-mode'}`}>
             <div>
-                <button className={`expand-toggle-btn`} onClick={()=>toggleIsExpanded()}>
+                <button className={`expand-toggle-btn ${isIncluded ? '' : 'dark-mode'}`} onClick={()=>toggleIsExpanded()}>
                     {isExpanded ? <MinimizeImg/> : <MaximizeImg/>}
                 </button>
                 <div className="text-container" onDoubleClick={()=>toggleIsExpanded()}>
@@ -72,7 +87,3 @@ const SongsListItem = ({songTitle, artistName, eventLocation, date}) => {
 };
 
 export default SongsListItem;
-{/* <div className="text-container" style={{ display: 'flex', flexDirection: 'column' }}>
-  <p>Venue: {eventLocation}</p>
-  <p>Date: {date}</p>
-</div> */}
