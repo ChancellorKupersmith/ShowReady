@@ -2,6 +2,7 @@ import React from 'react';
 import SeattleMap from './SeattleMapView';
 import SongListView from './SongListView';
 import { FilterContextProvider } from '../Filter/FilterContext';
+import { SavePlaylistSignalProvider } from './Source/SavePlaylistView';
 import { useSourceData } from './Source/SourceContext';
 import './PlaylistGen.css'
 
@@ -12,8 +13,10 @@ const PlaylistGenView = () => {
         <div id='songs-list-view'  className='snap-section' style={{backgroundColor: bgColor}}>
             <div className='playlist-gen-view-container'>
                 <FilterContextProvider>
+                <SavePlaylistSignalProvider>
                     <SeattleMap/>
                     <SongListView />
+                </SavePlaylistSignalProvider>
                 </FilterContextProvider>
             </div>
         </div>

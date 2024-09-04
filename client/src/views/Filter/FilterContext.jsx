@@ -79,7 +79,6 @@ export const FilterContextProvider = ({ children }) => {
             },
             song: {
                 names: [],
-                ids: [],
             },
             source: {
                 spotify: false,
@@ -89,7 +88,9 @@ export const FilterContextProvider = ({ children }) => {
     };
     const [filters, setFilters] = useState(defaultFilters);
     const updateFilters = (newFiltersObj) => {
-        setFilters(newFiltersObj);
+        if(newFiltersObj){
+            setFilters(newFiltersObj);
+        }
     }
 
     return (

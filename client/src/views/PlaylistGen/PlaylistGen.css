@@ -115,18 +115,9 @@ ul.songs-container .songs-list-item.dark-mode {
 }
 .filter-toggle-btn.dark-mode {
     background: #333;
+    border-left: solid #ffffff8e 1px;
+    margin-left: 2px;
 }
-.expand-toggle-btn {
-    background: #333;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.expand-toggle-btn.dark-mode {
-    background: #ffffff00;
-}
-
 
 
 .svg-container {
@@ -143,4 +134,54 @@ button.source-btn {
     width: 100%;
     background-color: #333;
     border: none;
+}
+
+.save-playlist-modal-container {
+    position: absolute;
+    top: 30%;
+    right: 5%;
+    z-index: 4;
+    height: fit-content;
+    width: 90%;
+    padding: 4px;
+    border: 1px solid #888;
+    border-radius: 7px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.save-playlist {
+    display: flex;
+    align-items: center;
+    color: black;
+}
+#playlist-name-input {
+    position: relative;
+    left: 1%;
+    flex: 5;
+    display: flex;
+    align-items: center;
+}
+.save-playlist input {
+    width: 40%;
+}
+#playlist-name-input label {
+    margin-right: 4px;
+}
+
+.save-playlist-footer {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: solid #33333320;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.save-playlist-footer button {
+    width: 200px;
+    margin: 2px;
+    margin-top: 0px;
 }

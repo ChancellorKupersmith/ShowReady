@@ -68,19 +68,14 @@ const reqQueryParamsCleaner = (req, res, next) => {
 */
 const querySongsList = async (whereConditional, queryParms) => {
   const client = await pool.connect();
-  // query = `
-  //     SELECT a.Name as Artist, Songs.Title, v.Name as Venue, e.EventDate, v.Hood, v.VenueAddress FROM Songs
-  //     JOIN Artists AS a ON a.ID = Songs.ArtistID
-  //     JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
-  //     JOIN Events AS e ON e.ID = ea.EventID
-  //     JOIN Venues AS v ON v.ID = e.VenueID
-  //     ${whereConditional}
-  //     ORDER BY $3
-  //     LIMIT $1 OFFSET $2;
-  // `;
   query = `
     WITH data AS (
-      SELECT a.Name AS Artist, Songs.Title, v.Name AS Venue, e.EventDate, v.Hood, v.VenueAddress FROM Songs
+      SELECT 
+        a.Name AS Artist, Songs.Title, 
+        v.Name AS Venue, e.EventDate, 
+        v.Hood, v.VenueAddress,
+        Songs.SpotifyExternalId AS SpId
+      FROM Songs
       JOIN Artists AS a ON a.ID = Songs.ArtistID
       JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
       JOIN Events AS e ON e.ID = ea.EventID
@@ -99,8 +94,6 @@ const querySongsList = async (whereConditional, queryParms) => {
     )
     SELECT data.*, total_count.total FROM data, total_count;
   `;
-  // console.log('SELECT_SONGS_QUERY: ' + query)
-  // console.log('QUERY_PARAMS: ' + queryParms)
   const result = await client.query(query, queryParms);
   client.release();
   return result;
@@ -124,6 +117,7 @@ const queryTotalResults = async (whereConditional, queryParms) => {
 const whereConditionBuilder = async (req, res, next) => {
   try {
     let whereConditional = 'WHERE ';
+    
     const { filters } = req.body;
     if(filters.dateGThan != '') whereConditional += `e.EventDate >= '${ (new Date(filters.dateGThan)).toUTCString() }' AND `;
     if(filters.dateLThan != '') whereConditional += `e.EventDate <= '${ (new Date(filters.dateLThan)).toUTCString() }' AND `;
@@ -181,7 +175,6 @@ router.post('/', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, 
 
 router.post('/total_results', whereConditionBuilder, async (req, res, next) => {
   try{
-    console.log(req.whereConditional);
     const result = await queryTotalResults(req.whereConditional);
     const total = result.rows[0];
     res.json(total)
@@ -190,57 +183,5 @@ router.post('/total_results', whereConditionBuilder, async (req, res, next) => {
   }
 });
 
-// Redirect function
-router.post('/save-list', async (req, res, next) => {
-  try {
-    const client = await pool.connect();
-    let whereConditional = 'WHERE ';
-    const { filters } = req.body;
-    if(filters.ex.minDate != '' && filters.ex.maxDate != '') whereConditional += `e.EventDate NOT BETWEEN '${ (new Date(filters.ex.minDate)).toUTCString() }' AND '${ (new Date(filters.ex.maxDate)).toUTCString() }' AND `;
-    if(filters.req.minDate != '' && filters.req.maxDate != '') whereConditional += `e.EventDate BETWEEN '${ (new Date(filters.req.minDate)).toUTCString() }' AND '${ (new Date(filters.req.maxDate)).toUTCString() }' AND `;
-    if(filters.ex.dates.length) whereConditional += `e.EventDate NOT IN ('${filters.ex.dates.join(`', '`)}') AND `;
-    if(filters.req.dates.length) whereConditional += `e.EventDate IN ('${filters.req.dates.join(`', '`)}') AND `;
-    if(filters.ex.artists.length) whereConditional += `a.Name NOT IN ('${filters.ex.artists.join(`', '`)}') AND `;
-    if(filters.req.artists.length) whereConditional += `a.Name IN ('${filters.req.artists.join(`', '`)}') AND `;
-    if(filters.ex.venues.length) whereConditional += `v.Name NOT IN ('${filters.ex.venues.join(`', '`)}') AND `;
-    if(filters.req.venues.length) whereConditional += `v.Name IN ('${filters.req.venues.join(`', '`)}') AND `;
-    if(filters.ex.songs.length) whereConditional += `Songs.Name NOT IN ('${filters.ex.songs.join(`', '`)}') AND `;
-    if(filters.req.songs.length) whereConditional += `Songs.Name IN ('${filters.req.songs.join(`', '`)}') AND `;
-    if(filters.ex.hoods.length) whereConditional += `v.Hood NOT IN ('${filters.ex.hoods.join(`', '`)}') AND `;
-    if(filters.req.hoods.length) whereConditional += `v.Hood IN ('${filters.req.hoods.join(`', '`)}') AND `;
-    // remove trailing 'AND'
-    whereConditional = whereConditional.substring(0, whereConditional.length - 4);
-    req.whereConditional = whereConditional;
-    let orderBy = filters.orderBy || 0;
-    switch (orderBy) {
-      case 1:
-        orderBy = OrderBys.SONG_NAME;
-        break;
-      case 2:
-        orderBy = OrderBys.EVENT_DATE;
-        break;
-      case 3:
-        orderBy = OrderBys.VENUE_NAME;
-        break;
-      default:
-        orderBy = OrderBys.ARTIST;
-    }
-    query = `
-      SELECT a.Name as Artist, Songs.Title, Songs.SpotifyId FROM Songs
-      JOIN Artists AS a ON a.ID = Songs.ArtistID
-      JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
-      JOIN Events AS e ON e.ID = ea.EventID
-      JOIN Venues AS v ON v.ID = e.VenueID
-      ${whereConditional}
-      ORDER BY $1;
-    `;
-    // console.log('SELECT_SONGS_QUERY: ' + query)
-    const result = await client.query(query, [orderBy]);
-    client.release();
-    res.songs = result.rows;
-
-  } catch (err) { next(err); }
-  
-});
 
 module.exports = router;

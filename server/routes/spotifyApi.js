@@ -89,13 +89,12 @@ router.get('/login_callback', getAccessToken, async (req, res, next) => {
         const userData = {
             username: data['display_name'],
             id: data['id'],
-            spUrl: data['href'],
+            spUrl: data['external_urls']['spotify'],
             profileImg: imgs.length > 0 ? imgs[0] : null,
             accessToken: req.accessToken,
             refreshToken: req.refreshToken,
             expiration: req.expiration
         };
-        // http://localhost:5173/spotify_callback
         res.redirect('http://localhost:5173/#/playlist_gen?' + new URLSearchParams(userData).toString())
     } catch(err) {
         next(err);
@@ -125,8 +124,8 @@ router.get('/refresh_token', async (req, res, next) => {
         const curTime = new Date();
         const data = await response.json();
         const accessToken = data['access_token'];
-        const refreshToken = data['refresh_token'];
-        const expiration = new Date(curTime.getTime() + data['expires_in'] * 1000);
+        const refreshToken = data['refresh_token'] || refresh_token;
+        const expiration = new Date(curTime.getTime() + data['expires_in']);
         res.json({
             access_token: accessToken,
             refresh_token: refreshToken,

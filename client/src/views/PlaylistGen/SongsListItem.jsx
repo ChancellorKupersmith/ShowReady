@@ -1,8 +1,6 @@
 import { useState } from "react";
 import AddSvg from '../../assets/add-circle.svg'
 import SubSvg from '../../assets/trash.svg'
-import MaximizeSvg from '../../assets/maximize.svg'
-import MinimizeSvg from '../../assets/minimize.svg'
 import { useSongsFilter } from "../Filter/FilterContext";
 
 
@@ -43,33 +41,11 @@ const SongsListItem = ({songId, songTitle, artistName, eventLocation, date}) => 
             />
         </div>
     );
-    const MaximizeImg = () => (
-        <div className="svg-container">
-            <img
-                loading="lazy"
-                src={MaximizeSvg}
-                alt='Expand'
-            />
-        </div>
-    );
-    const MinimizeImg = () => (
-        <div className="svg-container">
-            <img
-                loading='lazy'
-                src={MinimizeSvg}
-                alt='Close'
-            />
-        </div>
-    );
-
 
     
     return (
         <div className={`songs-list-item ${isIncluded ? '' : 'dark-mode'}`}>
             <div>
-                <button className={`expand-toggle-btn ${isIncluded ? '' : 'dark-mode'}`} onClick={()=>toggleIsExpanded()}>
-                    {isExpanded ? <MinimizeImg/> : <MaximizeImg/>}
-                </button>
                 <div className="text-container" onDoubleClick={()=>toggleIsExpanded()}>
                     <p>Song: {songTitle}</p>
                     <p>Artist: {artistName}</p>

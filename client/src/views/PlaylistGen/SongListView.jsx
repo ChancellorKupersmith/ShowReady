@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import FilterView from '../Filter/FilterView';
 import SongsListItem from './SongsListItem';
+import FilterView from '../Filter/FilterView';
 import CSVBtn from './Source/CSV';
-import { YouTubeBtn } from './Source/Youtube';
 import { useSongsFilter } from '../Filter/FilterContext';
+import { SavePlaylistView } from "./Source/SavePlaylistView";
 import { SpotifyContextProvider, useSpotifyData, SpotifyBtn } from './Source/Spotify'
+import { YouTubeBtn } from './Source/Youtube';
 
 const SongListView = () => {
     const [page, setPage] = useState(1);
+    /* TODO: Make songs lists page size dynamic to window size */
     const [pageSize, setPageSize] = useState(10);
     const { filters } = useSongsFilter();
     const [totalPages, setTotalPages] = useState(1);
@@ -30,12 +32,12 @@ const SongListView = () => {
                     body: JSON.stringify(postData)
                 });
                 const data = await response.json();
-                // console.log(data)
                 if(data.length > 0)
                     setTotalPages(Math.ceil(data[0].total / pageSize))
+                // console.log(data);
                 setSongs([...data]);
             }catch(err){
-                console.log(err)
+                console.error(err)
             }
         };
 
@@ -49,33 +51,32 @@ const SongListView = () => {
 
     return (
         <div className='songs-list-container'>
-            <div style={{display: 'flex', width: '100%'}}>
-                <CSVBtn />
-                <SpotifyContextProvider>
-                    <SpotifyBtn />
-                </SpotifyContextProvider>
-                <YouTubeBtn />
-            </div>
-            <FilterView />
-            {/* TODO: Make songs lists page size dynamic to window size */}
-            <div style={{minHeight: 'fit-content', height: '100%'}}>
-                <ul className='songs-container'>
-                    {songs.length > 0 && songs.map((song, index) => (<SongsListItem key={index} songTitle={song.title} artistName={song.artist} eventLocation={songs.venue} date={song.eventdate}/>))}
-                </ul>
-                <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                    <button onClick={() => handlePageChange(page - 1)} disabled={page === 1} >
-                        Previous
-                    </button>
-                    <span style={{color: '#333'}}>
-                        Page {page} of {totalPages}
-                    </span>
-                    <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} >
-                        Next
-                    </button>
-                </div>
-            </div>
             <SpotifyContextProvider>
-                <button>Save Playlist</button>
+                <div style={{display: 'flex', width: '100%'}}>
+                    <CSVBtn />
+                        <SpotifyBtn />
+
+                    <YouTubeBtn />
+                </div>
+                <FilterView />
+                {/* TODO: Make songs lists page size dynamic to window size */}
+                <div style={{minHeight: 'fit-content', height: '100%'}}>
+                    <ul className='songs-container'>
+                        {songs.length > 0 && songs.map((song, index) => (<SongsListItem key={index} songTitle={song.title} artistName={song.artist} eventLocation={songs.venue} date={song.eventdate}/>))}
+                    </ul>
+                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <button onClick={() => handlePageChange(page - 1)} disabled={page === 1} >
+                            Previous
+                        </button>
+                        <span style={{color: '#333'}}>
+                            Page {page} of {totalPages}
+                        </span>
+                        <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} >
+                            Next
+                        </button>
+                    </div>
+                </div>
+                <SavePlaylistView />
             </SpotifyContextProvider>
         </div>
     );

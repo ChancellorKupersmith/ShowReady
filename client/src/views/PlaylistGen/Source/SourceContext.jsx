@@ -8,7 +8,7 @@ export const SourceContextProvider = ({children}) => {
     const SPOTIFY_SOURCE = 1;
     const SPOTIFY_COLOR = '#18c49e';
     const YOUTUBE_SOURCE = 2;
-    const YOUTUBE_COLOR = '#e76265'; 
+    const YOUTUBE_COLOR = '#ff4d4d'; 
     const [bgColor, setBgColor] = useState(CSV_COLOR);
     const [source, setSource] = useState(0);
 
