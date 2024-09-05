@@ -2,6 +2,18 @@ import React, { useState } from 'react';
 import { useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
+export const displayDate = (date) => {
+    if(date.length == 24){
+        const [ ymd, time ] = date.split('T');
+        date = ymd;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        throw new Error('Invalid date format. Please use YYYY-MM-DD format.');
+    }
+    const [year, month, day] = date.split('-');
+    return `${month}/${day}/${year}`;
+}
+
 const DateMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
     const [dateInput, setDateInput] = useState('');
@@ -156,14 +168,14 @@ const DateMenu = () => {
     const reqDates = tempFilters.req.date.dates.map((date, index) => 
         <ReqExFilterTab 
             key={`reqfilter-date${index}`}
-            label={'Date: '} value={date}
+            label={'Date: '} value={displayDate(date)}
             onClickFunc={() => removeReqDate(date)}
         />
     );
     const exDates = tempFilters.ex.date.dates.map((date, index) => 
         <ReqExFilterTab 
             key={`exfilter-date${index}`}
-            label={'Date: '} value={date}
+            label={'Date: '} value={displayDate(date)}
             onClickFunc={() => removeExDate(date)}
         />
     );
@@ -183,15 +195,15 @@ const DateMenu = () => {
     );
 
     const reqChildren = [
-        (tempFilters.dateGThan && <ReqExFilterTab key={'reqfilter-gThan'} label={'After: '} value={tempFilters.dateGThan} onClickFunc={removeGThanDate}/>),
-        (tempFilters.dateLThan && <ReqExFilterTab key={'reqfilter-lThan'}  label={'Before: '} value={tempFilters.dateLThan} onClickFunc={removeLThanDate}/>),
+        (tempFilters.dateGThan && <ReqExFilterTab key={'reqfilter-gThan'} label={'After: '} value={displayDate(tempFilters.dateGThan)} onClickFunc={removeGThanDate}/>),
+        (tempFilters.dateLThan && <ReqExFilterTab key={'reqfilter-lThan'}  label={'Before: '} value={displayDate(tempFilters.dateLThan)} onClickFunc={removeLThanDate}/>),
         ...reqDates,
         ...reqTimes
     ];
     const exChildren = [...exDates, ...exTimes];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <div className='filter-menu'>
             <div className='menu-inputs'>
                 <div className='menu-input'>
                         <label htmlFor='datesInput'>Event Date: </label>
@@ -203,8 +215,8 @@ const DateMenu = () => {
                             onChange={handleDateChange}
                         />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqDate}>Require</button>
-                        <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exDate}>Exclude</button>
+                        <button className='reqex-btn req-btn' onClick={reqDate}>Require</button>
+                        <button className='reqex-btn ex-btn' onClick={exDate}>Exclude</button>
                     </div>
                 </div>
                 <div className='menu-input'>
@@ -217,7 +229,7 @@ const DateMenu = () => {
                         onChange={handleGThanDateChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '100%'}} onClick={reqGThanDate}>Require</button>
+                        <button className='reqex-btn req-btn only' onClick={reqGThanDate}>Require</button>
                     </div>
                 </div>
                 <div className='menu-input'>
@@ -230,7 +242,7 @@ const DateMenu = () => {
                         onChange={handleLThanDateChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '100%'}} onClick={reqLThanDate}>Require</button>
+                        <button className='reqex-btn req-btn only' onClick={reqLThanDate}>Require</button>
                     </div>
                 </div>
                 <div className='menu-input'>
@@ -243,8 +255,8 @@ const DateMenu = () => {
                         onChange={handleTimeChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqTime}>Require</button>
-                        <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exTime}>Exclude</button>
+                        <button className='reqex-btn req-btn' onClick={reqTime}>Require</button>
+                        <button className='reqex-btn ex-btn' onClick={exTime}>Exclude</button>
                     </div>
                 </div>
             </div>

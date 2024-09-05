@@ -36,7 +36,7 @@ const FilterMenu = ({filterMenu}) => {
     }
 
     return (
-        <div className='filter-menu'>
+        <div className='filter-menu-container'>
             {menu}
         </div>
     )

@@ -149,7 +149,7 @@ const LocationMenu = () => {
     const exChildren = [...exVenues, ...exHoods];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <div className='filter-menu'>
             <div className='menu-inputs'>
                 <div className='menu-input'>
                     <label htmlFor='venueInput'>Venue: </label>
@@ -161,8 +161,8 @@ const LocationMenu = () => {
                         onChange={handleVenueChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqVenue}>Require</button>
-                        <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exVenue}>Exclude</button>
+                        <button className='reqex-btn req-btn' onClick={reqVenue}>Require</button>
+                        <button className='reqex-btn ex-btn' onClick={exVenue}>Exclude</button>
                     </div>
                 </div>
                 <div className='menu-input'>
@@ -175,8 +175,8 @@ const LocationMenu = () => {
                         onChange={handleHoodChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqHood}>Require</button>
-                        <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exHood}>Exclude</button>
+                        <button className='reqex-btn req-btn' onClick={reqHood}>Require</button>
+                        <button className='reqex-btn ex-btn' onClick={exHood}>Exclude</button>
                     </div>
                 </div>
             </div>

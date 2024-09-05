@@ -8,6 +8,13 @@
     <script type="module" src="/src/main.jsx"></script>
   </head>
   <body>
+    <style>
+      /* Hide scrollbar in Chrome, Safari, and newer versions of Edge */
+      ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+      }
+    </style>
     <div id="root"></div>
     <!-- Google Maps loader script, restricted to just this websites domain (so its ok to have the api key exposed ...I know I don't like it either) -->
     <script>

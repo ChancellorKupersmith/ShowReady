@@ -37,7 +37,7 @@ const CSVBtn = () => {
     }
 
     return (
-        <button id='csv-btn' className='source-btn' onClick={()=>handleOnClick()}>CSV</button>
+        <button id='csv-btn' className={`source-btn ${source == CSV_SOURCE ? 'selected' : ''}`} onClick={()=>handleOnClick()}>CSV</button>
     );
 }
 

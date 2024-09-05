@@ -43,7 +43,6 @@ export const SpotifyBtn = () => {
     const btn_id = 'spotify-btn';
 
     useEffect(() => {
-        // only execute if logged in
         // TODO: look into handling in a more elegant way than just dumping the user data into the url
         const queryParams = new URLSearchParams(location.search);
         const userData = {
@@ -55,16 +54,11 @@ export const SpotifyBtn = () => {
             refreshToken: queryParams.get('refreshToken'),
             expiration: queryParams.get('expiration')
         };
+        // only execute if logged in
         if(userData?.id !== null){
             try {
                 if(userData.id != null){
-                    // console.log(userData)
                     updateSpotifyData(userData)
-                    const htmlBtn = document.getElementById(btn_id);
-                    if(htmlBtn) {
-                        htmlBtn.style.backgroundColor = SPOTIFY_COLOR;
-                        htmlBtn.style.color = 'black';
-                    }
                     let newTotal = filters.total;
                     if(!filters.req.source.spotify)
                         newTotal += 1;
@@ -122,7 +116,7 @@ export const SpotifyBtn = () => {
     }
 
     return (
-        <button id={btn_id} className='source-btn' onClick={()=>handleOnClick()}>Spotify</button>
+        <button id={btn_id} className={`source-btn ${source == SPOTIFY_SOURCE ? 'selected' : ''} ${spotifyData?.id ? SPOTIFY_COLOR : ''}`} onClick={()=>handleOnClick()}>Spotify</button>
     );
 
 }

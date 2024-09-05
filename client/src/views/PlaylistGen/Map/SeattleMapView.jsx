@@ -1,5 +1,6 @@
 import React, { useState, useEffect} from 'react';
-import FilterView from '../Filter/FilterView';
+import FilterView from '../../Filter/FilterView';
+import './Map.css'
 
 const SeattleMap = () => {
   // default center seattle

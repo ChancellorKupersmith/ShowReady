@@ -81,7 +81,7 @@ const ArtistMenu = () => {
     const exChildren = [...exArtists];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <div className='filter-menu'>
             <div className='menu-inputs'>
                 <div className='menu-input'>
                     <label htmlFor='artistInput'>Artist: </label>
@@ -93,8 +93,8 @@ const ArtistMenu = () => {
                         onChange={handleArtistChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqArtist}>Require</button>
-                        <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exArtist}>Exclude</button>
+                        <button className='reqex-btn req-btn' onClick={reqArtist}>Require</button>
+                        <button className='reqex-btn ex-btn' onClick={exArtist}>Exclude</button>
                     </div>
                 </div>
             </div>

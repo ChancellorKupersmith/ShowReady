@@ -130,7 +130,7 @@ const EventMenu = () => {
     const exChildren = [...exEvents];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <div className='filter-menu'>
             <div className='menu-inputs'>
                 <div className='menu-input'>
                     <label htmlFor='eventInput'>Event: </label>
@@ -142,8 +142,8 @@ const EventMenu = () => {
                         onChange={handleEventChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqEvent}>Require</button>
-                        <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exEvent}>Exclude</button>
+                        <button className='reqex-btn req-btn' onClick={reqEvent}>Require</button>
+                        <button className='reqex-btn ex-btn' onClick={exEvent}>Exclude</button>
                     </div>
                 </div>
                 <div className='menu-input'>
@@ -157,7 +157,7 @@ const EventMenu = () => {
                         onChange={handleGPriceChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '100%'}} onClick={reqGPrice}>Require</button>
+                        <button className='reqex-btn req-btn only' onClick={reqGPrice}>Require</button>
                     </div>
                 </div>
                 <div className='menu-input'>
@@ -171,7 +171,7 @@ const EventMenu = () => {
                         onChange={handleLPriceChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '100%'}} onClick={reqLPrice}>Require</button>
+                        <button className='reqex-btn req-btn only' onClick={reqLPrice}>Require</button>
                     </div>
                 </div>
             </div>

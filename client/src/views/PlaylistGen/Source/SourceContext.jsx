@@ -4,11 +4,11 @@ const SourceContext = createContext();
 export const useSourceData = () => useContext(SourceContext);
 export const SourceContextProvider = ({children}) => {
     const CSV_SOURCE = 0;
-    const CSV_COLOR = '#8fdaed';
+    const CSV_COLOR = 'csv-bg-color';
     const SPOTIFY_SOURCE = 1;
-    const SPOTIFY_COLOR = '#18c49e';
+    const SPOTIFY_COLOR = 'spotify-bg-color';
     const YOUTUBE_SOURCE = 2;
-    const YOUTUBE_COLOR = '#ff4d4d'; 
+    const YOUTUBE_COLOR = 'youtube-bg-color'; 
     const [bgColor, setBgColor] = useState(CSV_COLOR);
     const [source, setSource] = useState(0);
 

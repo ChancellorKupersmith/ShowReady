@@ -36,7 +36,7 @@ const SourceMenu = () => {
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <div className='filter-menu'>
             <div className='menu-inputs'>
                 <div className='menu-input'>
                     <div className='reqex-input-container'>

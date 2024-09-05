@@ -4,16 +4,12 @@ import RightArrow from '../../assets/right-arrow.svg'
 import { ReqExFilterTab } from './Menus/MenuUtils';
 
 const FilterLabel = ({label, handleFilterMenu, selectedMenu, tabs}) => {
-    const BORDER = '#6b6b6b69'
-    const SELECTED_BORDER = '#111111c1';
-
     return (
         <div 
-            className={'filter-label'}
-            style={{border: `solid ${label.toLowerCase() == selectedMenu ? SELECTED_BORDER : BORDER}`}}
+            className={`filter-label ${label.toLowerCase() == selectedMenu ? 'selected' : ''}`}
             onClick={() => handleFilterMenu(label)}
         >
-            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+            <div className='header'>
                 <h3>{label}</h3>
                 <button onClick={() => handleFilterMenu(label)}>
                     <img
@@ -23,11 +19,11 @@ const FilterLabel = ({label, handleFilterMenu, selectedMenu, tabs}) => {
                     />
                 </button>
             </div>
-            <div style={{display: 'flex', flexWrap: 'wrap', overflowX: 'auto'}}>
+            <div className='tabs-container'>
                 {tabs}
             </div>
         </div>
-    )
+    );
 }
 
 
@@ -107,7 +103,6 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
         };
         updateTempFilters(emptyFilters)
     }
-
     // maybe TODO: (depending on rendering speeds) wrap indivual funcs in useEffects so data is only re-copied whe needed
     // only display 2 tabs, display truncate tab if more
     // EFFICIENT: The reason for the complex logic (instead of just copying a bunch of unused data) is to avoid creating a bunch of unused html elements
@@ -324,7 +319,7 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
 
     return (
         <div className='filter-list'>
-            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+            <div className='header'>
                 <h2>Filters</h2>
                 {(tempFilters.total && <ReqExFilterTab label={'total:'} value={tempFilters.total} onClickFunc={clearAllFilters}/>)}
             </div>
@@ -336,7 +331,7 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
             <FilterLabel label={'Song'} handleFilterMenu={handleFilterMenu} selectedMenu={selectedMenu} tabs={songTabs}/>
             <FilterLabel label={'Source'} handleFilterMenu={handleFilterMenu} selectedMenu={selectedMenu} tabs={sourceTabs}/>
         </div>
-    )
+    );
 }
 
 

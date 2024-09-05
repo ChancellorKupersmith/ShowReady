@@ -3,7 +3,7 @@ import React from 'react';
 const FilterTitle = ({closeModal}) => {
     return (
         <div className="filter-title">
-            <div style={{display: 'flex', justifyContent: 'space-between'}}>
+            <div className='header'>
                 <h1>Song Filters</h1>
                 <button onClick={() => closeModal()}>x</button>
             </div>

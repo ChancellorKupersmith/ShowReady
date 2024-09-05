@@ -30,7 +30,7 @@ export const YouTubeBtn = () => {
     }
 
     return (
-        <button id='youtube-btn' className='source-btn' onClick={() => handleOnClick()}>YouTube</button>
+        <button id='youtube-btn' className={`source-btn ${source == YOUTUBE_SOURCE ? 'selected' : ''}`} onClick={() => handleOnClick()}>YouTube</button>
     );
 
 }

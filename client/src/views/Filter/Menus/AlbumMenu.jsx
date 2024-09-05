@@ -81,7 +81,7 @@ const AlbumMenu = () => {
     const exChildren = [...exAlbums];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%'}}>
+        <div className='filter-menu'>
             <div className='menu-inputs'>
                 <div className='menu-input'>
                     <label htmlFor='albumInput'>Album: </label>
@@ -93,8 +93,8 @@ const AlbumMenu = () => {
                         onChange={handleAlbumChange}
                     />
                     <div className='reqex-btn-container'>
-                        <button className='reqex-btn req-btn' style={{width: '50%'}} onClick={reqAlbum}>Require</button>
-                        <button className='reqex-btn ex-btn' style={{width: '50%'}} onClick={exAlbum}>Exclude</button>
+                        <button className='reqex-btn req-btn' onClick={reqAlbum}>Require</button>
+                        <button className='reqex-btn ex-btn' onClick={exAlbum}>Exclude</button>
                     </div>
                 </div>
             </div>

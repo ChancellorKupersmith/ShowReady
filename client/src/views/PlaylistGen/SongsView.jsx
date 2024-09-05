@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import SongsListItem from './SongsListItem';
 import FilterView from '../Filter/FilterView';
 import CSVBtn from './Source/CSV';
+import NextSvg from '../../assets/next.svg'
+import PrevSvg from '../../assets/prev.svg'
 import { useSongsFilter } from '../Filter/FilterContext';
 import { SavePlaylistView } from "./Source/SavePlaylistView";
 import { SpotifyContextProvider, useSpotifyData, SpotifyBtn } from './Source/Spotify'
 import { YouTubeBtn } from './Source/Youtube';
+import NotificationView from '../Notification/NotificationView';
 
-const SongListView = () => {
-    const [page, setPage] = useState(1);
+const SongsView = () => {
     /* TODO: Make songs lists page size dynamic to window size */
+    const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const { filters } = useSongsFilter();
     const [totalPages, setTotalPages] = useState(1);
@@ -48,32 +51,71 @@ const SongListView = () => {
         if(newPage != page && newPage >= 1 && newPage <= totalPages)
             setPage(newPage);    
     };
+    const NextBtn = () => {
+        const NextImg = () => (
+            <div className="svg-container">
+                <img
+                    loading="lazy"
+                    src={NextSvg}
+                    alt='Next Page'
+                />
+            </div>
+        );
+
+        return (
+            <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} >
+                <NextImg />
+            </button>
+        );
+    };
+    const PrevBtn = () => {
+        const PrevImg = () => (
+            <div className="svg-container">
+                <img
+                    loading="lazy"
+                    src={PrevSvg}
+                    alt='Previous Page'
+                />
+            </div>
+        );
+
+        return(
+            <button onClick={() => handlePageChange(page - 1)} disabled={page === 1} >
+                <PrevImg />
+            </button>
+        );
+    };
 
     return (
-        <div className='songs-list-container'>
+        <div className='songs-view-container'>
             <SpotifyContextProvider>
-                <div style={{display: 'flex', width: '100%'}}>
+                <div className='btn-tray'>
+                    <NotificationView />
+                    <FilterView />
+                </div>
+                <div className='source-tabs'>
                     <CSVBtn />
-                        <SpotifyBtn />
-
+                    <SpotifyBtn />
                     <YouTubeBtn />
                 </div>
-                <FilterView />
                 {/* TODO: Make songs lists page size dynamic to window size */}
-                <div style={{minHeight: 'fit-content', height: '100%'}}>
-                    <ul className='songs-container'>
-                        {songs.length > 0 && songs.map((song, index) => (<SongsListItem key={index} songTitle={song.title} artistName={song.artist} eventLocation={songs.venue} date={song.eventdate}/>))}
+                <div className='songs-list-container'>
+                    <ul>
+                        { songs.length > 0 &&
+                          songs.map((song, index) =>
+                            <SongsListItem 
+                                key={index}
+                                songTitle={song.title}
+                                artistName={song.artist}
+                                eventLocation={songs.venue}
+                                date={song.eventdate}
+                            />)
+                        }
                     </ul>
-                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                        <button onClick={() => handlePageChange(page - 1)} disabled={page === 1} >
-                            Previous
-                        </button>
-                        <span style={{color: '#333'}}>
-                            Page {page} of {totalPages}
-                        </span>
-                        <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} >
-                            Next
-                        </button>
+                    <div className='footer'>
+                        <PrevBtn />
+                        <span> Page {page} of {totalPages} </span>
+                        <NextBtn />
                     </div>
                 </div>
                 <SavePlaylistView />
@@ -83,4 +125,4 @@ const SongListView = () => {
 }
 
 
-export default SongListView;
+export default SongsView;
