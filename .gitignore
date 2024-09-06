@@ -12,3 +12,4 @@ Notes.txt
 .s.PGSQL.5432.lock
 **/eventsUrlScraper.py
 **/aggregatorShow.py
+**/YouTubeURLScraper.py

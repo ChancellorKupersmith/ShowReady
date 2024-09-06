@@ -8,7 +8,6 @@
       overlays = [
         (final: prev: rec {
           nodejs = prev.nodejs_latest;
-          pnpm = prev.nodePackages.pnpm;
           yarn = (prev.yarn.override { inherit nodejs; });
         })
       ];
@@ -31,7 +30,7 @@
           ];
           GECKO_DRIVER_PATH = "${pkgs.geckodriver}/bin";
           packages = with pkgs; [
-            node2nix nodejs pnpm yarn
+            node2nix nodejs nodePackages.pnpm yarn
             geckodriver
             redis
           ];

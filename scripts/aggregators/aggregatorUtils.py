@@ -214,7 +214,7 @@ class Album:
         return (self.title, self.spotify_id, self.lastfm_url, self.artist_id)
 
 class Song:
-    def __init__(self, title=None, artistid=None, albumid=None, albumtracknum=None, spotifyexternalid=None, spotifypopularity=None, spotifypreviewurl=None, lastfmurl=None, yturl=None):
+    def __init__(self, title=None, artistid=None, albumid=None, albumtracknum=None, spotifyexternalid=None, spotifypopularity=None, spotifypreviewurl=None, lastfmurl=None, yturl=None, mbid=None, id=None):
         self.title = title
         self.artist_id = artistid
         self.album_id = albumid
@@ -224,6 +224,8 @@ class Song:
         self.spotify_preview_url = spotifypreviewurl
         self.lastfm_url = lastfmurl
         self.yt_url = yturl
+        self.mbid = mbid
+        self.id = id
     
     def to_tuple(self):
         # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorSong.save_songs_to_db() !!!
