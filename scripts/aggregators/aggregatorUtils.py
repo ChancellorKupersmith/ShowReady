@@ -53,10 +53,12 @@ class PostgresClient:
             self.connection.commit()
             self.connection.close()
     
-    def query(self, query, data=None, fetchall=False, fetchone=False):
+    def query(self, query, data=None, params=None, fetchall=False, fetchone=False):
         try:
             if data:
                 execute_values(self.cursor, query, data)
+            elif params:
+                self.cursor.execute(query, (params,))
             else:
                 self.cursor.execute(query)
             if fetchall:
@@ -67,12 +69,79 @@ class PostgresClient:
             self.log(1, f"Database error: {e}")
             raise
 
+class GoogleClient:
+    def __init__(self, log=None, rate_limit=0.006):
+        self.last_req_time = None
+        self.base_url = "https://maps.googleapis.com/maps/api"
+        self.apikey = os.getenv("GOOGLE_MAPS_API_KEY")
+        self.log = log
+        self.rate_limit = rate_limit
+    
+    async def get(self, endpoint, params, max_retries=3):
+        url_req = self.base_url + endpoint
+        for p in params:
+            url_req += f"{p}&"
+        url = url_req + f"key={self.apikey}"
+        for attempt in range(max_retries):
+            try:
+                if self.last_req_time is not None:
+                    elapsed = time.time() - self.last_req_time
+                    if elapsed < self.rate_limit:
+                        time.sleep(self.rate_limit - elapsed)
+                async with httpx.AsyncClient() as client:
+                    self.log(0, f"Google API Request: {url}")
+                    response = await client.get(url)
+                    self.last_req_time = time.time()
+                    if response.status_code == 200:
+                        return response
+            except Exception as e:
+                self.log(1, f"ERROR: Failed to send google api request: {e}")
+                # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
+                time.sleep(300)
+        raise Exception(f"RETRIES EXCEEDED > {max_retries}")
+
+class TicketMasterClient:
+    def __init__(self, log=None, rate_limit=0.3):
+        self.last_req_time = None
+        self.base_url = "https://app.ticketmaster.com/discovery/v2"
+        self.apikey = os.getenv("TICKET_MASTER_API_KEY")
+        self.log = log
+        self.rate_limit = rate_limit
+    
+    async def get(self, endpoint, params, max_retries=3):
+        url_req = self.base_url + endpoint
+        for p in params:
+            url_req += f"{p}&"
+        url = url_req + f"apikey={self.apikey}"
+        for attempt in range(max_retries):
+            try:
+                if self.last_req_time is not None:
+                    elapsed = time.time() - self.last_req_time
+                    if elapsed < self.rate_limit:
+                        time.sleep(self.rate_limit - elapsed)
+                async with httpx.AsyncClient() as client:
+                    self.log(0, f"TicketMaster Request: {url}")
+                    response = await client.get(url)
+                    self.last_req_time = time.time()
+                    if response.status_code == 200:
+                        return response
+                    # Handle rate limiting
+                    if response.status_code == 429:
+                        retry_after = response.headers.get("Rate-Limit-Reset")
+                        if retry_after:
+                            self.log(1, f"Rate limit exceeded. Retry after {retry_after}")
+                            raise Exception("RATE LIMIT EXCEEDED")
+            except Exception as e:
+                self.log(1, f"ERROR: Failed to send ticketmaster request: {e}")
+                # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
+                time.sleep(300)
+        raise Exception(f"RETRIES EXCEEDED > {max_retries}")
+
 class LastFmClient:
     def __init__(self, log=None):
         self.last_req_time = None
         self.base_url = "http://ws.audioscrobbler.com/2.0/"
         self.api_resp_format = "&format=json"
-        # FIXME: Securely access secrets
         self.apikey = os.getenv("LASTFM_API_KEY")
         self.log = log
 
@@ -118,7 +187,6 @@ class SpotifyClient:
         self.log = log
 
     async def init_access_token(self):
-        # FIXME: Securely access secrets
         spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID")
         spotify_client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
         url_req = 'https://accounts.spotify.com/api/token'
@@ -176,13 +244,16 @@ class SpotifyClient:
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class Artist:
-    def __init__(self, id=None, name=None, lastfm_url=None, spotify_id=None, spotify_popular=None, dictionary=None):
+    def __init__(self, id=None, name=None, lastfm_url=None, spotify_id=None, spotify_popular=None, dictionary=None, tmid=None, website=None, mbid=None):
         if dictionary is None:
             self.id = id
             self.name = name
             self.lastfm_url = lastfm_url
             self.spotify_id = spotify_id
             self.spotify_popular = spotify_popular
+            self.tmid = tmid
+            self.website = website
+            self.mbid = mbid
         else:
             for key, value in dictionary.items():
                 setattr(self, key, value)
@@ -232,7 +303,7 @@ class Song:
         return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url)
 
 class Event:
-    def __init__(self, id=None, name=None, url=None, eventdate=None, eventtime=None, summary=None, agerestrictions=None, venueid=None):
+    def __init__(self, id=None, name=None, url=None, eventdate=None, eventtime=None, summary=None, agerestrictions=None, venueid=None, tmid=None, price=None):
         self.id = id
         self.name = name
         self.url = url
@@ -241,9 +312,11 @@ class Event:
         self.summary = summary
         self.age_restrictions = agerestrictions
         self.venue_id = venueid
+        self.tmid = tmid
+        self.price = price
 
 class Venue:
-    def __init__(self, id=None, name=None, venueurl=None, venueaddress=None, hood=None, summary=None, eourl=None, phone=None):
+    def __init__(self, id=None, name=None, venueurl=None, venueaddress=None, hood=None, summary=None, eourl=None, phone=None, lat=None, lng=None, tmid=None):
         self.id = id
         self.name = name
         self.venue_url = venueurl
@@ -252,3 +325,6 @@ class Venue:
         self.summary = summary
         self.eourl = eourl
         self.phone = phone
+        self.lat = lat
+        self.lng = lng
+        self.tmid = tmid

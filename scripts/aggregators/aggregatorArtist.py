@@ -21,8 +21,13 @@ def log(lvl, msg):
 
 def get_total_events_fromDB():
     total = 0
+    # select_query= """
+    #     SELECT COUNT(DISTINCT name) FROM Events
+    #     WHERE created >= NOW() - INTERVAL '1 week'
+    #     OR updated >= NOW() - INTERVAL '1 week'
+    # """
     select_query= """
-        SELECT COUNT(DISTINCT name) FROM Events
+        SELECT COUNT(*) FROM Events
         WHERE created >= NOW() - INTERVAL '1 week'
         OR updated >= NOW() - INTERVAL '1 week'
     """
@@ -36,8 +41,14 @@ def get_total_events_fromDB():
 
 def get_events_fromDB(page_size, offset):
     events = []
+    # select_query= f"""
+    #     SELECT DISTINCT name, id FROM Events
+    #     WHERE created >= NOW() - INTERVAL '1 week'
+    #     OR updated >= NOW() - INTERVAL '1 week'
+    #     OFFSET {offset} LIMIT {page_size}
+    # """
     select_query= f"""
-        SELECT DISTINCT name, id FROM Events
+        SELECT name, id FROM Events
         WHERE created >= NOW() - INTERVAL '1 week'
         OR updated >= NOW() - INTERVAL '1 week'
         OFFSET {offset} LIMIT {page_size}

@@ -1,5 +1,5 @@
 import React from 'react';
-import SeattleMap from './Map/SeattleMapView';
+import SeattleMap, { MapContextProvider } from './Map/SeattleMapView';
 import SongsView from './SongsView';
 import { FilterContextProvider } from '../Filter/FilterContext';
 import { SavePlaylistSignalProvider } from './Source/SavePlaylistView';
@@ -16,8 +16,10 @@ const PlaylistGenView = () => {
                 <FilterContextProvider>
                 <NotificationProvider>
                 <SavePlaylistSignalProvider>
+                <MapContextProvider>
                     <SeattleMap/>
                     <SongsView />
+                </MapContextProvider>
                 </SavePlaylistSignalProvider>
                 </NotificationProvider>
                 </FilterContextProvider>

@@ -11,7 +11,7 @@ export const displayDate = (date) => {
         throw new Error('Invalid date format. Please use YYYY-MM-DD format.');
     }
     const [year, month, day] = date.split('-');
-    return `${month}/${day}/${year}`;
+    return `${month}/${day}/${year.slice(-2)}`;
 }
 
 const DateMenu = () => {

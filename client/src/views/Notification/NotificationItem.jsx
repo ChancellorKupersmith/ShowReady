@@ -1,5 +1,5 @@
 import React from 'react';
-import SpotifyLogo from '../../assets/spotify-logo.svg';
+import { SpotifyIcon } from '../PlaylistGen/Source/Spotify';
 
 
 export const ProgressBar = ({color, progress}) => {   
@@ -24,18 +24,6 @@ export const ProgressBar = ({color, progress}) => {
 }
 
 export const SpotifyNotificationItem = ({playlist}) => {
-
-    const goToSpotify = () => window.open(playlist.url, '_blank');
-    const SpotifyIcon = () => (
-        <div className="svg-container" onClick={goToSpotify}>
-            <img
-                loading="lazy"
-                src={SpotifyLogo}
-                alt='spotify-link'
-            />
-        </div>
-    );
-    
     /*  
         // rgb(255, 0, 0) red 0%
         // rgb(255, 255, 0) yellow 50%
@@ -64,7 +52,7 @@ export const SpotifyNotificationItem = ({playlist}) => {
         <NotificationItem 
             title={`Generating ${playlist.name}`}
             message={message}
-            icon={<SpotifyIcon />}
+            icon={<SpotifyIcon url={playlist.url}/>}
             onClose={playlist.onClose}
         />
     );

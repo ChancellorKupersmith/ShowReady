@@ -1,14 +1,18 @@
 CREATE TABLE IF NOT EXISTS Venues (
     ID SERIAL PRIMARY KEY,
-    Name VARCHAR(300) UNIQUE,
+    Name VARCHAR(300),
     VenueUrl VARCHAR(600),
     VenueAddress VARCHAR(600),
     Hood VARCHAR(100),
     Summary VARCHAR(6000),
-    EOUrl VARCHAR(600),
+    EOUrl VARCHAR(600) UNIQUE,
     Phone VARCHAR(20),
+    LAT NUMERIC(10, 7),
+    LNG NUMERIC(10, 7),
+    TMID VARCHAR(36) UNIQUE,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Updated TIMESTAMP
+    Updated TIMESTAMP,
+    CONSTRAINT venues_unique_name_address UNIQUE(Name, VenueAddress)
 );
 
 CREATE TABLE IF NOT EXISTS Events (
@@ -20,18 +24,23 @@ CREATE TABLE IF NOT EXISTS Events (
     EventTime VARCHAR(100),
     AgeRestrictions VARCHAR(50),
     Summary VARCHAR(6000),
+    TMID VARCHAR(36) UNIQUE,
     VenueID INT,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
-    FOREIGN KEY (VenueID) REFERENCES Venues(ID)
+    UNIQUE (Name, EventDate),
+    FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Artists (
     ID SERIAL PRIMARY KEY,
-    Name VARCHAR(300) UNIQUE NOT NULL,
+    Name VARCHAR(300) NOT NULL,
     SpotifyExternalId VARCHAR(30) UNIQUE,
     SpotifyPopularity INT,
-    LastFmUrl VARCHAR(600),
+    LastFmUrl VARCHAR(600) UNIQUE,
+    Website VARCHAR(600),
+    MBID VARCHAR(100),
+    TMID VARCHAR(36) UNIQUE,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP
 );
@@ -41,18 +50,28 @@ CREATE TABLE IF NOT EXISTS Albums (
     Title VARCHAR(300) NOT NULL,
     SpotifyExternalId VARCHAR(30) UNIQUE,
     SpotifyPopularity INT,
-    LastFmUrl VARCHAR(600),
+    LastFmUrl VARCHAR(600) UNIQUE,
     ArtistID INT,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
-    FOREIGN KEY (ArtistID) REFERENCES Artists(ID)
+    FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Genres (
     ID SERIAL PRIMARY KEY,
     Name VARCHAR(300) UNIQUE NOT NULL,
+    ArtistID INT,
+    AlbumID INT,
+    SongID INT,
+    EventID INT,
+    VenueID INT,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Updated TIMESTAMP
+    Updated TIMESTAMP,
+    FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE SET NULL,
+    FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL,
+    FOREIGN KEY (SongID) REFERENCES Songs(ID) ON DELETE SET NULL,
+    FOREIGN KEY (EventID) REFERENCES Events(ID) ON DELETE SET NULL,
+    FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS Songs (
@@ -61,17 +80,18 @@ CREATE TABLE IF NOT EXISTS Songs (
     ArtistID INT NOT NULL,
     AlbumID INT,
     AlbumTrackNum INT,
-    mbid VARCHAR(100),
+    MBID VARCHAR(100),
     SpotifyExternalId VARCHAR(30) UNIQUE,
     SpotifyPopularity INT,
     SpotifyPreviewUrl VARCHAR(600),
-    LastFmUrl VARCHAR(600),
+    LastFmUrl VARCHAR(600) UNIQUE,
     YTUrl VARCHAR(600),
-    YTNotFound BOOLEAN,
+    -- used to identify if song has been scraped by youtube, Null if not attempted, true/false if url found
+    YTFound BOOLEAN,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
-    FOREIGN KEY (ArtistID) REFERENCES Artists(ID),
-    FOREIGN KEY (AlbumID) REFERENCES Albums(ID)
+    FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE,
+    FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS EventsArtists (
@@ -81,14 +101,6 @@ CREATE TABLE IF NOT EXISTS EventsArtists (
     PRIMARY KEY (EventID, ArtistID),
     FOREIGN KEY (EventID) REFERENCES Events(ID) ON DELETE CASCADE,
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS AlbumGenres (
-    AlbumID INT NOT NULL,
-    GenreID INT NOT NULL,
-    PRIMARY KEY (AlbumID, GenreID),
-    FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE CASCADE,
-    FOREIGN KEY (GenreID) REFERENCES Genres(ID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Errors (

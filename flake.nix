@@ -1,7 +1,9 @@
 {
   description = "Node/Python development environment for SeattleLiveRadio web app";
 
-  inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.*.tar.gz";
+  inputs = {
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.*.tar.gz";
+  };
 
   outputs = { self, nixpkgs }:
     let
@@ -9,6 +11,8 @@
         (final: prev: rec {
           nodejs = prev.nodejs_latest;
           yarn = (prev.yarn.override { inherit nodejs; });
+          postgresql15 = prev.postgresql_15;
+          postgresql16 = prev.postgresql;
         })
       ];
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
@@ -17,16 +21,21 @@
       });
     in
     {
-      devShells = forEachSupportedSystem ({ pkgs }: {
+      devShells = forEachSupportedSystem ({ pkgs }:
+      let 
+        pythonPackages = pkgs.python311.withPackages (ps: with ps; [
+          pip
+          httpx
+          psycopg2
+          selenium
+          python-dotenv
+        ]);
+      in {
         default = pkgs.mkShell rec {
           buildInputs = [
-            pkgs.postgresql
-            pkgs.python311
-            pkgs.python311Packages.pip
-            pkgs.python311Packages.httpx
-            pkgs.python311Packages.psycopg2
-            pkgs.python311Packages.selenium
-            pkgs.python311Packages.python-dotenv
+            pkgs.postgresql15
+            pkgs.postgresql16
+            pythonPackages
           ];
           GECKO_DRIVER_PATH = "${pkgs.geckodriver}/bin";
           packages = with pkgs; [

@@ -2,6 +2,7 @@ import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSourceData } from './SourceContext';
 import { useSongsFilter } from '../../Filter/FilterContext';
+import SpotifyLogo from '../../../assets/spotify-logo.svg';
 
 const SpotifyContext = createContext();
 export const useSpotifyData = () => useContext(SpotifyContext);
@@ -19,6 +20,20 @@ export const SpotifyContextProvider = ({children}) => {
           { children }
       </SpotifyContext.Provider>
   );
+}
+
+
+export const SpotifyIcon = ({url}) => {
+    const goToSpotify = () => window.open(url, '_blank');
+    return (
+        <div className="svg-container" onClick={goToSpotify}>
+            <img
+                loading="lazy"
+                src={SpotifyLogo}
+                alt='spotify-link'
+            />
+        </div>
+    );
 }
 
 /*

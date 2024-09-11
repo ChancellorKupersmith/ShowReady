@@ -5,10 +5,14 @@
     min-height: fit-content;
     margin-top: 35px;
 }
-.csv-bg-color { background-color: #8fdaed; }
+.csv-bg-color { background-color: #7499a2; }
 .spotify-bg-color { background-color: #18c49e; }
 .youtube-bg-color { background-color: #ff4d4d; }
-
+.svg-container {
+    max-width: fit-content;
+    max-height: fit-content;
+    color: #444444;
+}
 .songs-view-container {
     width: 40%;
     height: 100%;
@@ -78,7 +82,7 @@ button.source-btn.selected {
 .overlay {
     position: absolute;
     width: 40%; /* Set the width of the overlay */
-    height: 300px;
+    height: fit-content;
     background-color: #fff;
     color: black;
     border: solid white;
@@ -124,17 +128,15 @@ button.source-btn.selected {
 }
 .songs-list-item p {
     /* Remove default margin to better control spacing */
+    width: fit-content;
     margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: small;
     padding-left: 10px;
     padding-top: 2.5px;
     text-align: start;
-    /* Allow the paragraph to take up available space */
-    flex: 1;
-    cursor: pointer;
+    white-space: nowrap;
+    font-size: small;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .songs-list-item p:hover {
     /* Display full text on hover */

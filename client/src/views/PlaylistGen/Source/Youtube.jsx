@@ -1,6 +1,21 @@
 import React from 'react';
 import { useSongsFilter } from '../../Filter/FilterContext';
 import { useSourceData } from './SourceContext';
+import YouTubeLogo from '../../../assets/youtube-logo.svg';
+
+
+export const YouTubeIcon = ({url}) => {
+    const goToYouTube = () => window.open(url, '_blank');
+    return (
+        <div className="svg-container" onClick={goToYouTube}>
+            <img
+                loading="lazy"
+                src={YouTubeLogo}
+                alt='youtube-link'
+            />
+        </div>
+    );
+}
 
 export const YouTubeBtn = () => {
     const { filters, updateFilters } = useSongsFilter();

@@ -17,6 +17,7 @@ const SongsView = () => {
     const { filters } = useSongsFilter();
     const [totalPages, setTotalPages] = useState(1);
     const [songs, setSongs] = useState([]);
+    const [events, setEvents] = useState({});
 
     // Fetch songs on: first load, page change, pageSize change, filter change
     useEffect(() => {
@@ -36,9 +37,10 @@ const SongsView = () => {
                 });
                 const data = await response.json();
                 if(data.length > 0)
-                    setTotalPages(Math.ceil(data[0].total / pageSize))
+                    setTotalPages(Math.ceil(data[0][0].total / pageSize))
                 // console.log(data);
-                setSongs([...data]);
+                setSongs([...data[0]]);
+                setEvents(data[1])
             }catch(err){
                 console.error(err)
             }
@@ -103,12 +105,15 @@ const SongsView = () => {
                     <ul>
                         { songs.length > 0 &&
                           songs.map((song, index) =>
-                            <SongsListItem 
+                            <SongsListItem
                                 key={index}
-                                songTitle={song.title}
+                                songTitle={song.songtitle}
                                 artistName={song.artist}
-                                eventLocation={songs.venue}
+                                eventLocation={song.venue}
                                 date={song.eventdate}
+                                spId={song.spid}
+                                ytUrl={song.yturl}
+                                events={events[song.artist]}
                             />)
                         }
                     </ul>
