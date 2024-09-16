@@ -75,7 +75,7 @@ const whereConditionBuilder = async (req, res, next) => {
     if(filters.ex.source.spotify) whereConditional += `Songs.SpotifyExternalId IS NULL AND `;
     if(filters.req.source.spotify) whereConditional += `Songs.SpotifyExternalId IS NOT NULL AND `;
     if(filters.ex.source.youtube) whereConditional += `Songs.YTUrl IS NULL AND `;
-    if(filters.req.source.youtube) whereConditional += `Songs.YTNotFound = TRUE AND `;
+    if(filters.req.source.youtube) whereConditional += `Songs.YTFound = TRUE AND `;
     // remove trailing 'AND'
     if(whereConditional != 'WHERE ')
       whereConditional = whereConditional.substring(0, whereConditional.length - 4);
@@ -130,7 +130,7 @@ const querySongsList = async (whereConditional, queryParms) => {
       JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
       JOIN Events AS e ON e.ID = ea.EventID
       JOIN Venues AS v ON v.ID = e.VenueID
-      JOIN Albums AS al ON al.ID = Songs.AlbumID
+      LEFT JOIN Albums AS al ON al.ID = Songs.AlbumID
       ${whereConditional}
       ORDER BY $3
       LIMIT $1 OFFSET $2
@@ -141,7 +141,7 @@ const querySongsList = async (whereConditional, queryParms) => {
         JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
         JOIN Events AS e ON e.ID = ea.EventID
         JOIN Venues AS v ON v.ID = e.VenueID
-        JOIN Albums AS al ON al.ID = Songs.AlbumID
+        LEFT JOIN Albums AS al ON al.ID = Songs.AlbumID
         ${whereConditional}
     )
     SELECT data.*, total_count.total FROM data, total_count;
@@ -159,9 +159,9 @@ const queryTotalResults = async (whereConditional, queryParms) => {
     JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
     JOIN Events AS e ON e.ID = ea.EventID
     JOIN Venues AS v ON v.ID = e.VenueID
-    JOIN Albums AS al ON al.ID = Songs.AlbumID
     ${whereConditional}
-  `;
+    `;
+    // JOIN Albums AS al ON al.ID = Songs.AlbumID
   const result = await client.query(query, queryParms);
   client.release();
   return result;
@@ -200,6 +200,7 @@ const queryVenues = async () => {
       name, lat, lng, venueurl, 
       venueaddress, hood, summary, phone
     FROM Venues
+    WHERE lat IS NOT NULL
   `;
   const result = await client.query(query);
   client.release();

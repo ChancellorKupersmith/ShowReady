@@ -23,9 +23,11 @@ def log(lvl, msg):
 def get_total_artists_fromDB():
     total = 0
     select_query = """
-        SELECT COUNT(*) AS total FROM Artists
+        SELECT COUNT(DISTINCT a.id)
+        FROM Artists a
+        LEFT JOIN Songs s ON a.id = s.artistid
+        WHERE s.id IS NULL;
     """
-        # WHERE created >= NOW() - INTERVAL '1 week'
     try:
         with PostgresClient(log=log) as db:
             res = db.query(query=select_query, fetchone=True)
@@ -39,14 +41,16 @@ def get_total_artists_fromDB():
 def get_artists_fromDB(page_size, offset):
     artists = []
     select_query = f"""
-        SELECT name, id FROM Artists
+        SELECT DISTINCT a.id, a.name
+        FROM Artists a
+        LEFT JOIN Songs s ON a.id = s.artistid
+        WHERE s.lastfmurl IS NULL
         LIMIT {page_size} OFFSET {offset} 
     """
-        # WHERE created >= NOW() - INTERVAL '1 week'
     try:
         with PostgresClient(log=log) as db:
             rows = db.query(query=select_query, fetchall=True)
-            artists = list(map(lambda row: Artist(name=row[0], id=row[1]), rows))
+            artists = list(map(lambda row: Artist(id=row[0], name=row[1]), rows))
     except Exception as e:
         log(1, f"ERROR fetching artists from db returning empty list. {e}")
     finally:
@@ -102,8 +106,9 @@ def save_songs_inDB(songs_to_save):
     try:
         with PostgresClient(log=log) as db:
             song_tuples = list(map(lambda s: (s.title, s.artist_id, s.lastfm_url, s.mbid), songs_to_save))
-            db.query(query=insert_query, data=song_tuples)
-            log(0, f"Saved {len(song_tuples)} songs:")
+            if len(song_tuples) > 0:    
+                db.query(query=insert_query, data=song_tuples)
+                log(0, f"Saved {len(song_tuples)} songs:")
     except Exception as e:
         log(1, f"Error inserting songs in db, {e}")
 

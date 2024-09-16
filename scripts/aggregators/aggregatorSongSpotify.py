@@ -23,9 +23,10 @@ def log(lvl, msg):
 def get_total_albums_fromDB():
     total = 0
     select_query = """
-        SELECT COUNT(*) AS total FROM Albums
-        WHERE spotifyexternalid IS NOT NULL
-        AND created >= NOW() - INTERVAL '1 week'
+        SELECT COUNT(DISTINCT a.id)
+        FROM albums a
+        LEFT JOIN songs s ON a.id = s.albumid
+        WHERE s.id IS NULL AND a.spotifyexternalid IS NOT NULL
     """
     try:
         with PostgresClient(log=log) as db:
@@ -42,9 +43,10 @@ def get_albums_fromDB(page_size, offset):
     albums = {}
     # create spotify albums batch, limit: 20 (https://developer.spotify.com/documentation/web-api/reference/get-multiple-albums)
     select_query = f"""
-        SELECT id, spotifyexternalid, artistid, title FROM Albums
-        WHERE spotifyexternalid IS NOT NULL
-        AND created >= NOW() - INTERVAL '1 week'
+        SELECT DISTINCT a.id, a.spotifyexternalid, a.artistid, a.title 
+        FROM albums a
+        LEFT JOIN songs s ON a.id = s.albumid
+        WHERE s.id IS NULL AND a.spotifyexternalid IS NOT NULL
         LIMIT {page_size} OFFSET {offset}
     """
     try:
@@ -61,17 +63,10 @@ def save_songs_inDB(songs_to_save):
     insert_query = """
         INSERT INTO Songs (title, artistid, albumid, albumtracknum, spotifyexternalid, spotifypreviewurl)
         VALUES %s
-        ON CONFLICT (spotifyexternalid)
-        DO UPDATE SET
-            title = EXCLUDED.title,
-            artistid = EXCLUDED.artistid,
-            albumID = EXCLUDED.albumid,
-            albumtracknum = EXCLUDED.albumtracknum,
-            spotifypreviewurl = EXCLUDED.spotifypreviewurl
     """
     try:
         with PostgresClient(log=log) as db:
-            song_tuples = [ s.to_tuple() for s in songs_to_save ]
+            song_tuples = [ (s.title, s.artist_id, s.album_id, s.track_num, s.spotify_id, s.spotify_preview_url) for s in songs_to_save ]
             if len(song_tuples) > 0:
                 db.query(query=insert_query, data=song_tuples)
                 log(0, f"Saved {len(song_tuples)} songs")
@@ -81,7 +76,26 @@ def save_songs_inDB(songs_to_save):
         return [ s.album_id for s in songs_to_save ]
 
 @timer_decorator
+def update_songs_inDB(songs_to_update):
+    update_query = """
+        UPDATE Songs
+        SET albumid = %s, albumtracknum = %s, spotifyexternalid = %s, spotifypopularity = %s, spotifypreviewurl = %s
+        WHERE title = %s and artistid = %s
+    """
+    try:
+        with PostgresClient(log=log) as db:
+            song_tuples = [ (s.album_id, s.track_num, s.spotify_id, s.spotify_popular, s.spotify_preview_url, s.title, s.artist_id) for s in songs_to_update ]
+            if len(song_tuples) > 0:
+                db.query(executemany=True, query=update_query, data=song_tuples)
+                log(0, f"Saved {len(song_tuples)} songs")
+        return []
+    except Exception as e:
+        log(1, f"Error updating songs in db, {e}")
+        return [ s.album_id for s in songs_to_update ]
+
+@timer_decorator
 def save_errors_inDB(albums_not_found):
+    log(2, f'albums not found: {albums_not_found}')
     insert_query = """
         INSERT INTO Errors (albumid)
         VALUES %s
@@ -170,12 +184,12 @@ def populate_songs(json_data, albums):
             for song in spotify_album["tracks"]["items"]:
                 # init empty dict if first artist album
                 songs[song["id"]] = Song(
-                    title=song["name"], 
-                    spotifyexternalid=song["id"],
+                    title=song.get("name"), 
+                    spotifyexternalid=song.get("id"),
                     artistid=albumObj.artist_id,
                     albumid=albumObj.id,
-                    albumtracknum=song["track_number"],
-                    spotifypreviewurl=song["preview_url"]
+                    albumtracknum=song.get("track_number"),
+                    spotifypreviewurl=song.get("preview_url")
                 )
         except Exception as e:
             log(1, f"Error populating songs, {e}")
@@ -198,21 +212,56 @@ def populate_update_albums(json_data, albums):
             errors.append((albumObj.id,))
     return (update_albums, errors)
 
+@timer_decorator
+def get_existing_songs():
+    titles = {}
+    artist_ids = {}
+    # create spotify albums batch, limit: 20 (https://developer.spotify.com/documentation/web-api/reference/get-multiple-albums)
+    select_query = f"""
+        SELECT title, artistid FROM songs
+    """
+    try:
+        with PostgresClient(log=log) as db:
+            rows = db.query(query=select_query, fetchall=True)
+            titles = { row[0]: True for row in rows }
+            artist_ids = { row[1]: True for row in rows }
+    except Exception as e:
+        log(1, f"ERROR fetching existing songs from db. {e}")
+    finally:
+        return titles, artist_ids
+
 
 async def main():
     print('Running spotify song aggregator')
     client = SpotifyClient(log=log)
     await client.init_access_token()
     total_albums = get_total_albums_fromDB()
+    log(0, f'total: {total_albums}')
     # spotify albums batch limit: 20 (https://developer.spotify.com/documentation/web-api/reference/get-multiple-albums)
     page_size = 20
-    for page in range(int(total_albums / page_size)):
+    total_pages = int(total_albums / page_size)
+    for page in range(total_pages):
+        log(0, f'Scraping page {page}/{total_pages}')
         offset = page * page_size
         albums = get_albums_fromDB(page_size, offset)
+        # log(0, f'albums to search: {len(albums)}, {[ album.title for album in albums ]}')
         json_data = await fetch_album_tracks(client, albums.keys())
         if json_data:
             songs, errors = populate_songs(json_data, albums)
-            errors += save_songs_inDB(songs)
+            # filter songs based on title and name
+            titles, artist_ids = get_existing_songs()
+            update_songs = set()
+            insert_songs = set()
+            for s in songs:
+                if s.title not in titles and s.artist_id not in artist_ids:
+                    insert_songs.add(s)
+                else:
+                    update_songs.add(s)
+
+            log(0, f'new songs ids: {[s.artist_id for s in insert_songs]}')
+            log(0, f'new songs titles: {[s.title for s in insert_songs]}')
+            errors = errors + save_songs_inDB(insert_songs)
+            errors = errors + update_songs_inDB(update_songs)
             save_errors_inDB(errors)
 
             update_albums, errors = populate_update_albums(json_data, albums)

@@ -22,13 +22,15 @@ def log(lvl, msg):
 @timer_decorator
 def get_artists_fromDB():
     select_query = """
-        SELECT name, lastfmurl, spotifyexternalid, id FROM Artists
-        WHERE created >= NOW() - INTERVAL '1 week'
+        SELECT DISTINCT a.id, a.name, a.lastfmurl, a.spotifyexternalid
+        FROM Artists a
+        LEFT JOIN Albums al ON a.id = al.artistid
+        WHERE al.id IS NULL;
     """
     try:
         with PostgresClient(log=log) as db:
             rows = db.query(query=select_query, fetchall=True)
-            artists = map(lambda row: Artist(name=row[0], lastfm_url=row[1], spotify_id=row[2], id=row[3]), rows)
+            artists = [ Artist(id=row[0], name=row[1], lastfm_url=row[2], spotify_id=row[3]) for row in rows ]
             return artists
     except Exception as e:
         log(1, f"ERROR fetching artists from db returning None. {e}")
@@ -122,11 +124,11 @@ def save_albums_inDB(albums_to_save):
     insert_query = """
         INSERT INTO Albums (title, spotifyexternalid, lastfmurl, artistid)
         VALUES %s
-        ON CONFLICT (spotifyexternalid)
+        ON CONFLICT (lastfmurl)
         DO UPDATE SET
             title = EXCLUDED.title,
             artistid = EXCLUDED.artistid,
-            lastfmurl = EXCLUDED.lastfmurl
+            spotifyexternalid = EXCLUDED.spotifyexternalid
     """
     try:
         with PostgresClient(log=log) as db:
@@ -148,6 +150,20 @@ def save_errors_inDB(artists_not_found):
     except Exception as e:
         log(1, f"Error saving errors to db, {e}")
 
+@timer_decorator
+def get_albums_fromDB():
+    select_query = """
+        SELECT spotifyexternalid FROM Albums
+        WHERE spotifyexternalid IS NOT NULL
+    """
+    try:
+        with PostgresClient(log=log) as db:
+            rows = db.query(query=select_query, fetchall=True)
+            return { row[0]: True for row in rows }
+    except Exception as e:
+        log(1, f"ERROR fetching album spotify ids from db returning None. {e}")
+        return None
+
 
 async def main():
     print('Started album aggregator')
@@ -156,9 +172,12 @@ async def main():
     artists_and_albums = []
     for artist in artists:
         found_albums, errors = await find_albums(artist)
+        #  filter found albums from already found spotify ids, (choosing to filter spotify ids assuming less ids of spotify than lastfmurls), having to filter incase multiple artists share album
+        existing_albums = get_albums_fromDB()
+        new_found_albums = list(filter(lambda album: album.spotify_id not in existing_albums, found_albums))
         # save data
         if len(found_albums) > 0:
-            save_albums_inDB(found_albums)
+            save_albums_inDB(new_found_albums)
         if len(errors) > 0:
             save_errors_inDB(errors)
     print(f'Completed album aggregator, logs: {log_filename}')

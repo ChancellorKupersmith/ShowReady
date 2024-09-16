@@ -41,6 +41,7 @@ const SongsListItem = ({songId, songTitle, artistName, eventLocation, date, spId
                 setAboveHalfway(rect.top < halfwaypoint);
             }
         }
+        console.log(elementPosition)
 
         updatePosition();
         window.addEventListener('resize', updatePosition);
@@ -123,7 +124,7 @@ const SongsListItem = ({songId, songTitle, artistName, eventLocation, date, spId
     const SongOverlay = () => {
         // TODO: Try and make style on css
         const overlayStyle = {
-            [aboveHalfway? 'top':'bottom']: aboveHalfway? `${elementPosition.top + 10}px` : `${10 - (Math.ceil(elementPosition.top / 70))}%`,
+            'top': aboveHalfway? `${Math.ceil(elementPosition.top * 0.6)}px` : `${Math.ceil(elementPosition.top * 0.8)}px`,
             left: `${elementPosition.left - 200}px`
         }
 

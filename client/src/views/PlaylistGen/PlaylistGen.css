@@ -5,7 +5,7 @@
     min-height: fit-content;
     margin-top: 35px;
 }
-.csv-bg-color { background-color: #7499a2; }
+.csv-bg-color { background-color: #abd3df; }
 .spotify-bg-color { background-color: #18c49e; }
 .youtube-bg-color { background-color: #ff4d4d; }
 .svg-container {
@@ -13,31 +13,36 @@
     max-height: fit-content;
     color: #444444;
 }
-.songs-view-container {
-    width: 40%;
-    height: 100%;
-    margin-right: 4px;
+#songs-btn {
     background-color: transparent;
+    border: solid transparent;
+}
+#songs-btn.selected {
+    border: solid white;
+}
+.songs-view-container {
+    position: absolute;
+    top: 12%;
+    right: 2%;
+    z-index: 4;
+    width: 90%;
+    height: fit-content;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    align-items: end;
     overflow-y: auto;
-}
-.songs-view-container .btn-tray {
-    display: flex;
-    justify-content: end;
-    align-items: center;
-    width: 100%;
-    margin-top: 4px;
+    overflow-x: visible;
 }
 .songs-view-container .source-tabs {
     display: flex;
     width: 100%;
+    margin: 0px;
 }
 button.source-btn {
     flex: 1;
     width: 100%;
-    border: none;
+    border: solid transparent 2px;
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
     margin: 4px 0px 0px 0px;
@@ -51,16 +56,17 @@ button.source-btn.selected {
 .songs-list-container {
     display: flex;
     flex-direction: column;
+    align-items: center;
     min-height: fit-content;
+    width: 50%;
     height: 100%;
     border: solid;
     padding: 6px;
     border-radius: 10px;
-    border-top-left-radius: 0px;
-    border-top-right-radius: 0px;
 }
 .songs-list-container ul {
     height: 95%;
+    width: 100%;
     margin: 0;
     overflow-y: auto;
     /* Remove default inline padding */
@@ -89,7 +95,7 @@ button.source-btn.selected {
     padding: 10px;
     box-sizing: border-box;
     border-radius: 10px;
-    z-index: 1;
+    z-index: 5;
     /* transform: translateX(-100px); Slight adjustment if needed */
 }
 .songs-list-container .songs-list-item {

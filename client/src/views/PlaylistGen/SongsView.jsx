@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import SongsListItem from './SongsListItem';
 import FilterView from '../Filter/FilterView';
 import CSVBtn from './Source/CSV';
+import SongsSvg from '../../assets/song-list.svg'
 import NextSvg from '../../assets/next.svg'
 import PrevSvg from '../../assets/prev.svg'
 import { useSongsFilter } from '../Filter/FilterContext';
@@ -9,8 +10,12 @@ import { SavePlaylistView } from "./Source/SavePlaylistView";
 import { SpotifyContextProvider, useSpotifyData, SpotifyBtn } from './Source/Spotify'
 import { YouTubeBtn } from './Source/Youtube';
 import NotificationView from '../Notification/NotificationView';
+import { createPortal } from 'react-dom';
+import { useSourceData } from './Source/SourceContext';
 
 const SongsView = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const openCloseModal = () => setIsOpen(!isOpen)
     /* TODO: Make songs lists page size dynamic to window size */
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -18,6 +23,7 @@ const SongsView = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [songs, setSongs] = useState([]);
     const [events, setEvents] = useState({});
+    const { bgColor } = useSourceData()
 
     // Fetch songs on: first load, page change, pageSize change, filter change
     useEffect(() => {
@@ -38,7 +44,7 @@ const SongsView = () => {
                 const data = await response.json();
                 if(data.length > 0)
                     setTotalPages(Math.ceil(data[0][0].total / pageSize))
-                // console.log(data);
+                console.log(data);
                 setSongs([...data[0]]);
                 setEvents(data[1])
             }catch(err){
@@ -88,43 +94,60 @@ const SongsView = () => {
         );
     };
 
+    const SongsBtn = () => {
+        const SongsImg = () => (
+            <div className="svg-container">
+                <img
+                    loading="lazy"
+                    src={SongsSvg}
+                    alt='Songs'
+                />
+            </div>
+        );
+        return (
+            <button id='songs-btn' className={isOpen? 'selected' : ''} onClick={openCloseModal}><SongsImg /></button>
+        );
+    };
+
     return (
-        <div className='songs-view-container'>
-            <SpotifyContextProvider>
-                <div className='btn-tray'>
-                    <NotificationView />
-                    <FilterView />
-                </div>
-                <div className='source-tabs'>
-                    <CSVBtn />
-                    <SpotifyBtn />
-                    <YouTubeBtn />
-                </div>
-                {/* TODO: Make songs lists page size dynamic to window size */}
-                <div className='songs-list-container'>
-                    <ul>
-                        { songs.length > 0 &&
-                          songs.map((song, index) =>
-                            <SongsListItem
-                                key={index}
-                                songTitle={song.songtitle}
-                                artistName={song.artist}
-                                eventLocation={song.venue}
-                                date={song.eventdate}
-                                spId={song.spid}
-                                ytUrl={song.yturl}
-                                events={events[song.artist]}
-                            />)
-                        }
-                    </ul>
-                    <div className='footer'>
-                        <PrevBtn />
-                        <span> Page {page} of {totalPages} </span>
-                        <NextBtn />
+        <div>
+            <SongsBtn />
+            {isOpen && createPortal(
+                <SpotifyContextProvider>
+                    <div className='songs-view-container'>
+                        {/* TODO: Make songs lists page size dynamic to window size */}
+                        <div className={`songs-list-container ${bgColor}`}>
+                            <div className='source-tabs'>
+                                <CSVBtn />
+                                <SpotifyBtn />
+                                <YouTubeBtn />
+                            </div>
+                            <ul>
+                                { songs.length > 0 &&
+                                songs.map((song, index) =>
+                                    <SongsListItem
+                                        key={index}
+                                        songTitle={song.songtitle}
+                                        artistName={song.artist}
+                                        eventLocation={song.venue}
+                                        date={song.eventdate}
+                                        spId={song.spid}
+                                        ytUrl={song.yturl}
+                                        events={events[song.artist]}
+                                    />)
+                                }
+                            </ul>
+                            <div className='footer'>
+                                <PrevBtn />
+                                <span> Page {page} of {totalPages} </span>
+                                <NextBtn />
+                            </div>
+                            <SavePlaylistView />
+                        </div>
                     </div>
-                </div>
-                <SavePlaylistView />
-            </SpotifyContextProvider>
+                </SpotifyContextProvider>,
+                document.body
+            )}
         </div>
     );
 }

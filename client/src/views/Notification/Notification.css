@@ -6,8 +6,8 @@
 }
 .notifications-menu {
     position: absolute;
-    top: 10%;
-    right: 6%;
+    top: 12%;
+    right: 9%;
     z-index: 4;
     background-color: white;
     border: 1px solid #888;

@@ -53,9 +53,11 @@ class PostgresClient:
             self.connection.commit()
             self.connection.close()
     
-    def query(self, query, data=None, params=None, fetchall=False, fetchone=False):
+    def query(self, query, executemany=None, data=None, params=None, fetchall=False, fetchone=False):
         try:
-            if data:
+            if executemany:
+                self.cursor.executemany(query, data)
+            elif data:
                 execute_values(self.cursor, query, data)
             elif params:
                 self.cursor.execute(query, (params,))
@@ -176,7 +178,7 @@ class LastFmClient:
             except Exception as e:
                 self.log(1, f"ERROR: Failed to send lastfm request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
-                time.sleep(300)
+                time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class SpotifyClient:
@@ -240,7 +242,7 @@ class SpotifyClient:
             except Exception as e:
                 self.log(1, f"ERROR: Failed to send spotify request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
-                time.sleep(300)
+                time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class Artist:
@@ -297,7 +299,13 @@ class Song:
         self.yt_url = yturl
         self.mbid = mbid
         self.id = id
-    
+
+    def __hash__(self):
+        return hash((self.title, self.artist_id))
+        
+    def __eq__(self, other):
+        return (self.title, self.artist_id) == (other.title, other.artist_id)
+
     def to_tuple(self):
         # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorSong.save_songs_to_db() !!!
         return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url)
