@@ -20,7 +20,7 @@ export const NotificationProvider = ({children}) => {
     const mockNotifications = {
         '2nQ04uKoAErm0R4wDgaCVa': mockPlaylist
     };
-    const [notifications, setNotifications] = useState(mockNotifications);
+    const [notifications, setNotifications] = useState({});
 
     const addNotification = (notification) => {
         console.log('notification:')

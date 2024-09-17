@@ -168,7 +168,7 @@ export const OrderByBtn = () => {
                         <h3>Sort By</h3>
                         <button onClick={openCloseModal}>x</button>
                     </div>
-                    <div className='order-option'>
+                    {/* <div className='order-option'>
                         <p>Artist</p>
                         <div>
                             <label>
@@ -190,7 +190,7 @@ export const OrderByBtn = () => {
                                 Z-A
                             </label>
                         </div>
-                    </div>
+                    </div> */}
                     <div className='order-option'>
                         <p>Song</p>
                         <div>

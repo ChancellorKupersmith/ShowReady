@@ -208,8 +208,6 @@ const querySongsList = async (whereConditional, queryParms, orderBy, fromEachArt
     FROM ${addRowNumberLimit() == '' ? `data` : `from_each_data`}, total_count
     LIMIT $1 OFFSET $2;
     `;
-    console.log(query)
-    console.log(queryParms)
   const result = await client.query(query, queryParms);
   client.release();
   return result;

@@ -1,10 +1,11 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import FilterView from '../../Filter/FilterView';
 import NotificationView from '../../Notification/NotificationView';
 import VenueMarkerSVG from  '../../../assets/venue-marker.svg'
 import './Map.css'
 import { SpotifyContextProvider } from '../Source/Spotify';
 import SongsView from '../SongsView';
+import { useSongsFilter } from '../../Filter/FilterContext';
 
 const MapContext = createContext();
 export const useMap = () => useContext(MapContext);
@@ -27,7 +28,7 @@ export const MapContextProvider = ({children}) => {
         console.error(err)
     }
   };
-  const [venues, setVenues] = useState([]);
+  const [allVenues, setAllVenues] = useState([]);
   const [venueMarkers, updateVenueMarkers] = useState({});
   const setVenueMarkers = (venues) => {
     // console.log(venueMarkers);
@@ -35,15 +36,16 @@ export const MapContextProvider = ({children}) => {
   }
 
   return (
-    <MapContext.Provider value={{center, setCenter, findVenue, zoom, setZoom, venueMarkers, setVenueMarkers}}>
+    <MapContext.Provider value={{center, setCenter, findVenue, zoom, setZoom, venueMarkers, setVenueMarkers, allVenues, setAllVenues}}>
       { children }
     </MapContext.Provider>
   );
 };
 
 const SeattleMap = () => {
-  const { center, zoom, venueMarkers, setVenueMarkers } = useMap();
+  const { center, zoom, setVenueMarkers, allVenues, setAllVenues } = useMap();
   const [address, setAddress] = useState('');
+  const { filters, updateFilters } = useSongsFilter();
   const handleAddressChange = (e) => {
     setAddress(e.target.value);
     if(address){
@@ -57,49 +59,109 @@ const SeattleMap = () => {
     // else display pop up not found
   };
 
+  const reqVenue = (venueName) => {
+    updateFilters((prevState) => ({
+      ...prevState,
+      total: prevState.total + 1,
+      req: {
+          ...prevState.req,
+          location: {
+              ...prevState.req.location,
+              venues: [...prevState.req.location.venues, venueName]
+          }
+      }
+    }));
+  };
+  const exVenue = (venueName, marker, map) => {
+    if(!filters.ex.location.venues.includes(venueName)){
+      updateFilters((prevState) => ({
+          ...prevState,
+          total: prevState.total + 1,
+          ex: {
+              ...prevState.ex,
+              location: {
+                  ...prevState.ex.location,
+                  venues: [...prevState.ex.location.venues, venueName]
+              }
+          }
+      }));
+    };
+    map.removeLayer(marker)
+  };
+  const createMarker = (map, venue) => {
+    const marker = L.marker([parseFloat(venue.lat), parseFloat(venue.lng)], {
+      id: `map-marker-${venue.name}`,
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.5,
+      radius: 500
+    });
+    marker.addTo(map);
+    const popup = `
+        <div classname='venue-marker-popup'>
+          <a classname='venue-name' href='${venue.venueurl}'>${venue.name}</a>
+          <div className='reqex-btn-container'>
+              <button id='map-marker-btn-req-${venue.name}' className='reqex-btn req-btn'>Require</button>
+              <button id='map-marker-btn-ex-${venue.name}' className='reqex-btn ex-btn'>Exclude</button>
+          </div>
+        </div>
+    `;
+    marker.bindPopup(popup);
+    // listeners need to be unique so they can be removed later
+    const listenerName = `markerPopupReqExListener_${venue.name}`;
+    window[listenerName] = (event) => {
+      if(event.target.id === `map-marker-btn-req-${venue.name}`){
+        reqVenue(venue.name)
+      }
+      if(event.target.id === `map-marker-btn-ex-${venue.name}`){
+        exVenue(venue.name, marker, map)
+      }
+    }
+    document.addEventListener('click', window[listenerName])
+    marker.on('remove', function(){
+      console.log(`Filtering out ${venue.name}`)
+      document.removeEventListener('click', window[listenerName])
+    });
+
+    return marker;
+  };
+
+  // INIT MAP
   const initMarkers = async (map) => {
     const fetchVenues = async () => {
       try {
           const response = await fetch('/songs_list/venue_markers');
           const data = await response.json();
+          // save complete venues list for later filter sync
+          setAllVenues(data);
           return data;
       } catch(err) {
           console.error(err)
       }
-    };
-  
+    };  
+
     // only execute if map has loaded
     if(map){
       const venues = await fetchVenues();
-      if(!venues) return
       const markers = {};
-      for(let i=0; i<venues.length; i++){
-        markers[venues[i].name] = L.marker([parseFloat(venues[i].lat), parseFloat(venues[i].lng)], {
-          color: 'red',
-          fillColor: '#f03',
-          fillOpacity: 0.5,
-          radius: 500
-        }).addTo(map);
-        const popup = `
-          <b>${venues[i].name}</b><br>
-          <a href='${venues[i].venueurl}'>${venues[i].venueurl}</a>
-        `;
-        markers[venues[i].name].bindPopup(popup);
-      }
-      
+      venues.forEach(venue => {
+        markers[venue.name] = createMarker(map, venue)
+      });
+      // save for access to markers through context provider
       setVenueMarkers(markers)
     }
-  }
-
-  let mapUI;
+  };
+  const mapRef = useRef(null);
   useEffect(() => {
     let initMap = async () => {
       try {
-        if(!mapUI){
-          mapUI = L.map('mapUI', {
+        // only run once
+        if(!mapRef.current){
+          const mapUI = L.map('mapUI', {
             center: [center.lat, center.lng],
             zoom: zoom
           });
+          mapRef.current = mapUI;
           L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -112,6 +174,26 @@ const SeattleMap = () => {
     };
     initMap();
   }, [center, zoom]);
+  // sync map markers with filters
+  useEffect(() => {
+    if(mapRef.current){
+      allVenues.forEach(v => {
+        // check if out of sync (if in allVenues but not on map and not in filter exclusions)
+        let onMap = false;
+        mapRef.current.eachLayer(layer =>{
+          if(layer instanceof L.Marker && layer.options.id == `map-marker-${v.name}`){
+            onMap = true;
+          }
+        });
+        if(!filters.ex.location.venues.includes(v.name) && !onMap){
+          createMarker(mapRef.current, v)
+        }
+      });
+    }
+    
+  }, [filters]);
+
+
 
   return (
     <div className='map-container'>
