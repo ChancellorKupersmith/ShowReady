@@ -41,7 +41,6 @@ const SongsListItem = ({songId, songTitle, artistName, eventLocation, date, spId
                 setAboveHalfway(rect.top < halfwaypoint);
             }
         }
-        console.log(elementPosition)
 
         updatePosition();
         window.addEventListener('resize', updatePosition);

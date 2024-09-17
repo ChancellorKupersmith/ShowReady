@@ -13,13 +13,16 @@ const OrderBys = Object.freeze({
    ARTIST: 'a.Name',
    SONG_NAME: 'Songs.Title',
    EVENT_DATE: 'e.EventDate',
-   VENUE_NAME: 'v.Name'
+   VENUE_NAME: 'v.Name',
+   RANDOM: 'RANDOM()',
 });
 const reqQueryParamsCleaner = (req, res, next) => {
   try {
     const { page, limit, filters } = req.body;
     const pageSize = Math.min(MAX_PAGE_SIZE, parseInt(limit) || DEFAULT_PAGE_SIZE);
     const pageNum = parseInt(page) || 0;
+    req.fromEachArtist = filters.req.artist.fromEach? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, parseInt(filters.req.artist.fromEach))) : null;
+    req.fromEachAlbum = filters.req.album.fromEach? Math.max(0, Math.min(filters.req.artist.fromEach, parseInt(filters.req.album.fromEach))) : null;
     let orderBy = filters.orderBy || 2;
     switch (orderBy) {
       case 1:
@@ -31,10 +34,15 @@ const reqQueryParamsCleaner = (req, res, next) => {
       case 3:
         orderBy = OrderBys.VENUE_NAME;
         break;
+      case 4:
+        orderBy = OrderBys.RANDOM;
+        break;
       default:
         orderBy = OrderBys.ARTIST;
     }
-    req.cParams = [pageSize, pageNum, orderBy];
+    if(filters.descending) orderBy += ' DESC';
+    req.cParams = [pageSize, pageNum];
+    req.orderBy = orderBy;
     next();
   } catch (err) {
     next(err);
@@ -89,6 +97,60 @@ const whereConditionBuilder = async (req, res, next) => {
   }
 };
 
+const addRowNumberCondition = (fromEachArtist, fromEachAlbum) => {
+  if(fromEachArtist && fromEachAlbum) {
+    return `,
+      ROW_NUMBER() OVER (
+          PARTITION BY a.ID,
+          CASE
+            WHEN al.ID IS NOT NULL THEN al.ID
+            ELSE a.ID
+          END
+          ORDER BY Songs.ID
+        ) as row_num
+      `;
+  }
+  else if(fromEachArtist) {
+    return `,
+      ROW_NUMBER() OVER (
+        PARTITION BY a.ID
+        ORDER BY Songs.ID
+      ) as row_num
+    `;
+  }
+  else if(fromEachAlbum) {
+    return `,
+      ROW_NUMBER() OVER (
+        PARTITION BY al.ID
+        ORDER BY Songs.ID
+      ) as row_num
+    `;
+  }
+  else {
+    return ''
+  }
+}
+const addRowNumberLimit = (fromEachArtist, fromEachAlbum, offset) => {
+  if(fromEachArtist && fromEachAlbum) {
+    return `
+      WHERE
+        CASE
+          WHEN al.ID IS NOT NULL THEN row_num <= ${fromEachAlbum}
+          ELSE row_num <= ${fromEachArtist}
+        END
+    `;
+  }
+  else if(fromEachArtist) {
+    return ` WHERE row_num <= ${fromEachArtist}`;
+
+  }
+  else if(fromEachAlbum) {
+    return ` WHERE row_num <= ${fromEachAlbum}`;
+  }
+  else {
+    return ''
+  }
+}
 
 /*
   // params that are always needed are events date range 
@@ -114,7 +176,46 @@ const whereConditionBuilder = async (req, res, next) => {
     <distance_calculation_logic_using_latitude_and_longitude> <= <radius_in_meters>
   )  
 */
-const querySongsList = async (whereConditional, queryParms) => {
+const querySongsList = async (whereConditional, queryParms, orderBy, fromEachArtist, fromEachAlbum) => {
+  const client = await pool.connect();
+  query = `
+    WITH data AS (
+      SELECT
+        a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
+        v.Name AS Venue, e.EventDate, 
+        v.Hood, v.VenueAddress,
+        al.Title as AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
+        Songs.Title AS SongTitle, Songs.SpotifyExternalId AS SpId,
+        Songs.YTUrl as YTUrl, Songs.LastFmUrl AS SongLastFmUrl
+        ${addRowNumberCondition(fromEachArtist, fromEachAlbum)}
+      FROM Songs
+      JOIN Artists AS a ON a.ID = Songs.ArtistID
+      JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
+      JOIN Events AS e ON e.ID = ea.EventID
+      JOIN Venues AS v ON v.ID = e.VenueID
+      LEFT JOIN Albums AS al ON al.ID = Songs.AlbumID
+      ${whereConditional}
+      ORDER BY ${orderBy}
+    ),
+    from_each_data AS (
+      SELECT * FROM data
+      ${addRowNumberLimit(fromEachArtist, fromEachAlbum, queryParms[1])}
+    ),
+    total_count AS (
+      SELECT COUNT(*) AS total FROM from_each_data
+    )
+    SELECT ${addRowNumberLimit() == '' ? `data.*` : `from_each_data.*`}, total_count.total
+    FROM ${addRowNumberLimit() == '' ? `data` : `from_each_data`}, total_count
+    LIMIT $1 OFFSET $2;
+    `;
+    console.log(query)
+    console.log(queryParms)
+  const result = await client.query(query, queryParms);
+  client.release();
+  return result;
+};
+
+const queryTotalResults = async (whereConditional, queryParms, fromEachArtist, fromEachAlbum) => {
   const client = await pool.connect();
   query = `
     WITH data AS (
@@ -125,6 +226,7 @@ const querySongsList = async (whereConditional, queryParms) => {
         al.Title as AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
         Songs.Title AS SongTitle, Songs.SpotifyExternalId AS SpId,
         Songs.YTUrl as YTUrl, Songs.LastFmUrl AS SongLastFmUrl
+        ${addRowNumberCondition(fromEachArtist, fromEachAlbum)}
       FROM Songs
       JOIN Artists AS a ON a.ID = Songs.ArtistID
       JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
@@ -132,37 +234,17 @@ const querySongsList = async (whereConditional, queryParms) => {
       JOIN Venues AS v ON v.ID = e.VenueID
       LEFT JOIN Albums AS al ON al.ID = Songs.AlbumID
       ${whereConditional}
-      ORDER BY $3
-      LIMIT $1 OFFSET $2
+    ),
+    from_each_data AS (
+      SELECT * FROM data
+      ${addRowNumberLimit(fromEachArtist, fromEachAlbum, queryParms[1])}
     ),
     total_count AS (
-        SELECT COUNT(*) AS total FROM Songs
-        JOIN Artists AS a ON a.ID = Songs.ArtistID
-        JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
-        JOIN Events AS e ON e.ID = ea.EventID
-        JOIN Venues AS v ON v.ID = e.VenueID
-        LEFT JOIN Albums AS al ON al.ID = Songs.AlbumID
-        ${whereConditional}
+        SELECT COUNT(*) AS total FROM from_each_data
     )
-    SELECT data.*, total_count.total FROM data, total_count;
+    SELECT total_count.total FROM total_count;
   `;
-  const result = await client.query(query, queryParms);
-  client.release();
-  return result;
-};
-
-const queryTotalResults = async (whereConditional, queryParms) => {
-  const client = await pool.connect();
-  query = `
-    SELECT COUNT(*) FROM Songs
-    JOIN Artists AS a ON a.ID = Songs.ArtistID
-    JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
-    JOIN Events AS e ON e.ID = ea.EventID
-    JOIN Venues AS v ON v.ID = e.VenueID
-    ${whereConditional}
-    `;
-    // JOIN Albums AS al ON al.ID = Songs.AlbumID
-  const result = await client.query(query, queryParms);
+  const result = await client.query(query);
   client.release();
   return result;
 };
@@ -213,7 +295,7 @@ const router = express.Router();
 // (potential) Optimize TODO: setup cache of songs list to avoid many sql requests
 router.post('/', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, next) => {
   try {
-    const result = await querySongsList(req.whereConditional, req.cParams);
+    const result = await querySongsList(req.whereConditional, req.cParams, req.orderBy, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
     // console.log(songsList)
     const artistEvents =  await queryEventsList(songsList)
@@ -227,20 +309,19 @@ router.post('/', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, 
 
 router.post('/save', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, next) => {
   try {
-    const result = await querySongsList(req.whereConditional, req.cParams);
+    const result = await querySongsList(req.whereConditional, req.cParams, req.orderBy, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
-    // console.log(songsList)
     res.json(songsList);
   } catch (err) {
     next(err);
   }
 });
 
-router.post('/total_results', whereConditionBuilder, async (req, res, next) => {
+router.post('/total_results', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, next) => {
   try{
-    const result = await queryTotalResults(req.whereConditional);
+    const result = await queryTotalResults(req.whereConditional, req.cParams, req.fromEachArtist, req.fromEachAlbum);
     const total = result.rows[0];
-    console.log(total)
+    // console.log(total)
     res.json(total)
   } catch (err) {
     next(err);

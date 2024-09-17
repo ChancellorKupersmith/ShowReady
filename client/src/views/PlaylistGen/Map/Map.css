@@ -11,6 +11,7 @@
     margin: 5px;
     height: 95vh;
     border-radius: 10px;
+    cursor: auto;
 }
 .map-container .address-search {
     position: absolute;

@@ -37,7 +37,11 @@ export const SpotifyNotificationItem = ({playlist}) => {
         }
 
     */
-    const progress = Math.floor(playlist.pageProgress / playlist.size * 100);
+   console.log(`playlist progress ${playlist.page_progress}`)
+   console.log(`playlist size ${playlist.size}`)
+    const progress = Math.floor(playlist.page_progress / playlist.size * 100);
+    console.log(`progress ${progress}`)
+
     const red = progress > 50 ? (255 - (progress % 50) * 5) : 255;
     const green = progress <= 50 ? 5 * progress : 255;
     const message = (

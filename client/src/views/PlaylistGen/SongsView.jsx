@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import SongsListItem from './SongsListItem';
-import FilterView from '../Filter/FilterView';
 import CSVBtn from './Source/CSV';
 import SongsSvg from '../../assets/song-list.svg'
 import NextSvg from '../../assets/next.svg'
 import PrevSvg from '../../assets/prev.svg'
-import { useSongsFilter } from '../Filter/FilterContext';
+import { OrderByBtn, useSongsFilter } from '../Filter/FilterContext';
 import { SavePlaylistView } from "./Source/SavePlaylistView";
 import { SpotifyContextProvider, useSpotifyData, SpotifyBtn } from './Source/Spotify'
 import { YouTubeBtn } from './Source/Youtube';
-import NotificationView from '../Notification/NotificationView';
 import { createPortal } from 'react-dom';
 import { useSourceData } from './Source/SourceContext';
 
@@ -117,6 +115,7 @@ const SongsView = () => {
                     <div className='songs-view-container'>
                         {/* TODO: Make songs lists page size dynamic to window size */}
                         <div className={`songs-list-container ${bgColor}`}>
+                            <OrderByBtn />
                             <div className='source-tabs'>
                                 <CSVBtn />
                                 <SpotifyBtn />

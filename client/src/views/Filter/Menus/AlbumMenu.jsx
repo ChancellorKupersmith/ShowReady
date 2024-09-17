@@ -6,8 +6,11 @@ import { ReqExFilterTab, ReqExList } from './MenuUtils';
 const AlbumMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
     const [albumInput, setAlbumInput] = useState('');
+    const [fromEachAlbum, setFromEachAlbum] = useState(tempFilters.req.album.fromEach);
     // input funcs
     const handleAlbumChange = (event) => setAlbumInput(event.target.value);
+    // TODO: inform user you can have a max from each album 
+    const handleFromEachAlbumChange = (event) => setFromEachAlbum(Math.max(0, Math.min(event.target.value, tempFilters.req.artist.fromEach ? tempFilters.req.artist.fromEach : Number.MAX_SAFE_INTEGER)));
     // reqex btn funcs
     const reqAlbum = () => {
         if(!albumInput) return;
@@ -23,7 +26,7 @@ const AlbumMenu = () => {
             }
         });
         setAlbumInput('')
-    }
+    };
     const exAlbum = () => {
         if(!albumInput) return;
         updateTempFilters({
@@ -38,7 +41,22 @@ const AlbumMenu = () => {
             }
         });
         setAlbumInput('')
-    }
+    };
+    const reqFromEach = () => {
+        if(fromEachAlbum == null) return;
+        const newTotal = tempFilters.req.album.fromEach ? tempFilters.total : tempFilters.total + 1;
+        updateTempFilters({
+            ...tempFilters,
+            total: newTotal,
+            req: {
+                ...tempFilters.req,
+                album: {
+                    ...tempFilters.req.album,
+                    fromEach: fromEachAlbum
+                }
+            }
+        });
+    };
     // reqex filter tab funcs
     const removeReqAlbum = (album) => updateTempFilters({
         ...tempFilters,
@@ -62,6 +80,17 @@ const AlbumMenu = () => {
             }
         }
     });
+    const removeReqFromEach = () => updateTempFilters({
+        ...tempFilters,
+        total: tempFilters.total - 1,
+        req: {
+            ...tempFilters.req,
+            album: {
+                ...tempFilters.req.album,
+                fromEach: null
+            }
+        }
+    });
     const reqAlbums = tempFilters.req.album.names.map((album, index) =>
         <ReqExFilterTab 
             key={`reqfilter-album${index}`}
@@ -77,7 +106,10 @@ const AlbumMenu = () => {
         />
     );
 
-    const reqChildren = [...reqAlbums];
+    const reqChildren = [
+        (tempFilters.req.album.fromEach && <ReqExFilterTab key={'reqfilter-album-fromEach'} label={'From Each:'} value={`${tempFilters.req.album.fromEach}`} onClickFunc={removeReqFromEach}/>),
+        ...reqAlbums
+    ];
     const exChildren = [...exAlbums];
 
     return (
@@ -95,6 +127,18 @@ const AlbumMenu = () => {
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqAlbum}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exAlbum}>Exclude</button>
+                    </div>
+                </div>
+                <div className='menu-input'>
+                    <label htmlFor='fromEachAlbumInput'>#Songs From Each: </label>
+                    <input
+                        className='reqex-input-container'
+                        type='number'
+                        id='fromEachAlbumInput'
+                        onChange={handleFromEachAlbumChange}
+                    />
+                    <div className='reqex-btn-container'>
+                        <button className='reqex-btn req-btn only' onClick={reqFromEach}>Require</button>
                     </div>
                 </div>
             </div>

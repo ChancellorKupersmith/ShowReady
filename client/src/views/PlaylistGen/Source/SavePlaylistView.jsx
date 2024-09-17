@@ -53,7 +53,7 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                 body: JSON.stringify(postData)
             });
             const data = await response.json();
-            return data['count'];
+            return data['total'];
         }catch(err){
             console.error(err)
         }
@@ -100,10 +100,11 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                 body: JSON.stringify(postData)
             });
             const data = await response.json();
+            console.log(data)
             if(data.length > 0){
                 return [
-                    data[0].total,
-                    data.map(track => `spotify:track:${track.spid}`)
+                    data[0][0].total,
+                    data[0].map(track => `spotify:track:${track.spid}`)
                 ];
             }
             else{

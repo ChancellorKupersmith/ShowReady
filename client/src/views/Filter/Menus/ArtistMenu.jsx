@@ -6,8 +6,10 @@ import { ReqExFilterTab, ReqExList } from './MenuUtils';
 const ArtistMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
     const [artistInput, setArtistInput] = useState('');
+    const [fromEachArtist, setFromEachArtist] = useState(tempFilters.req.artist.fromEach);
     // input funcs
     const handleArtistChange = (event) => setArtistInput(event.target.value);
+    const handleFromEachArtistChange = (event) => setFromEachArtist(Math.max(0, event.target.value));
     // reqex btn funcs
     const reqArtist = () => {
         if(!artistInput) return;
@@ -23,7 +25,7 @@ const ArtistMenu = () => {
             }
         });
         setArtistInput('')
-    }
+    };
     const exArtist = () => {
         if(!artistInput) return;
         updateTempFilters({
@@ -38,7 +40,22 @@ const ArtistMenu = () => {
             }
         });
         setArtistInput('')
-    }
+    };
+    const reqFromEach = () => {
+        if(fromEachArtist == null) return;
+        const newTotal = tempFilters.req.artist.fromEach ? tempFilters.total : tempFilters.total + 1;
+        updateTempFilters({
+            ...tempFilters,
+            total: newTotal,
+            req: {
+                ...tempFilters.req,
+                artist: {
+                    ...tempFilters.req.artist,
+                    fromEach: fromEachArtist
+                }
+            }
+        });
+    };
     // reqex filter tab funcs
     const removeReqArtist = (artist) => updateTempFilters({
         ...tempFilters,
@@ -62,6 +79,17 @@ const ArtistMenu = () => {
             }
         }
     });
+    const removeReqFromEach = () => updateTempFilters({
+        ...tempFilters,
+        total: tempFilters.total - 1,
+        req: {
+            ...tempFilters.req,
+            artist: {
+                ...tempFilters.req.artist,
+                fromEach: null
+            }
+        }
+    });
     const reqArtists = tempFilters.req.artist.names.map((artist, index) =>
         <ReqExFilterTab 
             key={`reqfilter-artist${index}`}
@@ -77,7 +105,10 @@ const ArtistMenu = () => {
         />
     );
 
-    const reqChildren = [...reqArtists];
+    const reqChildren = [
+        (tempFilters.req.artist.fromEach && <ReqExFilterTab key={'reqfilter-artist-fromEach'} label={'From Each:'} value={`${tempFilters.req.artist.fromEach}`} onClickFunc={removeReqFromEach}/>),
+        ...reqArtists
+    ];
     const exChildren = [...exArtists];
 
     return (
@@ -95,6 +126,18 @@ const ArtistMenu = () => {
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqArtist}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exArtist}>Exclude</button>
+                    </div>
+                </div>
+                <div className='menu-input'>
+                    <label htmlFor='fromEachArtistInput'>#Songs From Each: </label>
+                    <input
+                        className='reqex-input-container'
+                        type='number'
+                        id='fromEachArtistInput'
+                        onChange={handleFromEachArtistChange}
+                    />
+                    <div className='reqex-btn-container'>
+                        <button className='reqex-btn req-btn only' onClick={reqFromEach}>Require</button>
                     </div>
                 </div>
             </div>

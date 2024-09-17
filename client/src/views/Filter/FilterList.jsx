@@ -223,6 +223,9 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
                 )
             }
         }
+        if(tempFilters.req.artist.fromEach){
+            tabs.push(<ReqExFilterTab key={'label-reqfilter-artist-fromEach'} label={'From Each:'} value={`${tempFilters.req.artist.fromEach}`}/>)
+        }
         populateTabs(tempFilters.req.artist.names, 'Artist:', 'label-reqfilter-artist')
         populateTabs(tempFilters.ex.artist.names, 'Artist:', 'label-exfilter-artist')
         // set ellipsis tab
@@ -243,6 +246,9 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
                     />
                 )
             }
+        }
+        if(tempFilters.req.album.fromEach){
+            tabs.push(<ReqExFilterTab key={'label-reqfilter-album-fromEach'} label={'From Each:'} value={`${tempFilters.req.album.fromEach}`}/>)
         }
         populateTabs(tempFilters.req.album.names, 'Album:', 'label-reqfilter-album')
         populateTabs(tempFilters.ex.album.names, 'Album:', 'label-exfilter-album')

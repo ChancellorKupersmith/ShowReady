@@ -11,7 +11,7 @@ export const NotificationProvider = ({children}) => {
     const mockPlaylist = {
         id: '2nQ04uKoAErm0R4wDgaCVa',
         name: 'test',
-        pageProgress: 6000,
+        page_progress: 6000,
         size: 10000,
         type: 'spotify',
         url: 'https://open.spotify.com/playlist/2nQ04uKoAErm0R4wDgaCVa',
@@ -23,6 +23,8 @@ export const NotificationProvider = ({children}) => {
     const [notifications, setNotifications] = useState(mockNotifications);
 
     const addNotification = (notification) => {
+        console.log('notification:')
+        console.log(notification)
         setNotifications({
             ...notifications,
             [notification.id]: notification

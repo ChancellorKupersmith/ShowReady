@@ -1,8 +1,9 @@
 .notifications-container button{
     background-color: transparent;
+    border: solid transparent;
 }
 .notifications-container button.selected {
-    border: solid white;
+    border: solid black;
 }
 .notifications-menu {
     position: absolute;
