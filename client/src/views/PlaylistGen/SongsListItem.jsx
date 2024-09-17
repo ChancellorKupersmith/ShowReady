@@ -8,7 +8,7 @@ import { YouTubeIcon } from "./Source/Youtube";
 import { useMap } from "./Map/SeattleMapView";
 
 
-const SongsListItem = ({songId, songTitle, artistName, eventLocation, date, spId, ytUrl, events}) => {
+const SongsListItem = ({songId, songTitle, artistName, albumName, eventLocation, date, spId, ytUrl, events}) => {
     const { filters, updateFilters } = useSongsFilter();
     const [isIncluded, setIsIncluded] = useState(true);
     const toggleIsInclude = () => {
@@ -72,52 +72,21 @@ const SongsListItem = ({songId, songTitle, artistName, eventLocation, date, spId
     );
     
     const SourceMeta = () => {
-        const style = {
-            display: 'flex',
-            justifyContent: 'start',
-            width: '20px',
-            height: '20px',
-            margin: '1px',
-            cursor: 'pointer',
-            // border: 'solid',
-        }
-        const containerStyle = {
-            display: 'flex'
-        }
         const spUrl = `http://open.spotify.com/track/${spId}`
         return (
-            <div style={containerStyle}>
+            <div className="source-meta-container">
                 { spId && 
-                    <div className="source-meta" style={style}>
+                    <div className="source-meta">
                         <SpotifyIcon url={spUrl}/> 
                     </div>
                 }
                 { ytUrl && 
-                    <div className="source-meta" style={style}>
+                    <div className="source-meta">
                         <YouTubeIcon url={ytUrl}/> 
                     </div>
                 }
             </div>
         );
-    }
-
-    const metaContainerStyle = {
-        display: 'flex',
-        alignItems: 'end',
-        // justifyContent: 'end',
-    }
-    const artistNameStyle = {
-        fontSize: '12px',
-        maxWidth: '80%',
-        marginLeft: '2px',
-        paddingLeft: '0px',
-        alignSelf: 'center',
-    }
-    const songTitleStyle = {
-        fontWeight: 'bold',
-        maxWidth: '96%',
-        marginTop: '8px',
-        paddingLeft: '0px',
     }
 
     const SongOverlay = () => {
@@ -127,62 +96,28 @@ const SongsListItem = ({songId, songTitle, artistName, eventLocation, date, spId
             left: `${elementPosition.left - 200}px`
         }
 
-        const eventInfoStyle = {
-            borderBottom: 'solid black 1px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'end',
-            paddingTop: '14px',
-            paddingBottom: '4px',
-        }
-        const dateStyle = {
-            fontWeight: 'bold',
-            fontSize: '12px',
-            margin: '0px',
-            padding: '0px',
-            minWidth: 'fit-content'
-            // border: 'solid',
-        }
-        const locationStyle = {
-            // border: 'solid',
-            fontWeight: 'bold',
-            fontSize: '14px',
-            textAlign: 'left',
-            margin: '0px',
-            marginLeft: '6px',
-            padding: '0px',
-            cursor: 'pointer',
-        }
-        const priceTimeContainerStyle = {
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'end',
-        }
-        const priceTimeStyle = {
-            fontSize: '10px',
-            whiteSpace: 'nowrap', /* Allow text to wrap */
-            overflow: 'visible',   /* Ensure the overflow is visible */
-            textOverflow: 'clip', /* Disable ellipsis */
-            maxWidth: 'max-content'
-        }
         const { findVenue } = useMap();
         return (
             <div className="overlay" style={overlayStyle}>
-                <div className="meta-container" style={metaContainerStyle}>
-                    <p className="song-title" style={songTitleStyle}>{songTitle}</p>
+                <div className="meta-container">
+                    <p className="song-title">{songTitle}</p>
                     <SourceMeta />
                 </div>
                 {/* album title */}
-                <p className="artist-name" style={artistNameStyle}>{artistName}</p>
+                <div className="artist-album-container">
+                    <p className="artist-name">{artistName}</p>
+                    <p className="break">-</p>
+                    { albumName && <p className="album-name">{albumName}</p> }
+                </div>
                 <ul>
                     { events.length > 0 &&
                         events.map((event, index) =>
-                            <div key={`event-info${index}`} className="event-info" style={eventInfoStyle}>
-                                <p className="date" style={dateStyle}>{displayDate(event.eventdate).slice(0,5)}</p>
-                                <p className="location" onClick={() => findVenue(event.venueaddress)} style={locationStyle}>{event.venue}</p>
-                                <div className="price-time-container" style={priceTimeContainerStyle}>
-                                    <p className="time" style={priceTimeStyle}>{event.eventtime}</p>
-                                    <p className="price" style={priceTimeStyle}>{event.price}</p>
+                            <div key={`event-info${index}`} className="event-info">
+                                <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
+                                <p className="location" onClick={() => findVenue(event.venueaddress)}>{event.venue}</p>
+                                <div className="price-time-container">
+                                    <p className="time">{event.eventtime}</p>
+                                    <p className="price">{event.price}</p>
                                 </div>
                             </div>
                         )
@@ -201,9 +136,9 @@ const SongsListItem = ({songId, songTitle, artistName, eventLocation, date, spId
                     onMouseEnter={() => setHovered(true)}
                     onMouseLeave={() => setHovered(false)}
                 >
-                    <p className="song-title" style={songTitleStyle}>{songTitle}</p>
-                    <div className="meta-container" style={metaContainerStyle}>
-                        <p className="artist-name" style={artistNameStyle}>{artistName}</p>
+                    <p className="song-title">{songTitle}</p>
+                    <div className="meta-container">
+                        <p className="artist-name">{artistName}</p>
                         <SourceMeta />
                     </div>
                     {hovered && <SongOverlay /> }

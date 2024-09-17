@@ -128,6 +128,7 @@ const SongsView = () => {
                                         key={index}
                                         songTitle={song.songtitle}
                                         artistName={song.artist}
+                                        albumName={song.albumtitle}
                                         eventLocation={song.venue}
                                         date={song.eventdate}
                                         spId={song.spid}

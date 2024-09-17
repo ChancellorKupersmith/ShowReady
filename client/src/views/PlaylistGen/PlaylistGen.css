@@ -98,6 +98,34 @@ button.source-btn.selected {
     z-index: 5;
     /* transform: translateX(-100px); Slight adjustment if needed */
 }
+.meta-container {
+    display: flex;
+    align-items: end;
+}
+.meta-container .artist-name {
+    font-size: 12px;
+    max-width: 80%;
+    margin-left: 2px;
+    padding-left: 0px;
+    align-self: center;
+}
+.song-title {
+    font-weight: bold;
+    max-width: 96%;
+    margin-top: 8px;
+    padding-left: 0px;
+}
+.source-meta-container {
+    display: flex;
+}
+.source-meta {
+    display: flex;
+    justify-content: start;
+    width: 20px;
+    height: 20px;
+    margin: 1px;
+    cursor: pointer;
+}
 .songs-list-container .songs-list-item {
     background: #fff;
     color: #333;
@@ -135,9 +163,9 @@ button.source-btn.selected {
 .songs-list-item p {
     /* Remove default margin to better control spacing */
     width: fit-content;
-    margin: 0;
-    padding-left: 10px;
-    padding-top: 2.5px;
+    margin: 2px;
+    /* padding-left: 10px;
+    padding-top: 2.5px; */
     text-align: start;
     white-space: nowrap;
     font-size: small;
@@ -163,6 +191,71 @@ button.source-btn.selected {
     border-left: solid #ffffff8e 1px;
     margin-left: 2px;
 }
+.song-title {
+    max-width: 96%;
+    margin-top: 8px;
+    padding-left: 0px;
+    font-weight: bold;
+
+}
+.artist-album-container {
+    display: flex;
+    align-items: center;
+}
+.overlay .artist-name {
+    align-self: center;
+    max-width: 80%;
+    /* margin-left: 2px; */
+    padding-left: 0px;
+    font-size: 12px;
+}
+.artist-album-container .album-name {
+    align-self: center;
+    padding-left: 0px;
+    font-size: 12px;
+}
+.artist-album-container .break {
+    align-self: center;
+    font-size: 11px;
+    margin: 2px;
+}
+.event-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    border-bottom: 1px solid black;
+    padding-top: 14px;
+    padding-bottom: 4px;
+}
+.event-info .date {
+    min-width: fit-content;
+    margin: 0px;
+    padding: 0px;
+    font-weight: bold;
+    font-size: 12px;
+}
+.event-info .location {
+    font-weight: bold;
+    font-size: 14px;
+    text-align: left;
+    margin: 0px;
+    margin-left: 6px;
+    padding: 0px;
+    cursor: pointer;
+}
+.event-info .price-time-container {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+}
+.event-info .price-time-container p {
+    font-size: 10px;
+    white-space: nowrap; /* Allow text to wrap */
+    overflow: visible; /* Ensure the overflow is visible */
+    text-overflow: clip; /* Disable ellipsis */
+    max-width: max-content;
+}
+
 
 /* Save Playlist Style */
 .save-playlist-view-container button {
