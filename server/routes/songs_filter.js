@@ -287,6 +287,30 @@ const queryVenues = async () => {
   return result.rows;
 }
 
+const queryUpcomingEvents = async (minDate, maxDate) => {
+  const client = await pool.connect();
+  // if(filters.dateGThan != '') whereConditional += `e.EventDate >= '${ (new Date(filters.dateGThan)).toUTCString() }' AND `;
+  //   if(filters.dateLThan != '') whereConditional += `e.EventDate <= '${ (new Date(filters.dateLThan)).toUTCString() }' AND `;
+  let query = `
+    SELECT 
+      e.Name as EventName, e.EventDate, e.EventTime, e.Url, e.Price,
+      v.Name AS VenueName, a.Name AS ArtistName
+    FROM Events as e
+    JOIN Venues as v ON v.ID = e.VenueID
+    JOIN EventsArtists as ea ON ea.EventID = e.ID
+    JOIN Artists as a ON a.ID = ea.ArtistID
+  `;
+  // join artists
+  if(minDate || maxDate){
+    query += `WHERE `;
+    if(minDate) query += `e.EventDate >= '${(new Date(minDate)).toUTCString()}' AND `;
+    query = maxDate ? query + `e.EventDate <= '${(new Date(maxDate)).toUTCString()}'` : query.substring(0, query.length - 4)
+  }
+  const result = await client.query(query);
+  client.release();
+  return result.rows;
+}
+
 
 // ROUTES
 const router = express.Router();
@@ -332,6 +356,24 @@ router.get('/venue_markers', async (req, res, next) => {
       res.json(venues);
   } catch (err) {
       console.error(`Error fetching venues, `, err);
+      next(err)
+  }
+});
+
+router.post('/upcoming_events', async (req, res, next) => {
+  try{
+      const { filters } = req.body;
+      const rows = await queryUpcomingEvents(filters.dateGThan, filters.dateLThan);
+      const events = rows.reduce((acc, row) => {
+        if(!acc[row.venuename]){
+          acc[row.venuename] = []
+        }
+        acc[row.venuename].push(row)
+        return acc;
+      }, {});
+      res.json(events);
+  } catch (err) {
+      console.error(`Error fetching upcoming events, `, err);
       next(err)
   }
 });
