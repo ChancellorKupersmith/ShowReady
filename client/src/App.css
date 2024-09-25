@@ -2,6 +2,11 @@
   /* max-width: 1280px; */
   margin: 0 auto;
   text-align: center;
+  overflow-x: auto;
+  width: 100%;
+  background-color: #242424;
+  color: white;
+
 }
 button {
   background-color: #e2e2e2;
@@ -11,15 +16,7 @@ button {
   padding: 6px;
   cursor: pointer;
 }
-.snap-container {
-  position: absolute;
-  top: 30px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  scroll-snap-type: y mandatory;
-  overflow-y: scroll;
-}
+
 input {
   background-color: #fff;
   color: black;
@@ -34,27 +31,33 @@ input {
 
 .snap-section {
   scroll-snap-align: start;
-  margin-top: 10px;
-  /* Full viewport height minus navbar height */
-  height: calc(100vh - 35px);
-  width: 100%;
+  margin-top: 39px; /* Navbar Height */
 }
 
 .navbar {
   position: fixed;
   top: 0;
-  left: 0;
+  right: 0;
   height: 30px; /* Height set for snap-container and snap-section dependencies */
-  width: 100%;
-  background-color: #333;
+  /* width: 100%; */
+  padding: 2px;
+  background-color: transparent;
+  /* border: 1px solid #fff; */
   display: flex;
   justify-content: space-around;
-  /* padding: 1rem; */
-  padding-top: 5px;
+  align-items: center;
   z-index: 5;
 }
-
+.navbar .home-btn {
+  margin-top: 2px;
+  padding: 2px;
+}
 .navbar a {
+  margin-top: 2px;
+  margin-left: 5px;
+  border: 1px solid white;
+  border-radius: 10px;
+  padding: 7px;
   color: white;
   text-decoration: none;
   cursor: pointer;

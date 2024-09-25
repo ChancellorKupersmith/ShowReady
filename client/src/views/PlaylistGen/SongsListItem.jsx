@@ -103,10 +103,9 @@ const SongsListItem = ({songId, songTitle, artistName, albumName, eventLocation,
                     <p className="song-title">{songTitle}</p>
                     <SourceMeta />
                 </div>
-                {/* album title */}
                 <div className="artist-album-container">
                     <p className="artist-name">{artistName}</p>
-                    <p className="break">-</p>
+                    { albumName && <p className="break">-</p> }
                     { albumName && <p className="album-name">{albumName}</p> }
                 </div>
                 <ul>

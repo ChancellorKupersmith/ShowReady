@@ -147,9 +147,10 @@ async def scrapeVenueCoordinates():
 
 async def main():
     await scrapeVenueCoordinates()
-    venues = get_venue_coordinates_fromDB()
-    updated_venues = await get_ticketmaster_venueIDs(venues)
-    if updated_venues is not None:
-        save_venueIDs_inDB(updated_venues)
+    # TODO: Add tm consolidaation logic in show aggregator
+    # venues = get_venue_coordinates_fromDB()
+    # updated_venues = await get_ticketmaster_venueIDs(venues)
+    # if updated_venues is not None:
+    #     save_venueIDs_inDB(updated_venues)
 
 asyncio.run(main())

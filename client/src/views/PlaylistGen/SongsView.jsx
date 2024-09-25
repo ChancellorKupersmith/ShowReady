@@ -42,7 +42,7 @@ const SongsView = () => {
                 const data = await response.json();
                 if(data.length > 0)
                     setTotalPages(Math.ceil(data[0][0].total / pageSize))
-                // console.log(data);
+                console.log(data);
                 setSongs([...data[0]]);
                 setEvents(data[1])
             }catch(err){
@@ -129,8 +129,6 @@ const SongsView = () => {
                                         songTitle={song.songtitle}
                                         artistName={song.artist}
                                         albumName={song.albumtitle}
-                                        eventLocation={song.venue}
-                                        date={song.eventdate}
                                         spId={song.spid}
                                         ytUrl={song.yturl}
                                         events={events[song.artist]}

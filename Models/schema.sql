@@ -1,11 +1,12 @@
 CREATE TABLE IF NOT EXISTS Venues (
     ID SERIAL PRIMARY KEY,
     Name VARCHAR(300),
-    VenueUrl VARCHAR(600),
-    VenueAddress VARCHAR(600),
+    VenueUrl VARCHAR(511),
+    VenueAddress VARCHAR(255),
+    City VARCHAR(100),
     Hood VARCHAR(100),
     Summary VARCHAR(6000),
-    EOUrl VARCHAR(600) UNIQUE,
+    EOUrl VARCHAR(511) UNIQUE,
     Phone VARCHAR(20),
     LAT NUMERIC(10, 7),
     LNG NUMERIC(10, 7),
@@ -17,10 +18,10 @@ CREATE TABLE IF NOT EXISTS Venues (
 
 CREATE TABLE IF NOT EXISTS Events (
     ID SERIAL PRIMARY KEY,
-    Name VARCHAR(300),
+    Name VARCHAR(300) NOT NULL,
     Url VARCHAR(600),
     Price VARCHAR(100),    
-    EventDate DATE,
+    EventDate DATE NOT NULL,
     EventTime VARCHAR(100),
     AgeRestrictions VARCHAR(50),
     Summary VARCHAR(6000),
@@ -59,7 +60,7 @@ CREATE TABLE IF NOT EXISTS Albums (
 
 CREATE TABLE IF NOT EXISTS Genres (
     ID SERIAL PRIMARY KEY,
-    Name VARCHAR(300) UNIQUE NOT NULL,
+    Name VARCHAR(300) NOT NULL,
     ArtistID INT,
     AlbumID INT,
     SongID INT,

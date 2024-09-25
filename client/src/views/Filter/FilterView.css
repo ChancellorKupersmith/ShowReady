@@ -214,26 +214,27 @@ button.order-random {
     border-radius: 10px;
     cursor: pointer;
     text-align: center;
+    border: px solid;
     color: hsla(0, 0%, 100%, 0.812);
 }
 .req-btn {
     margin-left: 2px;
-    background-color: #3b694e;
-    box-shadow: inset -5px -5px 10px hsl(145, 28%, 15%), inset 1px 1px 3px #ffffff;
+    background-color: #242424;
+    box-shadow: inset -5px -5px 10px #242424, inset 1px 1px 3px #ffffff;
 }
 .reqex-btn.only {
     width: 100%;
 }
 .req-btn:hover {
-    box-shadow: inset 5px 5px 10px hsl(145, 28%, 15%), inset -1px -1px 3px #ffffff;
+    box-shadow: inset 5px 5px 10px #242424, inset -1px -1px 3px #ffffff;
 }
 .ex-btn {
-    background-color: #da3a34;
-    box-shadow: inset -5px -5px 10px hsl(2, 69%, 30%), inset 1px 1px 3px #ffffff;
+    background-color: #242424;
+    box-shadow: inset -5px -5px 10px #242424, inset 1px 1px 3px #ffffff;
 
 }
 .ex-btn:hover {
-    box-shadow: inset 5px 5px 10px hsl(2, 69%, 30%), inset -1px -1px 3px #ffffff;
+    box-shadow: inset 5px 5px 10px #242424, inset -1px -1px 3px #ffffff;
 }
 .reqex-list {
     flex: 1;

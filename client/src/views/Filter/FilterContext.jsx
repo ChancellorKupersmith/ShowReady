@@ -31,6 +31,9 @@ export const FilterContextProvider = ({ children }) => {
         // spotifyPopularityGThan: '',
         // spotifyPopularityLThan: '',
         ex: {
+            genre: {
+                names: [],
+            },
             date: {
                 dates: [],
                 eventTimes: [],
@@ -63,6 +66,9 @@ export const FilterContextProvider = ({ children }) => {
             },
         },
         req: {
+            genre: {
+                names: [],
+            },
             date: {
                 dates: [],
                 eventTimes: [],
@@ -100,6 +106,7 @@ export const FilterContextProvider = ({ children }) => {
         if(newFiltersObj){
             setFilters(newFiltersObj);
         }
+        console.log(newFiltersObj)
     }
 
     return (

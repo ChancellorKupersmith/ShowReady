@@ -1,0 +1,41 @@
+.landing-view {
+    width: 100%;
+}
+.call-to-action-container {
+    padding-left: 10px;
+    padding-right: 10px;
+    border: solid blueviolet;
+}
+.call-to-action-container h1 {
+    /* border: solid red; */
+    text-align: left;
+    font-size: 24px;
+}
+.call-to-action-container p {
+    text-align: left;
+    font-size: 14px;
+}
+
+.slider {
+    border: solid rgb(0, 251, 255);
+    width: 100%;
+}
+
+.data-stats-container {
+    border: solid green;
+}
+
+.playlists-carousel-container {
+    border: solid red;
+    width: 100%;
+}
+.playlist-carousel-slide {
+    border: solid yellow;
+    width: 100%;
+    
+}
+.radiogen-playlist {
+    border: solid blue;
+    color: white;
+    width: 100%;
+}

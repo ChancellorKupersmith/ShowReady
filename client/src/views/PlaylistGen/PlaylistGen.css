@@ -6,7 +6,7 @@
     margin-top: 35px;
 }
 .csv-bg-color { background-color: #abd3df; }
-.spotify-bg-color { background-color: #18c49e; }
+.spotify-bg-color { background-color: #00dc52; }
 .youtube-bg-color { background-color: #ff4d4d; }
 .svg-container {
     max-width: fit-content;
@@ -38,6 +38,7 @@
     display: flex;
     width: 100%;
     margin: 0px;
+    border-bottom: solid #212121 1.5px;
 }
 button.source-btn {
     flex: 1;
@@ -48,7 +49,7 @@ button.source-btn {
     margin: 4px 0px 0px 0px;
 }
 button.source-btn.selected {
-    border: solid white 2px;
+    border: solid #212121 1.5px;
     border-bottom: none;
 }
 
@@ -60,7 +61,7 @@ button.source-btn.selected {
     min-height: fit-content;
     width: 40%;
     height: 100%;
-    border: solid;
+    border: 1.5px solid #212121;
     padding: 6px;
     border-radius: 10px;
 }
@@ -91,7 +92,7 @@ button.source-btn.selected {
     height: fit-content;
     background-color: #fff;
     color: black;
-    border: solid white;
+    border: 0.5px solid #242424;
     padding: 10px;
     box-sizing: border-box;
     border-radius: 10px;

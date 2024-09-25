@@ -10,7 +10,7 @@ import { TempFilterContextProvider } from './FilterContext';
 
 const FilterView = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const closeModal = () => setIsOpen(!isOpen)
+    const closeModal = () => setIsOpen(!isOpen);
 
     const FilterBtn = () => {
         const FilterImg = () => (
@@ -25,10 +25,10 @@ const FilterView = () => {
         return (
             <button id='filter-btn' className={isOpen? 'selected' : ''} onClick={closeModal}><FilterImg /></button>
         );
-    } 
+    }; 
 
 
-    const [filterMenu, setFilterMenu] = useState('date')
+    const [filterMenu, setFilterMenu] = useState('genre')
     const handleFilterMenu = (label) => {
         switch(label.toLowerCase()){
             case 'location':
@@ -49,10 +49,13 @@ const FilterView = () => {
             case 'source':
                 setFilterMenu('source');
                 break;
-            default:
+            case 'date':
                 setFilterMenu('date');
-        }
-    }
+                break;
+            default:
+                setFilterMenu('genre');
+        };
+    };
 
     return (
         <div>

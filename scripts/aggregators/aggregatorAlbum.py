@@ -25,7 +25,7 @@ def get_artists_fromDB():
         SELECT DISTINCT a.id, a.name, a.lastfmurl, a.spotifyexternalid
         FROM Artists a
         LEFT JOIN Albums al ON a.id = al.artistid
-        WHERE al.id IS NULL;
+        WHERE al.id IS NULL
     """
     try:
         with PostgresClient(log=log) as db:
@@ -42,25 +42,26 @@ async def query_lastFm_albums(client, artist_name, artist_id):
         resp = await client.get("artist.gettopalbums", [f"artist={artist_name}", "limit=200"])
         if resp.status_code != 200:
             log(2, f"Failed to fetch data. Status code:{resp.status_code}")
-            return (False, [])
+            return (False, [], [])
         json_data = (resp.json())
         lastfm_albums_list = json_data["topalbums"]["album"]
         # log(0, f"LASTFM {artist_name} TOP ALBUMS LIST: {lastfm_albums_list}")
         if len(lastfm_albums_list) == 0:
             log(2, f"LastFM found 0 albums for {artist_name}")
-            return (False, [])
+            return (False, [], [])
         albums = list(map(lambda album: {album["name"].lower(): Album(title=album["name"], lastfmurl=album["url"], artistid=artist_id)}, lastfm_albums_list))
-        return (True, albums)
+        return (True, albums, [])
     except Exception as e:
         log(1, f"ERROR finding artist: {artist_name}'s albums on LastFM: {e}")
-        return (False, [])
+        return (False, [], [])
 
 @timer_decorator
 async def query_spotify_albums(client, artist_spotify_id, artist_id, artist_name):
     albums = []
+    genres = []
     if artist_spotify_id is None:
         log(2, f"artist: ({artist_name}, {artist_id}) not found on spotify")
-        return (True, albums)
+        return (True, albums, genres)
     try:
         # if total is more than limit (max spotify api limit 50) paginate to get all albums
         offset = 0
@@ -70,23 +71,26 @@ async def query_spotify_albums(client, artist_spotify_id, artist_id, artist_name
             resp = await client.get(f"/artists/{artist_spotify_id}/albums?", ["market=US", f"offset={offset}", f"limit={limit}"])
             if resp.status_code != 200:
                 log(2, f"Failed to fetch data. Status code:{resp.status_code}, Returning current aggregated albums")
-                return (False, albums)
+                return (False, albums, genres)
             json_data = (resp.json())
+            log(0, f'resp: {json_data}')
             resp_total = json_data["total"]
-            albums.extend(map(lambda a: { a["name"].lower(): Album(title=a["name"], spotifyexternalid=a["id"], artistid=artist_id)}, json_data["items"]))
+            for album in json_data["items"]:
+                albums.append({album['name'].lower(): Album(title=album['name'], spotifyexternalid=album['id'], artistid=artist_id)})
+                album_genres = album.get('genres')
+                if album_genres is not None:
+                    genres.extend([(Genre(name=g, artistid=artist_id), album['name'].lower()) for g in album_genres])
             offset += limit
-        return (True, albums)
+        return (True, albums, genres)
     except Exception as e:
         log(1, f"ERROR finding artist: {artist_name} albums on Spotify: {e}")
-        return (False, albums)
+        return (False, albums, genres)
 
 @timer_decorator
-async def find_albums(artist):
-    spotify_client = SpotifyClient(log=log)
-    await spotify_client.init_access_token()
-    lastfm_client = LastFmClient(log=log)
+async def find_albums(artist, spotify_client, lastfm_client):
     failed_artists = []
     artist_albums = {}
+    genres = {}
     try:
         # 3rd party searches albums concurrently 
         tasks = [
@@ -94,10 +98,10 @@ async def find_albums(artist):
             query_spotify_albums(spotify_client, artist.spotify_id, artist.id, artist.name)
         ]
         results = await asyncio.gather(*tasks)
-        # Consolidate album info
+        # Consolidate album info and populate genres object
         itr = 0
         for res in results:
-            success, found_albums = res
+            success, found_albums, found_genres = res
             if not success and itr == 1:
                 failed_artists.append((artist.id, f"error finding albums for artist: {artist.name}"))
             for a in found_albums:
@@ -113,11 +117,13 @@ async def find_albums(artist):
                             artist_albums[key] = album
                     else:
                         artist_albums[key] = album
+            for g in found_genres:
+                genres[g[1]] = g[0]
             itr += 1
     except Exception as e:
         log(1, f"ERROR fetching artist albums, {e}")
         failed_artists.append((artist.id, f"error finding albums for artist: {artist.name}"))
-    return (artist_albums.values(), failed_artists)
+    return (artist_albums.values(), genres, failed_artists)
 
 @timer_decorator
 def save_albums_inDB(albums_to_save):
@@ -129,11 +135,13 @@ def save_albums_inDB(albums_to_save):
             title = EXCLUDED.title,
             artistid = EXCLUDED.artistid,
             spotifyexternalid = EXCLUDED.spotifyexternalid
+        RETURNING id, title, artistid
     """
     try:
         with PostgresClient(log=log) as db:
             album_tuples = list(map(lambda a: a.to_tuple(), albums_to_save))
-            db.query(query=insert_query, data=album_tuples)
+            rows = db.query(query=insert_query, data=album_tuples, fetchall=True)
+            return { row[1]: Album(id=row[0], title=row[1], artistid=row[2]) for row in rows }
     except Exception as e:
         log(1, f"Error saving Albums to db: {e}")
 
@@ -149,6 +157,28 @@ def save_errors_inDB(artists_not_found):
             db.query(query=insert_query, data=artists_not_found)
     except Exception as e:
         log(1, f"Error saving errors to db, {e}")
+
+@timer_decorator
+def save_genres_inDB(found_genres, saved_albums):
+    """
+        found_genres structure: (Genre, album_title)
+        saved_albums structure: {album_title: Album}
+    """
+    insert_query = """
+        INSERT INTO Genres (name, artistid, albumid)
+        VALUES %s
+    """
+    try:
+        genres = []
+        for g in found_genres:
+            album = saved_albums.get(g[1])
+            if album is not None:
+                g.album_id = album.id
+            genres.append((g.name, g.artist_id, g.album_id))
+        with PostgresClient(log=log) as db:
+            db.query(query=insert_query, data=genres)
+    except Exception as e:
+        log(1, f"Error saving Genres to db: {e}")
 
 @timer_decorator
 def get_albums_fromDB():
@@ -170,15 +200,21 @@ async def main():
     # TODO paginate through artists from db
     artists = get_artists_fromDB()
     artists_and_albums = []
+    spotify_client = SpotifyClient(log=log)
+    await spotify_client.init_access_token()
+    lastfm_client = LastFmClient(log=log)
     for artist in artists:
-        found_albums, errors = await find_albums(artist)
+        found_albums, found_genres, errors = await find_albums(artist, spotify_client, lastfm_client)
         #  filter found albums from already found spotify ids, (choosing to filter spotify ids assuming less ids of spotify than lastfmurls), having to filter incase multiple artists share album
         existing_albums = get_albums_fromDB()
         new_found_albums = list(filter(lambda album: album.spotify_id not in existing_albums, found_albums))
         # save data
+        saved_albums = {}
         if len(found_albums) > 0:
-            save_albums_inDB(new_found_albums)
+           saved_albums = save_albums_inDB(new_found_albums)
         if len(errors) > 0:
             save_errors_inDB(errors)
+        if found_genres:
+            save_genres_inDB(found_genres, saved_albums)
     print(f'Completed album aggregator, logs: {log_filename}')
 asyncio.run(main())

@@ -336,3 +336,13 @@ class Venue:
         self.lat = lat
         self.lng = lng
         self.tmid = tmid
+
+class Genre:
+    def __init__(self, id=None, name=None, artistid=None, albumid=None, songid=None, eventid=None, venueid=None):
+        self.id = id
+        self.name = name
+        self.artist_id = artistid
+        self.album_id = albumid
+        self.song_id = songid
+        self.event_id = eventid
+        self.venue_id = venueid

@@ -72,8 +72,9 @@ def save_songs_inDB(songs_to_save):
                 log(0, f"Saved {len(song_tuples)} songs")
         return []
     except Exception as e:
-        log(1, f"Error inserting songs in db, {e}")
-        return [ s.album_id for s in songs_to_save ]
+        msg = f"Error inserting songs in db, {e}"
+        log(1, msg)
+        return [ (s.album_id, msg) for s in songs_to_save ]
 
 @timer_decorator
 def update_songs_inDB(songs_to_update):
@@ -94,71 +95,56 @@ def update_songs_inDB(songs_to_update):
         return [ s.album_id for s in songs_to_update ]
 
 @timer_decorator
-def save_errors_inDB(albums_not_found):
-    log(2, f'albums not found: {albums_not_found}')
+def save_genres_inDB(album_genres):
     insert_query = """
-        INSERT INTO Errors (albumid)
+        INSERT INTO Genres (name, artistid, albumid)
         VALUES %s
     """
     try:
-        if len(albums_not_found) > 0:
+        with PostgresClient(log=log) as db:
+            genre_tuples = [ (g.name, g.artist_id, g.album_id) for g in album_genres ]
+            if len(genre_tuples) > 0:
+                db.query(query=insert_query, data=genre_tuples)
+                log(0, f"Saved {len(genre_tuples)} genres")
+        return []
+    except Exception as e:
+        msg = f"Error inserting genres in db, {e}"
+        log(1, msg)
+        return [ (g.album_id, msg) for g in album_genres ]
+
+@timer_decorator
+def save_errors_inDB(errors):
+    log(2, f'albums not found: {len(errors)}')
+    insert_query = """
+        INSERT INTO Errors (albumid, errormessage)
+        VALUES %s
+    """
+    try:
+        if len(errors) > 0:
             with PostgresClient(log=log) as db:
-                db.query(query=insert_query, data=albums_not_found)
+                db.query(query=insert_query, data=errors)
     except Exception as e:
         log(1, f"Error saving errors to db, {e}")
 
 @timer_decorator
 def update_albums_inDB(albums_to_update):
-    def update_albums(db):
-        try:
-            update_query = """
-                INSERT INTO Albums (title, id, spotifypopularity)
-                VALUES %s
-                ON CONFLICT (id) DO UPDATE SET
-                    title = EXCLUDED.title,
-                    spotifypopularity = EXCLUDED.spotifypopularity
-            """
+    update_query = """
+        INSERT INTO Albums (title, id, spotifypopularity)
+        VALUES %s
+        ON CONFLICT (id) DO UPDATE SET
+            title = EXCLUDED.title,
+            spotifypopularity = EXCLUDED.spotifypopularity
+    """
+    try:
+        with PostgresClient(log=log) as db:
             update_tuples = [ (a.title, a.id, a.spotify_popular) for a in albums_to_update ]
             log(0, f"Update Tuples: {update_tuples}")
             db.query(query=update_query, data=update_tuples)
-        except Exception as e:
-            log(1, f"Error updating albums in db, {e}")
-    def select_genres(db, genres):
-        try:
-            insert_query = """
-                INSERT INTO Genres (name)
-                VALUES %s
-                ON CONFLICT (name) DO NOTHING
-                RETURNING name, id
-            """
-            rows = db.query(query=insert_query, data=genres, fetchall=True)
-            return {row[0]: row[1] for row in rows}
-        except Exception as e:
-            log(1, f"Error saving genres in db, {e}")
-
-    def save_album_genres(db, albums_genres):
-        try:
-            insert_query = """
-                INSERT INTO AlbumGenres (albumid, genreid)
-                VALUES %s
-                ON CONFLICT (albumid, genreid) DO NOTHING
-            """
-            log(0, f"AlbumGenres: {albums_genres}")
-            db.query(query=insert_query, data=albums_genres)
-        except Exception as e:
-            log(1, f"Error saving AlbumGenres, {e}")
-    try:
-        with PostgresClient(log=log) as db:
-            genres = [ (genre,) for album in albums_to_update for genre in album.genres ]
-            if len(genres) > 0:
-                new_genres = select_genres(db, genres)
-                join_albums_genres = [ (album.id, new_genres[genre]) for album in albums_to_update for genre in album.genres ]
-                save_album_genres(db, join_albums_genres)
-            update_albums(db)
             return []
     except Exception as e:
-        log(1, f"Error updating album meta in db, {e}")
-        return [(album.id,) for album in albums_to_update]
+        msg = f"Error updating album meta in db, {e}"
+        log(1, msg)
+        return [(album.id, msg) for album in albums_to_update]
 
 @timer_decorator
 async def fetch_album_tracks(client, album_ids):
@@ -177,10 +163,16 @@ def populate_songs(json_data, albums):
     # aggregate songs in hash table to preserve unique SpotifyExternalId property in db
     songs = {}
     errors = []
+    genres = []
     for spotify_album in json_data["albums"]:
         spID = spotify_album["id"]
         albumObj = albums[spID]
         try:
+            # get genres
+            sp_genres = spotify_album.get('genres')
+            if sp_genres is not None:
+                genres.extend([Genre(name=g.name, artistid=albumObj.artist_id, albumid=albumObj.id) for g in sp_genres])
+            # get tracks
             for song in spotify_album["tracks"]["items"]:
                 # init empty dict if first artist album
                 songs[song["id"]] = Song(
@@ -192,9 +184,10 @@ def populate_songs(json_data, albums):
                     spotifypreviewurl=song.get("preview_url")
                 )
         except Exception as e:
-            log(1, f"Error populating songs, {e}")
-            errors.append((albumObj.id,))
-    return (songs.values(), errors)
+            msg = f"Error populating songs, {e}"
+            log(1, msg)
+            errors.append((albumObj.id, msg))
+    return (songs.values(), genres, errors)
 
 @timer_decorator
 def populate_update_albums(json_data, albums):
@@ -204,12 +197,12 @@ def populate_update_albums(json_data, albums):
         spID = spotify_album["id"]
         albumObj = albums[spID]
         try:
-            albumObj.genres = spotify_album["genres"]
             albumObj.spotify_popular = int(spotify_album["popularity"])
             update_albums.append(albumObj)
         except Exception as e:
-            log(1, f"Error populating update_albums, {e}")
-            errors.append((albumObj.id,))
+            msg = f"Error populating update_albums, {e}"
+            log(1, msg)
+            errors.append((albumObj.id, msg))
     return (update_albums, errors)
 
 @timer_decorator
@@ -247,7 +240,7 @@ async def main():
         # log(0, f'albums to search: {len(albums)}, {[ album.title for album in albums ]}')
         json_data = await fetch_album_tracks(client, albums.keys())
         if json_data:
-            songs, errors = populate_songs(json_data, albums)
+            songs, album_genres, errors = populate_songs(json_data, albums)
             # filter songs based on title and name
             titles, artist_ids = get_existing_songs()
             update_songs = set()
@@ -257,18 +250,17 @@ async def main():
                     insert_songs.add(s)
                 else:
                     update_songs.add(s)
-
             log(0, f'new songs ids: {[s.artist_id for s in insert_songs]}')
             log(0, f'new songs titles: {[s.title for s in insert_songs]}')
-            errors = errors + save_songs_inDB(insert_songs)
-            errors = errors + update_songs_inDB(update_songs)
-            save_errors_inDB(errors)
-
-            update_albums, errors = populate_update_albums(json_data, albums)
+            errors += save_songs_inDB(insert_songs)
+            errors += update_songs_inDB(update_songs)
+            errors += save_genres_inDB(album_genres)
+            update_albums, album_errors = populate_update_albums(json_data, albums)
+            errors += album_errors
             errors += update_albums_inDB(update_albums)
             save_errors_inDB(errors)
         else:
-            save_errors_inDB(albums.keys())
+            save_errors_inDB([(a, 'error fetching albums from spotify') for a in albums.keys()])
     log(0, 'SUCCESSFULL SPOTIFY SONG AGGREGATION!')
     print(f'Completed spotify song aggregator, logs: {log_filename}')
 asyncio.run(main())

@@ -39,6 +39,9 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
             // spotifyPopularityGThan: '',
             // spotifyPopularityLThan: '',
             ex: {
+                genre: {
+                    names: [],
+                },
                 date: {
                     dates: [],
                     eventTimes: [],
@@ -70,6 +73,9 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
                 },
             },
             req: {
+                genre: {
+                    names: [],
+                },
                 date: {
                     dates: [],
                     eventTimes: [],
@@ -107,6 +113,31 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
     // only display 2 tabs, display truncate tab if more
     // EFFICIENT: The reason for the complex logic (instead of just copying a bunch of unused data) is to avoid creating a bunch of unused html elements
     const MAX_TABS = 3;
+    const populateTabs = (list, label, key) => {
+        const tabs = [];
+        for(let i=0; i < list.length && tabs.length <= MAX_TABS; i++){
+            tabs.push(
+                <ReqExFilterTab 
+                    key={`${key}${i}`}
+                    label={label}
+                    value={list[i]}
+                />
+            )
+        }
+        return tabs;
+    }
+    const getGenreFilterTabs = () => {
+        let tabs = [];
+        tabs = [...tabs, ...populateTabs(tabs, tempFilters.req.genre.names, 'Genre:', 'label-reqfilter-genre')]
+        tabs = [...tabs, ...populateTabs(tempFilters.ex.genre.names, 'Genre:', 'label-exfilter-genre')]
+
+        // set ellipsis tab
+        if(tabs.length >= MAX_TABS){
+            tabs[MAX_TABS - 1] = <ReqExFilterTab key={'date-ellipsis'} value={'...'}/>
+        }
+        console.log(`Tabs: ${tabs}`)
+        return tabs;
+    }
     const getDateFilterTabs = () => {
         let tabs = [];
         const populateTabs = (list, label, key) => {
@@ -314,6 +345,7 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
         }
         return tabs;
     }
+    const genreTabs = getGenreFilterTabs();
     const dateTabs = getDateFilterTabs();
     const locationTabs = getLocationFilterTabs();
     const eventTabs = getEventFilterTabs();
@@ -329,6 +361,7 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
                 <h2>Filters</h2>
                 {(tempFilters.total && <ReqExFilterTab label={'total:'} value={tempFilters.total} onClickFunc={clearAllFilters}/>)}
             </div>
+            <FilterLabel label={'Genre'} handleFilterMenu={handleFilterMenu} selectedMenu={selectedMenu} tabs={genreTabs}/>
             <FilterLabel label={'Date'} handleFilterMenu={handleFilterMenu} selectedMenu={selectedMenu} tabs={dateTabs}/>
             <FilterLabel label={'Location'} handleFilterMenu={handleFilterMenu} selectedMenu={selectedMenu} tabs={locationTabs}/>
             <FilterLabel label={'Event'} handleFilterMenu={handleFilterMenu} selectedMenu={selectedMenu} tabs={eventTabs}/>

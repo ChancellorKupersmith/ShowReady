@@ -6,10 +6,14 @@ import ArtistMenu from './ArtistMenu';
 import AlbumMenu from './AlbumMenu';
 import SongMenu from './SongMenu';
 import SourceMenu from './SourceMenu';
+import GenreMenu from './GenreMenu';
 
 const FilterMenu = ({filterMenu}) => {
     let menu;
     switch(filterMenu){
+        case 'genre':
+            menu = <GenreMenu />
+            break;
         case 'date':
             menu = <DateMenu />
             break;

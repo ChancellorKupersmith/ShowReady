@@ -10,10 +10,10 @@ const pool = new Pool({
 const MAX_PAGE_SIZE = 200;
 const DEFAULT_PAGE_SIZE = 100;
 const OrderBys = Object.freeze({
-   ARTIST: 'a.Name',
-   SONG_NAME: 'Songs.Title',
-   EVENT_DATE: 'e.EventDate',
-   VENUE_NAME: 'v.Name',
+   ARTIST: 'Artist',
+   SONG_NAME: 'SongTitle',
+   EVENT_DATE: 'EventDate',
+   VENUE_NAME: 'VenueName',
    RANDOM: 'RANDOM()',
 });
 const reqQueryParamsCleaner = (req, res, next) => {
@@ -22,7 +22,8 @@ const reqQueryParamsCleaner = (req, res, next) => {
     const pageSize = Math.min(MAX_PAGE_SIZE, parseInt(limit) || DEFAULT_PAGE_SIZE);
     const pageNum = parseInt(page) || 0;
     req.fromEachArtist = filters.req.artist.fromEach? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, parseInt(filters.req.artist.fromEach))) : null;
-    req.fromEachAlbum = filters.req.album.fromEach? Math.max(0, Math.min(filters.req.artist.fromEach, parseInt(filters.req.album.fromEach))) : null;
+    req.fromEachAlbum = filters.req.album.fromEach? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, parseInt(filters.req.album.fromEach))) : null;
+    req.fromEachGenre = filters.req.genre.fromEach? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, parseInt(filters.req.genre.fromEach))) : null;
     let orderBy = filters.orderBy || 2;
     switch (orderBy) {
       case 1:
@@ -48,12 +49,13 @@ const reqQueryParamsCleaner = (req, res, next) => {
     next(err);
   }
 };
-
-const whereConditionBuilder = async (req, res, next) => {
+const eventWhereConditionBuilder = async (req, res, next) => {
   try {
     let whereConditional = 'WHERE ';
 
     const { filters } = req.body;
+    if(filters.ex.genre?.names?.length) whereConditional += `g.Name NOT IN ('${filters.ex.genre.names.join(`', '`)}') AND `;
+    if(filters.req.genre?.names?.length) whereConditional += `g.Name IN ('${filters.req.genre.names.join(`', '`)}') AND `;
     if(filters.dateGThan != '') whereConditional += `e.EventDate >= '${ (new Date(filters.dateGThan)).toUTCString() }' AND `;
     if(filters.dateLThan != '') whereConditional += `e.EventDate <= '${ (new Date(filters.dateLThan)).toUTCString() }' AND `;
     if(filters.priceGThan != '') whereConditional += `e.Price >= '${filters.priceGThan}' AND `;
@@ -70,7 +72,25 @@ const whereConditionBuilder = async (req, res, next) => {
     // TODO: handle ex/req addresses within square miles
     if(filters.ex.event.names.length) whereConditional += `e.Name NOT IN ('${filters.ex.event.names.join(`', '`)}') AND `;
     if(filters.req.event.names.length) whereConditional += `e.Name IN ('${filters.req.event.names.join(`', '`)}') AND `;
-    // TODO: handle age restrictions
+    // remove trailing 'AND'
+    if(whereConditional != 'WHERE ')
+      whereConditional = whereConditional.substring(0, whereConditional.length - 4);
+    else
+      whereConditional = ''
+    req.eventWhereConditional = whereConditional;
+    // console.log(whereConditional)
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+const songWhereConditionBuilder = async (req, res, next) => {
+  try {
+    let whereConditional = 'WHERE ';
+
+    const { filters } = req.body;
+    if(filters.ex.genre?.names?.length) whereConditional += `g.Name NOT IN ('${filters.ex.genre.names.join(`', '`)}') AND `;
+    if(filters.req.genre?.names?.length) whereConditional += `g.Name IN ('${filters.req.genre.names.join(`', '`)}') AND `;
     if(filters.ex.artist.names.length) whereConditional += `a.Name NOT IN ('${filters.ex.artist.names.join(`', '`)}') AND `;
     if(filters.req.artist.names.length) whereConditional += `a.Name IN ('${filters.req.artist.names.join(`', '`)}') AND `;
     // TODO: handle from each artists
@@ -78,79 +98,24 @@ const whereConditionBuilder = async (req, res, next) => {
     if(filters.ex.album.names.length) whereConditional += `al.Title NOT IN ('${filters.ex.album.names.join(`', '`)}') AND `;
     if(filters.req.album.names.length) whereConditional += `al.Title IN ('${filters.req.album.names.join(`', '`)}') AND `;
     // TODO: handle from each album
-    if(filters.ex.song.names.length) whereConditional += `Songs.Title NOT IN ('${filters.ex.song.names.join(`', '`)}') AND `;
-    if(filters.req.song.names.length) whereConditional += `Songs.Title IN ('${filters.req.song.names.join(`', '`)}') AND `;
-    if(filters.ex.source.spotify) whereConditional += `Songs.SpotifyExternalId IS NULL AND `;
-    if(filters.req.source.spotify) whereConditional += `Songs.SpotifyExternalId IS NOT NULL AND `;
-    if(filters.ex.source.youtube) whereConditional += `Songs.YTUrl IS NULL AND `;
-    if(filters.req.source.youtube) whereConditional += `Songs.YTFound = TRUE AND `;
+    if(filters.ex.song.names.length) whereConditional += `s.Title NOT IN ('${filters.ex.song.names.join(`', '`)}') AND `;
+    if(filters.req.song.names.length) whereConditional += `s.Title IN ('${filters.req.song.names.join(`', '`)}') AND `;
+    if(filters.ex.source.spotify) whereConditional += `s.SpotifyExternalId IS NULL AND `;
+    if(filters.req.source.spotify) whereConditional += `s.SpotifyExternalId IS NOT NULL AND `;
+    if(filters.ex.source.youtube) whereConditional += `s.YTUrl IS NULL AND `;
+    if(filters.req.source.youtube) whereConditional += `s.YTFound = TRUE AND `;
     // remove trailing 'AND'
     if(whereConditional != 'WHERE ')
       whereConditional = whereConditional.substring(0, whereConditional.length - 4);
     else
       whereConditional = ''
-    req.whereConditional = whereConditional;
+    req.songWhereConditional = whereConditional;
     // console.log(whereConditional)
     next();
   } catch (err) {
     next(err);
   }
 };
-
-const addRowNumberCondition = (fromEachArtist, fromEachAlbum) => {
-  if(fromEachArtist && fromEachAlbum) {
-    return `,
-      ROW_NUMBER() OVER (
-          PARTITION BY a.ID,
-          CASE
-            WHEN al.ID IS NOT NULL THEN al.ID
-            ELSE a.ID
-          END
-          ORDER BY Songs.ID
-        ) as row_num
-      `;
-  }
-  else if(fromEachArtist) {
-    return `,
-      ROW_NUMBER() OVER (
-        PARTITION BY a.ID
-        ORDER BY Songs.ID
-      ) as row_num
-    `;
-  }
-  else if(fromEachAlbum) {
-    return `,
-      ROW_NUMBER() OVER (
-        PARTITION BY al.ID
-        ORDER BY Songs.ID
-      ) as row_num
-    `;
-  }
-  else {
-    return ''
-  }
-}
-const addRowNumberLimit = (fromEachArtist, fromEachAlbum, offset) => {
-  if(fromEachArtist && fromEachAlbum) {
-    return `
-      WHERE
-        CASE
-          WHEN al.ID IS NOT NULL THEN row_num <= ${fromEachAlbum}
-          ELSE row_num <= ${fromEachArtist}
-        END
-    `;
-  }
-  else if(fromEachArtist) {
-    return ` WHERE row_num <= ${fromEachArtist}`;
-
-  }
-  else if(fromEachAlbum) {
-    return ` WHERE row_num <= ${fromEachAlbum}`;
-  }
-  else {
-    return ''
-  }
-}
 
 /*
   // params that are always needed are events date range 
@@ -176,71 +141,120 @@ const addRowNumberLimit = (fromEachArtist, fromEachAlbum, offset) => {
     <distance_calculation_logic_using_latitude_and_longitude> <= <radius_in_meters>
   )  
 */
-const querySongsList = async (whereConditional, queryParms, orderBy, fromEachArtist, fromEachAlbum) => {
+const querySongsList = async (eventWhereConditional, songWhereConditional, queryParms, orderBy, fromEachGenre, fromEachArtist, fromEachAlbum) => {
   const client = await pool.connect();
-  query = `
+  const filterEventsQuery = `
+    SELECT
+      ea.ArtistID, v.Name AS VenueName, e.EventDate
+      FROM Events e
+    JOIN Venues as v ON e.VenueID = v.ID
+    JOIN EventsArtists AS ea ON e.ID = ea.EventID
+    LEFT JOIN Genres AS g ON e.ID = g.EventID
+    ${eventWhereConditional}
+  `;
+  const filterSongsQuery = `
+    SELECT 
+      a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
+      al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
+      s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
+      s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl,
+      g.Name AS Genre
+    FROM Songs s
+    JOIN Artists AS a ON s.ArtistID = a.ID
+    LEFT JOIN Albums AS al ON s.AlbumID = al.ID
+    LEFT JOIN Genres AS g ON a.ID = g.ArtistID
+    ${songWhereConditional}
+  `;
+  const query = `
     WITH data AS (
-      SELECT
-        a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
-        v.Name AS Venue, e.EventDate, 
-        v.Hood, v.VenueAddress,
-        al.Title as AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
-        Songs.Title AS SongTitle, Songs.SpotifyExternalId AS SpId,
-        Songs.YTUrl as YTUrl, Songs.LastFmUrl AS SongLastFmUrl
-        ${addRowNumberCondition(fromEachArtist, fromEachAlbum)}
-      FROM Songs
-      JOIN Artists AS a ON a.ID = Songs.ArtistID
-      JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
-      JOIN Events AS e ON e.ID = ea.EventID
-      JOIN Venues AS v ON v.ID = e.VenueID
-      LEFT JOIN Albums AS al ON al.ID = Songs.AlbumID
-      ${whereConditional}
+      WITH FromEachRankedSongs AS (
+        SELECT
+          fs.Artist, fs.ArtistLastFmUrl,
+          fs.AlbumTitle, fs.AlbumLastFmUrl,
+          fs.SongTitle, fs.SpID,
+          fs.YTUrl, fs.SongLastFmUrl,
+          fe.EventDate, fe.VenueName
+          ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY fs.Genre ORDER BY fs.SongTitle) AS rn_genre' : ''}
+          ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY fs.ArtistID ORDER BY fs.SongTitle) AS rn_artist' : ''}
+          ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY fs.AlbumID ORDER BY fs.SongTitle) AS rn_album' : ''}
+        FROM
+          (${filterEventsQuery}) AS fe
+        JOIN
+          (${filterSongsQuery}) AS fs
+        ON
+          fe.ArtistID = fs.ArtistID
+      )
+      ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
+      ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
+      ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
+      ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
       ORDER BY ${orderBy}
     ),
-    from_each_data AS (
-      SELECT * FROM data
-      ${addRowNumberLimit(fromEachArtist, fromEachAlbum, queryParms[1])}
-    ),
     total_count AS (
-      SELECT COUNT(*) AS total FROM from_each_data
+      SELECT COUNT(*) AS total FROM data
     )
-    SELECT ${addRowNumberLimit() == '' ? `data.*` : `from_each_data.*`}, total_count.total
-    FROM ${addRowNumberLimit() == '' ? `data` : `from_each_data`}, total_count
-    LIMIT $1 OFFSET $2;
-    `;
+    SELECT data.*, total_count.total
+    FROM data, total_count
+    LIMIT $1 OFFSET $2
+  `;
   const result = await client.query(query, queryParms);
   client.release();
   return result;
 };
 
-const queryTotalResults = async (whereConditional, queryParms, fromEachArtist, fromEachAlbum) => {
+const queryTotalResults = async (eventWhereConditional, songWhereConditional, fromEachGenre, fromEachArtist, fromEachAlbum) => {
   const client = await pool.connect();
-  query = `
+  const filterEventsQuery = `
+    SELECT
+      ea.ArtistID, v.Name AS VenueName, e.EventDate
+      FROM Events e
+    JOIN Venues as v ON e.VenueID = v.ID
+    JOIN EventsArtists AS ea ON e.ID = ea.EventID
+    LEFT JOIN Genres AS g ON e.ID = g.EventID
+    ${eventWhereConditional}
+  `;
+  const filterSongsQuery = `
+    SELECT 
+      a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
+      al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
+      s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
+      s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl,
+      g.Name AS Genre
+    FROM Songs s
+    JOIN Artists AS a ON s.ArtistID = a.ID
+    LEFT JOIN Albums AS al ON s.AlbumID = al.ID
+    LEFT JOIN Genres AS g ON a.ID = g.ArtistID
+    ${songWhereConditional}
+  `;
+  const query = `
     WITH data AS (
-      SELECT 
-        a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
-        v.Name AS Venue, e.EventDate, 
-        v.Hood, v.VenueAddress,
-        al.Title as AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
-        Songs.Title AS SongTitle, Songs.SpotifyExternalId AS SpId,
-        Songs.YTUrl as YTUrl, Songs.LastFmUrl AS SongLastFmUrl
-        ${addRowNumberCondition(fromEachArtist, fromEachAlbum)}
-      FROM Songs
-      JOIN Artists AS a ON a.ID = Songs.ArtistID
-      JOIN EventsArtists AS ea ON ea.ArtistID = a.ID
-      JOIN Events AS e ON e.ID = ea.EventID
-      JOIN Venues AS v ON v.ID = e.VenueID
-      LEFT JOIN Albums AS al ON al.ID = Songs.AlbumID
-      ${whereConditional}
-    ),
-    from_each_data AS (
-      SELECT * FROM data
-      ${addRowNumberLimit(fromEachArtist, fromEachAlbum, queryParms[1])}
+      WITH FromEachRankedSongs AS (
+        SELECT
+          fs.Artist, fs.ArtistLastFmUrl,
+          fs.AlbumTitle, fs.AlbumLastFmUrl,
+          fs.SongTitle, fs.SpID,
+          fs.YTUrl, fs.SongLastFmUrl,
+          fe.EventDate, fe.VenueName
+          ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY fs.Genre ORDER BY fs.SongTitle) AS rn_genre' : ''}
+          ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY fs.ArtistID ORDER BY fs.SongTitle) AS rn_artist' : ''}
+          ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY fs.AlbumID ORDER BY fs.SongTitle) AS rn_album' : ''}
+        FROM
+          (${filterEventsQuery}) AS fe
+        JOIN
+          (${filterSongsQuery}) AS fs
+        ON
+          fe.ArtistID = fs.ArtistID
+      )
+      ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
+      ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
+      ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
+      ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
     ),
     total_count AS (
-        SELECT COUNT(*) AS total FROM from_each_data
+      SELECT COUNT(*) AS total FROM data
     )
-    SELECT total_count.total FROM total_count;
+    SELECT total
+    FROM total_count
   `;
   const result = await client.query(query);
   client.release();
@@ -315,9 +329,9 @@ const queryUpcomingEvents = async (minDate, maxDate) => {
 // ROUTES
 const router = express.Router();
 // (potential) Optimize TODO: setup cache of songs list to avoid many sql requests
-router.post('/', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, next) => {
+router.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try {
-    const result = await querySongsList(req.whereConditional, req.cParams, req.orderBy, req.fromEachArtist, req.fromEachAlbum);
+    const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
     // console.log(songsList)
     const artistEvents =  await queryEventsList(songsList)
@@ -329,9 +343,9 @@ router.post('/', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, 
   }
 });
 
-router.post('/save', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, next) => {
+router.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try {
-    const result = await querySongsList(req.whereConditional, req.cParams, req.orderBy, req.fromEachArtist, req.fromEachAlbum);
+    const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
     res.json(songsList);
   } catch (err) {
@@ -339,9 +353,9 @@ router.post('/save', reqQueryParamsCleaner, whereConditionBuilder, async (req, r
   }
 });
 
-router.post('/total_results', reqQueryParamsCleaner, whereConditionBuilder, async (req, res, next) => {
+router.post('/total_results', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try{
-    const result = await queryTotalResults(req.whereConditional, req.cParams, req.fromEachArtist, req.fromEachAlbum);
+    const result = await queryTotalResults(req.eventWhereConditional, req.songWhereConditional, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const total = result.rows[0];
     // console.log(total)
     res.json(total)

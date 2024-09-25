@@ -15,6 +15,7 @@ export const MapContextProvider = ({children}) => {
   // default center seattle
   const [center, setCenter] = useState({lat: 47.608013, lng: -122.3217481});
   const [zoom, setZoom] = useState(12);
+  // FIXME: change to query db for lat and lng
   const findVenue = async (address) => {
     try{
         const params = new URLSearchParams({
@@ -93,7 +94,7 @@ const SeattleMap = () => {
   const handleReqExVenueClick = (event) => {
     if(event.target.closest('.req-btn')){
       const venueName = event.target.closest('.req-btn').dataset.venue;
-      if(!filters.req.location.includes(venueName)){
+      if(!filters.req.location.venues.includes(venueName)){
         updateFilters((prevState) => ({
           ...prevState,
           total: prevState.total + 1,
@@ -140,10 +141,10 @@ const SeattleMap = () => {
           <a className='venue-name' href={venue.venueurl}>{venue.name}</a>
           <div className='reqex-btn-container'>
               <button data-venue={venue.name} className='reqex-btn req-btn'>
-                <p>Require</p>
+                <p>+</p>
               </button>
               <button data-venue={venue.name} className='reqex-btn ex-btn'>
-                <p>Exclude</p>
+                <p>-</p>
               </button>
           </div>
         </div>
@@ -152,7 +153,7 @@ const SeattleMap = () => {
               events.map((event, index) =>
                 <div key={`event-info${index}`} className='event-info-container'>
                   <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
-                  <p className='artist'>{event.artistname}</p>
+                  <p className='event'>{event.eventname}</p>
                 </div>
               )
           }

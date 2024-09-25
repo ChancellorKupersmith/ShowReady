@@ -35,7 +35,18 @@
     border-top-left-radius: 0px;
 
 }
-
+.leaflet-popup-content-wrapper {
+    color: white;
+    background-color: #242424;
+    width: fit-content !important;
+}
+.leaflet-popup-content {
+    width: 240px !important;
+    /* border: solid red; */
+}
+.leaflet-popup-tip {
+    background-color: #242424;
+}
 .venue-marker-popup {
     display: flex;
     flex-direction: column;
@@ -44,6 +55,9 @@
     min-width: 100%;
     max-height: 400px;
     overflow: auto;
+    padding: 0px;
+    margin: 0px;
+    background-color: #242424;
 }
 .venue-marker-popup .title {
     display: flex;
@@ -55,6 +69,7 @@
 }
 .venue-marker-popup .title .venue-name {
     flex: 1;
+    color: white;
     
 }
 .venue-marker-popup .title .reqex-btn-container {
@@ -66,18 +81,21 @@
 .venue-marker-popup .title .reqex-btn {
     display: flex;
     max-height: 30px;
-    width: fit-content;
+    width: 40%;
     align-items: center;
     height: fit-content;
     padding: 2px;
-    font-size: 10px;
-    text-align: left;
+    font-size: 16px;
+    text-align: center;
     margin: 1px;
+}
+.venue-marker-popup .title .reqex-btn.ex-btn {
+    font-size: 24px;
 }
 .venue-marker-popup .title .reqex-btn p {
     overflow: hidden;
     width: 100%;
-    text-align: left;
+    text-align: center;
 }
 .venue-marker-popup .events-info-list {
     display: flex;
