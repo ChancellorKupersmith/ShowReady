@@ -145,7 +145,7 @@ export const TempFilterContextProvider = ({ children }) => {
 
 export const OrderByBtn = () => {
     const { filters, updateFilters } = useSongsFilter();
-    const [ order, setOrder ] = useState('Random')
+    const [ order, setOrder ] = useState(filters.orderBy)
     const [isOpen, setIsOpen] = useState(false);
     const openCloseModal = () => setIsOpen(!isOpen)
 

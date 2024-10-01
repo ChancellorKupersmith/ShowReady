@@ -55,8 +55,8 @@ const eventWhereConditionBuilder = async (req, res, next) => {
     let whereConditional = 'WHERE ';
 
     const { filters } = req.body;
-    if(filters.ex.genre?.names?.length) whereConditional += `g.Name NOT IN ('${filters.ex.genre.names.join(`', '`)}') AND `;
-    if(filters.req.genre?.names?.length) whereConditional += `g.Name IN ('${filters.req.genre.names.join(`', '`)}') AND `;
+    // if(filters.ex.genre?.names?.length) whereConditional += `g.Name NOT IN ('${filters.ex.genre.names.join(`', '`)}') AND `;
+    // if(filters.req.genre?.names?.length) whereConditional += `g.Name IN ('${filters.req.genre.names.join(`', '`)}') AND `;
     if(filters.dateGThan != '') whereConditional += `e.EventDate >= '${ (new Date(filters.dateGThan)).toUTCString() }' AND `;
     if(filters.dateLThan != '') whereConditional += `e.EventDate <= '${ (new Date(filters.dateLThan)).toUTCString() }' AND `;
     if(filters.priceGThan != '') whereConditional += `e.Price >= '${filters.priceGThan}' AND `;
@@ -118,83 +118,56 @@ const songWhereConditionBuilder = async (req, res, next) => {
   }
 };
 
-/*
-  // params that are always needed are events date range 
-  // acting as the data's page size. Then certain where conditions
-  // are dynamically added based on filter list not empty (ex:
-  // exclude_artists = ['a', 'b'] and only_venue_names = [''])
-  
-  SELECT Artists.Name, *.Songs, *.Events FROM Songs
-  JOIN Artists ON Artists.ID = Songs.ArtistID
-  JOIN EventsArtists ON EventsArtists.ArtistID = Artists.ID
-  JOIN Events ON Events.ID = EventsArtists.EventID
-  WHERE Events.EventDate >= (MIN_DATE_RANGE) 
-  AND Events.EventDate <= (MAX_DATE_RANGE)
-  
-  // not these artists
-  AND Artists.Name NOT IN (:excluded_names)
-  // only these artists
-  AND Artists.Name IN (:only_names)
-  // by venue name
-  AND Events.Venue
-  // with in certain radius
-  AND (
-    <distance_calculation_logic_using_latitude_and_longitude> <= <radius_in_meters>
-  )  
-*/
 const querySongsList = async (eventWhereConditional, songWhereConditional, queryParms, orderBy, randomSeed, fromEachGenre, fromEachArtist, fromEachAlbum) => {
   const client = await pool.connect();
+  // ${/*'LEFT JOIN Genres AS g ON e.ID = g.EventID'*/''}
   const filterEventsQuery = `
     SELECT
       ea.ArtistID, v.Name AS VenueName, e.EventDate
-      FROM Events e
+      FROM Events_Partitioned e
     JOIN Venues as v ON e.VenueID = v.ID
     JOIN EventsArtists AS ea ON e.ID = ea.EventID
-    LEFT JOIN Genres AS g ON e.ID = g.EventID
     ${eventWhereConditional}
   `;
   const filterSongsQuery = `
-    SELECT 
-      a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
-      al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
-      s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
-      s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl,
-      g.Name AS Genre
-    FROM Songs s
-    JOIN Artists AS a ON s.ArtistID = a.ID
-    LEFT JOIN Albums AS al ON s.AlbumID = al.ID
-    LEFT JOIN Genres AS g ON a.ID = g.ArtistID
-    ${songWhereConditional}
+    WITH FromEachRankedSongs AS (
+      SELECT 
+        a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
+        al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
+        s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
+        s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
+        ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY g.Name ORDER BY s.Title) AS rn_genre' : ''}
+        ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY a.ID ORDER BY s.Title) AS rn_artist' : ''}
+        ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY al.ID ORDER BY s.Title) AS rn_album' : ''}
+      FROM Songs_Partitioned s
+      JOIN Artists AS a ON s.ArtistID = a.ID
+      LEFT JOIN Albums AS al ON s.AlbumID = al.ID
+      LEFT JOIN Genres AS g ON a.ID = g.ArtistID
+      ${songWhereConditional}
+    )
+    ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
+    ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
+    ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
+    ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
   `;
   const query = `
     WITH data AS (
-      WITH FromEachRankedSongs AS (
-        SELECT
-          fs.Artist, fs.ArtistLastFmUrl,
-          fs.AlbumTitle, fs.AlbumLastFmUrl,
-          fs.SongTitle, fs.SpID, fs.Genre,
-          fs.YTUrl, fs.SongLastFmUrl,
-          fe.EventDate, fe.VenueName
-          ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY fs.Genre ORDER BY fs.SongTitle) AS rn_genre' : ''}
-          ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY fs.ArtistID ORDER BY fs.SongTitle) AS rn_artist' : ''}
-          ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY fs.AlbumID ORDER BY fs.SongTitle) AS rn_album' : ''}
-        FROM
-          (${filterEventsQuery}) AS fe
-        JOIN
-          (${filterSongsQuery}) AS fs
-        ON
-          fe.ArtistID = fs.ArtistID
-      )
-      ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
-      ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
-      ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
-      ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
+      SELECT
+        fs.Artist, fs.ArtistLastFmUrl,
+        fs.AlbumTitle, fs.AlbumLastFmUrl,
+        fs.SongTitle, fs.SpID, fs.Genre,
+        fs.YTUrl, fs.SongLastFmUrl,
+        fe.EventDate, fe.VenueName
+      FROM
+        (${filterEventsQuery}) AS fe
+      JOIN
+        (${filterSongsQuery}) AS fs ON fe.ArtistID = fs.ArtistID
       ORDER BY ${orderBy}
     ),
     total_count AS (
       SELECT COUNT(*) AS total FROM data
     )
-    SELECT DISTINCT data.*, total_count.total
+    SELECT data.*, total_count.total
     FROM data, total_count
     LIMIT $1 OFFSET $2
   `;
@@ -210,48 +183,42 @@ const queryTotalResults = async (eventWhereConditional, songWhereConditional, fr
   const filterEventsQuery = `
     SELECT
       ea.ArtistID, v.Name AS VenueName, e.EventDate
-      FROM Events e
+      FROM Events_Partitioned e
     JOIN Venues as v ON e.VenueID = v.ID
     JOIN EventsArtists AS ea ON e.ID = ea.EventID
-    LEFT JOIN Genres AS g ON e.ID = g.EventID
     ${eventWhereConditional}
   `;
   const filterSongsQuery = `
-    SELECT 
-      a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
-      al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
-      s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
-      s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl,
-      g.Name AS Genre
-    FROM Songs s
-    JOIN Artists AS a ON s.ArtistID = a.ID
-    LEFT JOIN Albums AS al ON s.AlbumID = al.ID
-    LEFT JOIN Genres AS g ON a.ID = g.ArtistID
-    ${songWhereConditional}
+    WITH FromEachRankedSongs AS (
+      SELECT 
+        a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
+        al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
+        s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
+        s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
+        ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY g.Name ORDER BY s.Title) AS rn_genre' : ''}
+        ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY a.ID ORDER BY s.Title) AS rn_artist' : ''}
+        ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY al.ID ORDER BY s.Title) AS rn_album' : ''}
+      FROM Songs_Partitioned s
+      JOIN Artists AS a ON s.ArtistID = a.ID
+      LEFT JOIN Albums AS al ON s.AlbumID = al.ID
+      LEFT JOIN Genres AS g ON a.ID = g.ArtistID
+      ${songWhereConditional}
+    )
+    ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
+    ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
+    ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
+    ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
   `;
   const query = `
     WITH data AS (
-      WITH FromEachRankedSongs AS (
-        SELECT
-          fs.Artist, fs.ArtistLastFmUrl,
-          fs.AlbumTitle, fs.AlbumLastFmUrl,
-          fs.SongTitle, fs.SpID,
-          fs.YTUrl, fs.SongLastFmUrl,
-          fe.EventDate, fe.VenueName
-          ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY fs.Genre ORDER BY fs.SongTitle) AS rn_genre' : ''}
-          ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY fs.ArtistID ORDER BY fs.SongTitle) AS rn_artist' : ''}
-          ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY fs.AlbumID ORDER BY fs.SongTitle) AS rn_album' : ''}
-        FROM
-          (${filterEventsQuery}) AS fe
-        JOIN
-          (${filterSongsQuery}) AS fs
-        ON
-          fe.ArtistID = fs.ArtistID
-      )
-      ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
-      ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
-      ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
-      ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
+      SELECT
+        fs.SongTitle
+      FROM
+        (${filterEventsQuery}) AS fe
+      JOIN
+        (${filterSongsQuery}) AS fs
+      ON
+        fe.ArtistID = fs.ArtistID
     ),
     total_count AS (
       SELECT COUNT(*) AS total FROM data
@@ -272,7 +239,7 @@ const queryEventsList = async (songs) => {
       e.EventTime, e.Price, e.AgeRestrictions,
       v.Name as Venue, v.Hood, v.VenueAddress,
       a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl
-    FROM Events as e
+    FROM Events_Partitioned as e
     JOIN EventsArtists AS ea ON ea.EventID = e.ID
     JOIN Artists AS a ON a.ID = ea.ArtistID
     JOIN Venues AS v ON v.ID = e.VenueID
@@ -306,13 +273,11 @@ const queryVenues = async () => {
 
 const queryUpcomingEvents = async (minDate, maxDate) => {
   const client = await pool.connect();
-  // if(filters.dateGThan != '') whereConditional += `e.EventDate >= '${ (new Date(filters.dateGThan)).toUTCString() }' AND `;
-  //   if(filters.dateLThan != '') whereConditional += `e.EventDate <= '${ (new Date(filters.dateLThan)).toUTCString() }' AND `;
   let query = `
     SELECT 
       e.Name as EventName, e.EventDate, e.EventTime, e.Url, e.Price,
       v.Name AS VenueName, a.Name AS ArtistName
-    FROM Events as e
+    FROM Events_Partitioned as e
     JOIN Venues as v ON v.ID = e.VenueID
     JOIN EventsArtists as ea ON ea.EventID = e.ID
     JOIN Artists as a ON a.ID = ea.ArtistID
