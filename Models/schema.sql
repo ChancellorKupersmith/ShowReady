@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS Events (
 
 CREATE TABLE IF NOT EXISTS Artists (
     ID SERIAL PRIMARY KEY,
-    Name VARCHAR(300) NOT NULL,
+    Name VARCHAR(300) NOT NULL UNIQUE,
     SpotifyExternalId VARCHAR(30) UNIQUE,
     SpotifyPopularity INT,
     LastFmUrl VARCHAR(600) UNIQUE,
@@ -53,6 +53,8 @@ CREATE TABLE IF NOT EXISTS Albums (
     SpotifyPopularity INT,
     LastFmUrl VARCHAR(600) UNIQUE,
     ArtistID INT,
+    SpotifyFound BOOLEAN,
+    LastFmFound BOOLEAN,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE
@@ -68,6 +70,7 @@ CREATE TABLE IF NOT EXISTS Genres (
     VenueID INT,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
+    CONSTRAINT genres_distinct UNIQUE(ArtistID, AlbumID, SongID, EventID, VenueID),
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE SET NULL,
     FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL,
     FOREIGN KEY (SongID) REFERENCES Songs(ID) ON DELETE SET NULL,
@@ -89,6 +92,8 @@ CREATE TABLE IF NOT EXISTS Songs (
     YTUrl VARCHAR(600),
     -- used to identify if song has been scraped by youtube, Null if not attempted, true/false if url found
     YTFound BOOLEAN,
+    SpotifyFound BOOLEAN,
+    LastFmFound BOOLEAN,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
     CONSTRAINT songs_unique_title_artist UNIQUE (Title, ArtistID)

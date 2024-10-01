@@ -35,14 +35,21 @@ def get_total_events_fromDB():
         return total
 
 def get_events_fromDB(page_size, offset):
-    events = {}
+    """_summary_
+        - selects all events created within last week
+        - for events from ticketmaster performing artists should already be found, but spotify and lastfm meta could be null so to skip extracting names from events,
+            - replace event name with performing artists' name
+            - remove duplicate event
+    """
+    # storing events as array for multiple performing artists usecase
+    events = []
     eo_select_query = f"""
         SELECT name, id FROM Events
         WHERE created >= NOW() - INTERVAL '1 week'
         OFFSET {offset} LIMIT {page_size}
     """
     tm_select_query = f"""
-        SELECT Artists.name, Events.id FROM Events
+        SELECT Artists.name, Events.id, Events.tmid FROM Events
         JOIN EventsArtists AS ea ON ea.eventid = Events.id
         JOIN Artists ON Artists.id = ea.artistid
         WHERE
@@ -54,10 +61,12 @@ def get_events_fromDB(page_size, offset):
     try:
         with PostgresClient(log=log) as db:
             rows = db.query(query=eo_select_query, fetchall=True)
-            events = {row[1]: Event(name=row[0], id=row[1]) for row in rows }
+            all_new_events = {row[1]: Event(name=row[0], id=row[1]) for row in rows }
             rows = db.query(query=tm_select_query, fetchall=True)
-            events.update({row[1]: Event(name=row[0], id=row[1]) for row in rows })
-
+            for row in rows:
+                events.append(Event(name=row[0], id=row[1], tmid=row[2]))
+                all_new_events.pop(row[1], None) # remove duplicate
+            events += list(all_new_events.values())
     except Exception as e:
         log(1, f"Error fetching events from Events table returning empty list, {e}")
     finally:
@@ -65,7 +74,7 @@ def get_events_fromDB(page_size, offset):
 
 def get_existing_artists_fromDB():
     existing_artists = {}
-    select_query = "SELECT name, id FROM Artists WHERE spotifyexternalid IS NOT NULL"
+    select_query = "SELECT name, id FROM Artists WHERE spotifyexternalid IS NOT NULL AND lastfmurl IS NOT NULL"
     try:
         with PostgresClient(log=log) as db:
             rows = db.query(query=select_query, fetchall=True)
@@ -76,33 +85,63 @@ def get_existing_artists_fromDB():
     finally:
         return existing_artists
 
-def get_existing_spotify_artists_fromDB():
-    existing_artists = []
-    select_query = "SELECT spotifyexternalid FROM Artists WHERE spotifyexternalid IS NOT NULL"
-    try:
-        with PostgresClient(log=log) as db:
-            rows = db.query(query=select_query, fetchall=True)
-            existing_artists = [row[0] for row in rows]
-    except Exception as e:
-        log(1, f"ERROR selecting existing artists from db returning empty set, {e}")
+def save_artists_inDB(new_artists):
+    def get_existing_spotify_artists_fromDB():
         existing_artists = []
-    finally:
-        return existing_artists
+        select_query = "SELECT spotifyexternalid FROM Artists WHERE spotifyexternalid IS NOT NULL"
+        try:
+            with PostgresClient(log=log) as db:
+                rows = db.query(query=select_query, fetchall=True)
+                existing_artists = [row[0] for row in rows]
+        except Exception as e:
+            log(1, f"ERROR selecting existing spotify artists from db returning empty set, {e}")
+            existing_artists = []
+        finally:
+            return existing_artists
+    
+    def get_existing_lastfm_artists_fromDB():
+        existing_artists = []
+        select_query = "SELECT name FROM Artists WHERE lastfmurl IS NOT NULL"
+        try:
+            with PostgresClient(log=log) as db:
+                rows = db.query(query=select_query, fetchall=True)
+                existing_artists = [row[0].lower() for row in rows]
+        except Exception as e:
+            log(1, f"ERROR selecting existing lfm artists from db returning empty set, {e}")
+            existing_artists = []
+        finally:
+            return existing_artists
 
-def save_artists_inDB(artists_to_save):
-    insert_query = """
-        INSERT INTO Artists (name, spotifyexternalid, spotifypopularity, lastfmurl)
+    insert_spotify_query = """
+        INSERT INTO Artists (name, spotifyexternalid, spotifypopularity)
         VALUES %s
-        ON CONFLICT (lastfmurl)
+        ON CONFLICT (name)
         DO UPDATE SET
-            name = EXCLUDED.name,
+            spotifyexternalid = EXCLUDED.spotifyexternalid,
             spotifypopularity = EXCLUDED.spotifypopularity
+        RETURNING name, id
+    """
+    insert_lastfm_query = """
+        INSERT INTO Artists (name, lastfmurl)
+        VALUES %s
+        ON CONFLICT (name)
+        DO UPDATE SET
+            lastfmurl = EXCLUDED.lastfmurl
         RETURNING name, id
     """
     artist_name_ids = {}
     try:
+        # Insert/Update found artists
+        existing_spotify_artists = get_existing_spotify_artists_fromDB()
+        existing_lastfm_artists = get_existing_lastfm_artists_fromDB()
+        unique_spotify_artists = list(filter(lambda artist: artist.spotify_id not in existing_spotify_artists, new_artists.values()))
+        unique_lastfm_artists = list(filter(lambda artist: artist.name.lower() not in existing_lastfm_artists, new_artists.values()))
+        new_spotify_artists_tuples = [(a.name, a.spotify_id, a.spotify_popular) for a in unique_spotify_artists]
+        new_lastfm_artists_tuples = [(a.name, a.lastfm_url) for a in unique_lastfm_artists]
         with PostgresClient(log=log) as db:
-            rows = db.query(query=insert_query, data=artists_to_save, fetchall=True)
+            rows = db.query(query=insert_spotify_query, data=new_spotify_artists_tuples, fetchall=True)
+            artist_name_ids = {row[0]: row[1] for row in rows}
+            rows = db.query(query=insert_lastfm_query, data=new_lastfm_artists_tuples, fetchall=True)
             artist_name_ids = {row[0]: row[1] for row in rows}
     except Exception as e:
         log(1, f"Error saving artist to db returning empty list, {e}")
@@ -133,63 +172,66 @@ def save_errors_inDB(artist_not_found_events):
     except Exception as e:
         log(1, f"Error saving errors to db, {e}")
 
-async def query_spotify_artist(spotify_client, name):
-    artists = {}
-    try:
-        resp = await spotify_client.get("/search?", [f"q=artist:{name}", "type=artist", "market=US", "limit=1"])
-        log(0, f"RESP: {resp}")
-        if resp.status_code != 200:
-            log(2, f"Failed to fetch data. Status code:{resp.status_code}")
-            return (False, artists)
-        json_data = (resp.json())["artists"]
-        if json_data["total"] == 0:
-            names = name_split(name)
-            if names is not None:
-                for n in names:
-                    success, found_artists = await query_spotify_artist(spotify_client, n)
-                    artists.update(found_artists)
-            else:
-                return (False, artists)
-        else:
-            artist_list = json_data["items"]
-            sp_artist = artist_list[0]
-            a = Artist(name=sp_artist["name"], spotify_id=sp_artist["id"], spotify_popular=sp_artist["popularity"])
-            artist = {a.name.lower(): a}
-            return (True, artist)
-    except Exception as e:
-        log(1, f"ERROR finding artist: {name} on Spotify: {e}")
-        return (False, artists)
-    return (artists != {}, artists)
-
-async def query_lastFm_artist(lastfm_client, name):
-    artists = {}
-    try:
-        resp = await lastfm_client.get("artist.search", [f"artist={name}", "limit=1"])
-        log(0, f"RESP: {resp}")
-        if resp.status_code != 200:
-            log(2, f"Failed to fetch data. Status code:{resp.status_code}")
-            return (False, artists)
-        json_data = (resp.json())["results"]
-        artist_list = json_data["artistmatches"]["artist"]
-        if len(artist_list) == 0:
-            names = name_split(name)
-            if names is not None:
-                for n in names:
-                    success, found_artists = await query_lastFm_artist(lastfm_client, n)
-                    artists.update(found_artists)
-            else:
-                return (False, artists)
-        else:
-            lastfm_artist = artist_list[0]
-            a = Artist(name=lastfm_artist["name"], lastfm_url=lastfm_artist["url"])
-            artist = {a.name.lower(): a}
-            return (True, artist)
-    except Exception as e:
-        log(1, f"ERROR finding artist: {name} on LastFM: {e}")
-        return (False, artists)
-    return (artists != {}, artists)
-
 async def find_artists(events):
+    async def query_spotify_artist(spotify_client, name, tmid=None):
+        artists = {}
+        try:
+            resp = await spotify_client.get("/search?", [f"q=artist:{name}", "type=artist", "market=US", "limit=1"])
+            log(0, f"RESP: {resp}")
+            if resp.status_code != 200:
+                log(2, f"Failed to fetch data. Status code:{resp.status_code}")
+                return (False, artists)
+            json_data = (resp.json())["artists"]
+            if json_data["total"] == 0 and tmid is None:
+                # try to extract artis name from event
+                names = name_split(name)
+                if names is not None:
+                    for n in names:
+                        success, found_artists = await query_spotify_artist(spotify_client, n)
+                        artists.update(found_artists)
+                else:
+                    return (False, artists)
+            else:
+                artist_list = json_data["items"]
+                sp_artist = artist_list[0]
+                a = Artist(name=sp_artist["name"], spotify_id=sp_artist["id"], spotify_popular=sp_artist["popularity"])
+                artist = {a.name.lower(): a}
+                return (True, artist)
+        except Exception as e:
+            log(1, f"ERROR finding artist: {name} on Spotify: {e}")
+            return (False, artists)
+        return (artists != {}, artists)
+
+    async def query_lastFm_artist(lastfm_client, name, tmid=None):
+        artists = {}
+        try:
+            resp = await lastfm_client.get("artist.search", [f"artist={name}", "limit=1"])
+            log(0, f"RESP: {resp}")
+            if resp.status_code != 200:
+                log(2, f"Failed to fetch data. Status code:{resp.status_code}")
+                return (False, artists)
+            json_data = (resp.json())["results"]
+            artist_list = json_data["artistmatches"]["artist"]
+            if len(artist_list) == 0 and tmid is None:
+                # try to extract artis name from event
+                names = name_split(name)
+                if names is not None:
+                    for n in names:
+                        success, found_artists = await query_lastFm_artist(lastfm_client, n)
+                        artists.update(found_artists)
+                else:
+                    return (False, artists)
+            else:
+                lastfm_artist = artist_list[0]
+                a = Artist(name=lastfm_artist["name"], lastfm_url=lastfm_artist["url"])
+                artist = {a.name.lower(): a}
+                return (True, artist)
+        except Exception as e:
+            log(1, f"ERROR finding artist: {name} on LastFM: {e}")
+            return (False, artists)
+        return (artists != {}, artists)
+    
+    
     artists = {}
     try:
         spotify_client = SpotifyClient(log=log)
@@ -200,8 +242,8 @@ async def find_artists(events):
             artists_not_found = {}
             num_new_events += 1
             tasks = [
-                query_lastFm_artist(lastfm_client, event.name),
-                query_spotify_artist(spotify_client, event.name)
+                query_lastFm_artist(lastfm_client, event.name, event.tmid),
+                query_spotify_artist(spotify_client, event.name, event.tmid)
             ]
             results = await asyncio.gather(*tasks)
             for res in results:
@@ -210,7 +252,7 @@ async def find_artists(events):
                     for new_artist in new_artists.values():
                         # check if other api found artist
                         if new_artist.name.lower() in artists:
-                            # determine if new artist data from spotify or lastfm
+                            # and consolidate data if already found
                             if new_artist.spotify_id is None:
                                 artists[new_artist.name.lower()].lastfm_url = new_artist.lastfm_url
                             else:
@@ -274,19 +316,15 @@ async def main():
     for page in range(int(total / page_size)):
         events = get_events_fromDB(page_size, page * page_size)
         # Avoid unnecessary find_artist compute by filter new artists not saved in db
-        new_artist_events = list(filter(lambda event: event.name not in existing_artists.keys(), events.values()))
+        new_artist_events = list(filter(lambda event: event.name not in existing_artists.keys(), events))
         log(0, f"number of new artist events: {len(new_artist_events)}")
         new_artists = await find_artists(new_artist_events)
-        existing_spotify_artist = get_existing_spotify_artists_fromDB()
-        unique_new_artists = list(filter(lambda artist: artist.spotify_id not in existing_spotify_artist, new_artists.values()))
-        new_artists_tuples = [(a.name, a.spotify_id, a.spotify_popular, a.lastfm_url) for a in unique_new_artists]
-        artist_name_ids = save_artists_inDB(new_artists_tuples)
-
+        artist_name_ids = save_artists_inDB(new_artists)
         # Match events to artists for event-artist join table in db
         existing_artists.update(artist_name_ids)
         events_artists_list = []
         artist_not_found_events = []
-        for event in events.values():
+        for event in events:
             artistId = existing_artists.get(event.name, None)
             if artistId is None:
                 artist_not_found_events.append((event.id, f"no artists found for event: {event.name}"))

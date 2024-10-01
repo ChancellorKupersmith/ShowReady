@@ -42,6 +42,7 @@ const reqQueryParamsCleaner = (req, res, next) => {
         orderBy = OrderBys.ARTIST;
     }
     if(filters.descending) orderBy += ' DESC';
+    req.randomSeed = filters.randomSeed ? filters.randomSeed : (Date.now() / 1000) % 1;
     req.cParams = [pageSize, pageNum];
     req.orderBy = orderBy;
     next();
@@ -141,7 +142,7 @@ const songWhereConditionBuilder = async (req, res, next) => {
     <distance_calculation_logic_using_latitude_and_longitude> <= <radius_in_meters>
   )  
 */
-const querySongsList = async (eventWhereConditional, songWhereConditional, queryParms, orderBy, fromEachGenre, fromEachArtist, fromEachAlbum) => {
+const querySongsList = async (eventWhereConditional, songWhereConditional, queryParms, orderBy, randomSeed, fromEachGenre, fromEachArtist, fromEachAlbum) => {
   const client = await pool.connect();
   const filterEventsQuery = `
     SELECT
@@ -171,7 +172,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
         SELECT
           fs.Artist, fs.ArtistLastFmUrl,
           fs.AlbumTitle, fs.AlbumLastFmUrl,
-          fs.SongTitle, fs.SpID,
+          fs.SongTitle, fs.SpID, fs.Genre,
           fs.YTUrl, fs.SongLastFmUrl,
           fe.EventDate, fe.VenueName
           ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY fs.Genre ORDER BY fs.SongTitle) AS rn_genre' : ''}
@@ -193,10 +194,12 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
     total_count AS (
       SELECT COUNT(*) AS total FROM data
     )
-    SELECT data.*, total_count.total
+    SELECT DISTINCT data.*, total_count.total
     FROM data, total_count
     LIMIT $1 OFFSET $2
   `;
+  console.log(query)
+  await client.query(`SELECT setseed(${randomSeed})`);
   const result = await client.query(query, queryParms);
   client.release();
   return result;
@@ -331,7 +334,7 @@ const router = express.Router();
 // (potential) Optimize TODO: setup cache of songs list to avoid many sql requests
 router.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try {
-    const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
+    const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.randomSeed, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
     // console.log(songsList)
     const artistEvents =  await queryEventsList(songsList)
@@ -345,7 +348,7 @@ router.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereCon
 
 router.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try {
-    const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
+    const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.randomSeed, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
     res.json(songsList);
   } catch (err) {

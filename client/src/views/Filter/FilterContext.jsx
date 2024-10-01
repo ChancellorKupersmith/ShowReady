@@ -13,10 +13,11 @@ export const OrderBys = Object.freeze({
 const SongsFilterContext = createContext();
 export const useSongsFilter = () => useContext(SongsFilterContext);
 export const FilterContextProvider = ({ children }) => {
-    // TODO: Filter States to implement
-    // - set # from each venue
-    // - exclude / only address
-    // - map marker area
+    /* TODO: Filter States to implement
+        - set # from each venue
+        - exclude / only address
+        - map marker area
+    */
     const today = new Date();
     let monthFromToday = new Date();
     monthFromToday.setDate(today.getDate() + 30)
@@ -28,6 +29,7 @@ export const FilterContextProvider = ({ children }) => {
         dateLThan: formatDate(monthFromToday),
         priceGThan: '',
         priceLThan: '',
+        randomSeed: (Date.now() / 1000) % 1,
         // spotifyPopularityGThan: '',
         // spotifyPopularityLThan: '',
         ex: {
@@ -101,12 +103,18 @@ export const FilterContextProvider = ({ children }) => {
             },
         },
     };
-    const [filters, setFilters] = useState(defaultFilters);
+    
+    const [filters, setFilters] = useState(() => {
+        const savedFilters = sessionStorage.getItem('filters');
+        return savedFilters ? JSON.parse(savedFilters) : defaultFilters;
+    });
+    useEffect(() => {
+        sessionStorage.setItem('filters', JSON.stringify(filters));
+    }, [filters]);
     const updateFilters = (newFiltersObj) => {
-        if(newFiltersObj){
-            setFilters(newFiltersObj);
-        }
-        console.log(newFiltersObj)
+        if(!newFiltersObj) return;
+        setFilters(newFiltersObj);
+        console.log(newFiltersObj);
     }
 
     return (
@@ -163,7 +171,8 @@ export const OrderByBtn = () => {
     const changeOrderBy = (option, desc) => updateFilters({
         ...filters,
         orderBy: option,
-        descending: desc
+        descending: desc,
+        randomSeed: option == OrderBys.RANDOM ? (Date.now() / 1000) % 1 : filters.seed
     });
 
     return (
@@ -175,29 +184,6 @@ export const OrderByBtn = () => {
                         <h3>Sort By</h3>
                         <button onClick={openCloseModal}>x</button>
                     </div>
-                    {/* <div className='order-option'>
-                        <p>Artist</p>
-                        <div>
-                            <label>
-                                <input
-                                    type='radio'
-                                    value='A-Z'
-                                    checked={filters.orderBy == OrderBys.ARTIST && !filters.descending}
-                                    onChange={() => changeOrderBy(OrderBys.ARTIST, false)}
-                                />
-                                A-Z
-                            </label>
-                            <label>
-                                <input
-                                    type='radio'
-                                    value='Z-A'
-                                    checked={filters.orderBy == OrderBys.ARTIST && filters.descending}
-                                    onChange={() => changeOrderBy(OrderBys.ARTIST, true)}
-                                />
-                                Z-A
-                            </label>
-                        </div>
-                    </div> */}
                     <div className='order-option'>
                         <p>Song</p>
                         <div>

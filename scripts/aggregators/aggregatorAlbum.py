@@ -19,13 +19,30 @@ def log(lvl, msg):
     elif lvl == 1: logging.error(msg=msg)
     else: logging.warning(msg=msg)
 
-@timer_decorator
-def get_artists_fromDB():
-    select_query = """
-        SELECT DISTINCT a.id, a.name, a.lastfmurl, a.spotifyexternalid
+def get_total_artists_fromDB():
+    total = 0
+    select_query = f"""
+        SELECT COUNT(*)
         FROM Artists a
         LEFT JOIN Albums al ON a.id = al.artistid
         WHERE al.id IS NULL
+    """
+    try:
+        with PostgresClient(log=log) as db:
+            total = db.query(query=select_query, fetchone=True)[0]
+    except Exception as e:
+        log(1, f"ERROR fetching artists from db returning 0. {e}")
+    finally:
+        return total
+
+@timer_decorator
+def get_artists_fromDB(page_size, offset):
+    select_query = f"""
+        SELECT a.id, a.name, a.lastfmurl, a.spotifyexternalid
+        FROM Artists a
+        LEFT JOIN Albums al ON a.id = al.artistid
+        WHERE al.id IS NULL
+        OFFSET {offset} LIMIT {page_size}
     """
     try:
         with PostgresClient(log=log) as db:
@@ -37,57 +54,57 @@ def get_artists_fromDB():
         return None
 
 @timer_decorator
-async def query_lastFm_albums(client, artist_name, artist_id):
-    try:
-        resp = await client.get("artist.gettopalbums", [f"artist={artist_name}", "limit=200"])
-        if resp.status_code != 200:
-            log(2, f"Failed to fetch data. Status code:{resp.status_code}")
-            return (False, [], [])
-        json_data = (resp.json())
-        lastfm_albums_list = json_data["topalbums"]["album"]
-        # log(0, f"LASTFM {artist_name} TOP ALBUMS LIST: {lastfm_albums_list}")
-        if len(lastfm_albums_list) == 0:
-            log(2, f"LastFM found 0 albums for {artist_name}")
-            return (False, [], [])
-        albums = list(map(lambda album: {album["name"].lower(): Album(title=album["name"], lastfmurl=album["url"], artistid=artist_id)}, lastfm_albums_list))
-        return (True, albums, [])
-    except Exception as e:
-        log(1, f"ERROR finding artist: {artist_name}'s albums on LastFM: {e}")
-        return (False, [], [])
-
-@timer_decorator
-async def query_spotify_albums(client, artist_spotify_id, artist_id, artist_name):
-    albums = []
-    genres = []
-    if artist_spotify_id is None:
-        log(2, f"artist: ({artist_name}, {artist_id}) not found on spotify")
-        return (True, albums, genres)
-    try:
-        # if total is more than limit (max spotify api limit 50) paginate to get all albums
-        offset = 0
-        limit = 50
-        resp_total = 51
-        while offset + limit <= resp_total:
-            resp = await client.get(f"/artists/{artist_spotify_id}/albums?", ["market=US", f"offset={offset}", f"limit={limit}"])
-            if resp.status_code != 200:
-                log(2, f"Failed to fetch data. Status code:{resp.status_code}, Returning current aggregated albums")
-                return (False, albums, genres)
-            json_data = (resp.json())
-            log(0, f'resp: {json_data}')
-            resp_total = json_data["total"]
-            for album in json_data["items"]:
-                albums.append({album['name'].lower(): Album(title=album['name'], spotifyexternalid=album['id'], artistid=artist_id)})
-                album_genres = album.get('genres')
-                if album_genres is not None:
-                    genres.extend([(Genre(name=g, artistid=artist_id), album['name'].lower()) for g in album_genres])
-            offset += limit
-        return (True, albums, genres)
-    except Exception as e:
-        log(1, f"ERROR finding artist: {artist_name} albums on Spotify: {e}")
-        return (False, albums, genres)
-
-@timer_decorator
 async def find_albums(artist, spotify_client, lastfm_client):
+    @timer_decorator
+    async def query_lastFm_albums(client, artist_name, artist_id):
+        try:
+            resp = await client.get("artist.gettopalbums", [f"artist={artist_name}", "limit=200"])
+            if resp.status_code != 200:
+                log(2, f"Failed to fetch data. Status code:{resp.status_code}")
+                return (False, [], [])
+            json_data = (resp.json())
+            lastfm_albums_list = json_data["topalbums"]["album"]
+            # log(0, f"LASTFM {artist_name} TOP ALBUMS LIST: {lastfm_albums_list}")
+            if len(lastfm_albums_list) == 0:
+                log(2, f"LastFM found 0 albums for {artist_name}")
+                return (False, [], [])
+            albums = list(map(lambda album: {album["name"].lower(): Album(title=album["name"], lastfmurl=album["url"], artistid=artist_id)}, lastfm_albums_list))
+            return (True, albums, [])
+        except Exception as e:
+            log(1, f"ERROR finding artist: {artist_name}'s albums on LastFM: {e}")
+            return (False, [], [])
+
+    @timer_decorator
+    async def query_spotify_albums(client, artist_spotify_id, artist_id, artist_name):
+        albums = []
+        genres = []
+        if artist_spotify_id is None:
+            log(2, f"artist: ({artist_name}, {artist_id}) not found on spotify")
+            return (True, albums, genres)
+        try:
+            # if total is more than limit (max spotify api limit 50) paginate to get all albums
+            offset = 0
+            limit = 50
+            resp_total = 51
+            while offset + limit <= resp_total:
+                resp = await client.get(f"/artists/{artist_spotify_id}/albums?", ["market=US", f"offset={offset}", f"limit={limit}"])
+                if resp.status_code != 200:
+                    log(2, f"Failed to fetch data. Status code:{resp.status_code}, Returning current aggregated albums")
+                    return (False, albums, genres)
+                json_data = (resp.json())
+                log(0, f'resp: {json_data}')
+                resp_total = json_data["total"]
+                for album in json_data["items"]:
+                    albums.append({album['name'].lower(): Album(title=album['name'], spotifyexternalid=album['id'], artistid=artist_id)})
+                    album_genres = album.get('genres')
+                    if album_genres is not None:
+                        genres.extend([(Genre(name=g, artistid=artist_id), album['name'].lower()) for g in album_genres])
+                offset += limit
+            return (True, albums, genres)
+        except Exception as e:
+            log(1, f"ERROR finding artist: {artist_name} albums on Spotify: {e}")
+            return (False, albums, genres)
+
     failed_artists = []
     artist_albums = {}
     genres = {}
@@ -197,24 +214,28 @@ def get_albums_fromDB():
 
 async def main():
     print('Started album aggregator')
-    # TODO paginate through artists from db
-    artists = get_artists_fromDB()
-    artists_and_albums = []
-    spotify_client = SpotifyClient(log=log)
-    await spotify_client.init_access_token()
-    lastfm_client = LastFmClient(log=log)
-    for artist in artists:
-        found_albums, found_genres, errors = await find_albums(artist, spotify_client, lastfm_client)
-        #  filter found albums from already found spotify ids, (choosing to filter spotify ids assuming less ids of spotify than lastfmurls), having to filter incase multiple artists share album
-        existing_albums = get_albums_fromDB()
-        new_found_albums = list(filter(lambda album: album.spotify_id not in existing_albums, found_albums))
-        # save data
-        saved_albums = {}
-        if len(found_albums) > 0:
-           saved_albums = save_albums_inDB(new_found_albums)
-        if len(errors) > 0:
-            save_errors_inDB(errors)
-        if found_genres:
-            save_genres_inDB(found_genres, saved_albums)
+    total = get_total_artists_fromDB()
+    page_size = 10
+    log(0, f"number of new artists: {total}")
+    for page in range(int(total / page_size)):
+        artists = get_artists_fromDB(page_size, page * page_size)
+        artists_and_albums = []
+        spotify_client = SpotifyClient(log=log)
+        await spotify_client.init_access_token()
+        lastfm_client = LastFmClient(log=log)
+        for artist in artists:
+            found_albums, found_genres, errors = await find_albums(artist, spotify_client, lastfm_client)
+            #  filter found albums from already found spotify ids, (choosing to filter spotify ids assuming less ids of spotify than lastfmurls), having to filter incase multiple artists share album
+            existing_albums = get_albums_fromDB()
+            new_found_albums = list(filter(lambda album: album.spotify_id not in existing_albums, found_albums))
+            # save data
+            saved_albums = {}
+            if len(found_albums) > 0:
+                saved_albums = save_albums_inDB(new_found_albums)
+            if len(errors) > 0:
+                save_errors_inDB(errors)
+            if found_genres:
+                save_genres_inDB(found_genres, saved_albums)
+    log(0, 'SUCCESSFULL ALBUM AGGREGATION!')
     print(f'Completed album aggregator, logs: {log_filename}')
 asyncio.run(main())

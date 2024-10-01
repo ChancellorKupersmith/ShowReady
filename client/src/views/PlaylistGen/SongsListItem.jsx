@@ -8,7 +8,7 @@ import { YouTubeIcon } from "./Source/Youtube";
 import { useMap } from "./Map/SeattleMapView";
 
 
-const SongsListItem = ({songId, songTitle, artistName, albumName, eventLocation, date, spId, ytUrl, events}) => {
+const SongsListItem = ({songId, songTitle, artistName, albumName, genre, eventLocation, date, spId, ytUrl, events}) => {
     const { filters, updateFilters } = useSongsFilter();
     const [isIncluded, setIsIncluded] = useState(true);
     const toggleIsInclude = () => {
@@ -108,6 +108,7 @@ const SongsListItem = ({songId, songTitle, artistName, albumName, eventLocation,
                     { albumName && <p className="break">-</p> }
                     { albumName && <p className="album-name">{albumName}</p> }
                 </div>
+                { genre && <p className="genre-name">{genre}</p>}
                 <ul>
                     { events.length > 0 &&
                         events.map((event, index) =>
