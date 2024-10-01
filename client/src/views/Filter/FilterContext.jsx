@@ -114,7 +114,7 @@ export const FilterContextProvider = ({ children }) => {
     const updateFilters = (newFiltersObj) => {
         if(!newFiltersObj) return;
         setFilters(newFiltersObj);
-        console.log(newFiltersObj);
+        // console.log(newFiltersObj);
     }
 
     return (
