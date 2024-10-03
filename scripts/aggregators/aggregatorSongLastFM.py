@@ -12,7 +12,7 @@ logging.basicConfig(
     filename=log_filename,
     filemode='w',
     format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.DEBUG
+    level=logging.INFO
 )
 def log(lvl, msg):
     if lvl == 0: logging.info(msg=msg)
@@ -58,8 +58,7 @@ def get_artists_fromDB(page_size, offset):
 
 @timer_decorator
 async def query_lastFm_songs(client, artists):
-    artists_songs = {}
-
+    @timer_decorator
     async def fetch_artist_tracks(artist_name, page):
         try:
             resp = await client.get("artist.gettoptracks", [f"artist={artist_name}", f"page={page}" "limit=200"])
@@ -70,6 +69,7 @@ async def query_lastFm_songs(client, artists):
         except Exception as e:
             log(1, f"ERROR finding artist: {artist_name}'s songs on LastFM, {e}")
 
+    artists_songs = {}
     for artist in artists:
         page = 1
         total_pages = 1
@@ -94,6 +94,24 @@ async def query_lastFm_songs(client, artists):
     return artists_songs
 
 @timer_decorator
+def gather_artist_ids(songs):
+    return set(song.artist_id for song in songs)
+
+@timer_decorator
+def create_partitions(artist_ids):
+    if not artist_ids:
+        return
+    partition_queries = [
+        f"CREATE TABLE IF NOT EXISTS songs_artist_{artist_id} PARTITION OF Songs FOR VALUES IN ({artist_id});"
+        for artist_id in artist_ids
+    ]
+    # Join all partition creation queries into one to reduce overhead
+    combined_query = "\n".join(partition_queries)
+    with PostgresClient(log=log) as db:
+        db.query(query=combined_query)
+
+
+@timer_decorator
 def save_songs_inDB(songs_to_save):
     insert_query = """
         INSERT INTO Songs (title, artistid, lastfmurl, mbid)
@@ -104,9 +122,11 @@ def save_songs_inDB(songs_to_save):
             mbid = EXCLUDED.mbid
     """
     try:
+        artist_ids = gather_artist_ids(songs_to_save)
+        create_partitions(artist_ids)
         with PostgresClient(log=log) as db:
             song_tuples = list(map(lambda s: (s.title, s.artist_id, s.lastfm_url, s.mbid), songs_to_save))
-            if len(song_tuples) > 0:    
+            if len(song_tuples) > 0:  
                 db.query(query=insert_query, data=song_tuples)
                 log(0, f"Saved {len(song_tuples)} songs:")
     except Exception as e:

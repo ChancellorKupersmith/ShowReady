@@ -44,27 +44,27 @@ def get_events_fromDB(page_size, offset):
     # storing events as array for multiple performing artists usecase
     events = []
     eo_select_query = f"""
-        SELECT name, id FROM Events
+        SELECT name, id, eventdate FROM Events
         WHERE created >= NOW() - INTERVAL '1 week'
         OFFSET {offset} LIMIT {page_size}
     """
     tm_select_query = f"""
-        SELECT Artists.name, Events.id, Events.tmid FROM Events
-        JOIN EventsArtists AS ea ON ea.eventid = Events.id
+        SELECT Artists.name, Events.id, Events.tmid, Events.eventdate FROM Events
+        JOIN EventsArtists AS ea ON ea.eventid = Events.id AND ea.eventdate = Events.eventdate
         JOIN Artists ON Artists.id = ea.artistid
         WHERE
             Artists.spotifyexternalid IS NULL
             AND Events.tmid IS NOT NULL
-            AND Events.created >= NOW() - INTERVAL '1 week'
+            AND Events.created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
         OFFSET {offset} LIMIT {page_size}
     """
     try:
         with PostgresClient(log=log) as db:
             rows = db.query(query=eo_select_query, fetchall=True)
-            all_new_events = {row[1]: Event(name=row[0], id=row[1]) for row in rows }
+            all_new_events = {row[1]: Event(name=row[0], id=row[1], eventdate=row[2]) for row in rows }
             rows = db.query(query=tm_select_query, fetchall=True)
             for row in rows:
-                events.append(Event(name=row[0], id=row[1], tmid=row[2]))
+                events.append(Event(name=row[0], id=row[1], tmid=row[2], eventdate=row[3]))
                 all_new_events.pop(row[1], None) # remove duplicate
             events += list(all_new_events.values())
     except Exception as e:
@@ -151,7 +151,7 @@ def save_artists_inDB(new_artists):
 
 def save_eventsartists_inDB(events_artists_to_store):
     insert_query = """
-        INSERT INTO EventsArtists (artistid, eventid)
+        INSERT INTO EventsArtists (artistid, eventid, eventdate)
         VALUES %s
         ON CONFLICT (artistid, eventid) DO NOTHING
     """
@@ -163,7 +163,7 @@ def save_eventsartists_inDB(events_artists_to_store):
 
 def save_errors_inDB(artist_not_found_events):
     insert_query = """
-        INSERT INTO Errors (eventid, errormessage)
+        INSERT INTO Errors (eventid, eventdate, errormessage)
         VALUES %s
     """
     try:
@@ -327,9 +327,9 @@ async def main():
         for event in events:
             artistId = existing_artists.get(event.name, None)
             if artistId is None:
-                artist_not_found_events.append((event.id, f"no artists found for event: {event.name}"))
+                artist_not_found_events.append((event.id, event.date, f"no artists found for event: {event.name}"))
             else:
-                events_artists_list.append((artistId, event.id))
+                events_artists_list.append((artistId, event.id, event.date))
         log(2, f'Total artist not fonud events: {len(artist_not_found_events)}')
 
         save_errors_inDB(artist_not_found_events)

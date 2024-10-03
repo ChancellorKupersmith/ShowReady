@@ -136,7 +136,7 @@ class TicketMasterClient:
             except Exception as e:
                 self.log(1, f"ERROR: Failed to send ticketmaster request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
-                time.sleep(300)
+                time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class LastFmClient:
@@ -338,11 +338,11 @@ class Venue:
         self.tmid = tmid
 
 class Genre:
-    def __init__(self, id=None, name=None, artistid=None, albumid=None, songid=None, eventid=None, venueid=None):
+    def __init__(self, id=None, name=None, artistid=None, albumid=None, eventid=None, eventdate=None, venueid=None):
         self.id = id
         self.name = name
         self.artist_id = artistid
         self.album_id = albumid
-        self.song_id = songid
         self.event_id = eventid
+        self.event_date = eventdate
         self.venue_id = venueid

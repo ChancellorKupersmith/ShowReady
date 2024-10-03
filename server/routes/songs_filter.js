@@ -124,9 +124,9 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
   const filterEventsQuery = `
     SELECT
       ea.ArtistID, v.Name AS VenueName, e.EventDate
-      FROM Events_Partitioned e
+      FROM Events e
     JOIN Venues as v ON e.VenueID = v.ID
-    JOIN EventsArtists AS ea ON e.ID = ea.EventID
+    JOIN EventsArtists AS ea ON e.ID = ea.EventID AND e.EventDate = ea.EventDate
     ${eventWhereConditional}
   `;
   const filterSongsQuery = `
@@ -139,7 +139,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
         ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY g.Name ORDER BY s.Title) AS rn_genre' : ''}
         ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY a.ID ORDER BY s.Title) AS rn_artist' : ''}
         ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY al.ID ORDER BY s.Title) AS rn_album' : ''}
-      FROM Songs_Partitioned s
+      FROM Songs s
       JOIN Artists AS a ON s.ArtistID = a.ID
       LEFT JOIN Albums AS al ON s.AlbumID = al.ID
       LEFT JOIN Genres AS g ON a.ID = g.ArtistID
@@ -167,7 +167,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
     total_count AS (
       SELECT COUNT(*) AS total FROM data
     )
-    SELECT data.*, total_count.total
+    SELECT DISTINCT data.*, total_count.total
     FROM data, total_count
     LIMIT $1 OFFSET $2
   `;
@@ -183,9 +183,9 @@ const queryTotalResults = async (eventWhereConditional, songWhereConditional, fr
   const filterEventsQuery = `
     SELECT
       ea.ArtistID, v.Name AS VenueName, e.EventDate
-      FROM Events_Partitioned e
+      FROM Events e
     JOIN Venues as v ON e.VenueID = v.ID
-    JOIN EventsArtists AS ea ON e.ID = ea.EventID
+    JOIN EventsArtists AS ea ON e.ID = ea.EventID AND e.EventDate = ea.EventDate
     ${eventWhereConditional}
   `;
   const filterSongsQuery = `
@@ -198,7 +198,7 @@ const queryTotalResults = async (eventWhereConditional, songWhereConditional, fr
         ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY g.Name ORDER BY s.Title) AS rn_genre' : ''}
         ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY a.ID ORDER BY s.Title) AS rn_artist' : ''}
         ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY al.ID ORDER BY s.Title) AS rn_album' : ''}
-      FROM Songs_Partitioned s
+      FROM Songs s
       JOIN Artists AS a ON s.ArtistID = a.ID
       LEFT JOIN Albums AS al ON s.AlbumID = al.ID
       LEFT JOIN Genres AS g ON a.ID = g.ArtistID
@@ -239,8 +239,8 @@ const queryEventsList = async (songs) => {
       e.EventTime, e.Price, e.AgeRestrictions,
       v.Name as Venue, v.Hood, v.VenueAddress,
       a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl
-    FROM Events_Partitioned as e
-    JOIN EventsArtists AS ea ON ea.EventID = e.ID
+    FROM Events as e
+    JOIN EventsArtists AS ea ON ea.EventID = e.ID AND ea.EventDate = e.EventDate
     JOIN Artists AS a ON a.ID = ea.ArtistID
     JOIN Venues AS v ON v.ID = e.VenueID
     WHERE a.Name = $1
@@ -277,9 +277,9 @@ const queryUpcomingEvents = async (minDate, maxDate) => {
     SELECT 
       e.Name as EventName, e.EventDate, e.EventTime, e.Url, e.Price,
       v.Name AS VenueName, a.Name AS ArtistName
-    FROM Events_Partitioned as e
+    FROM Events as e
     JOIN Venues as v ON v.ID = e.VenueID
-    JOIN EventsArtists as ea ON ea.EventID = e.ID
+    JOIN EventsArtists as ea ON ea.EventID = e.ID AND ea.EventDate = e.EventDate
     JOIN Artists as a ON a.ID = ea.ArtistID
   `;
   // join artists

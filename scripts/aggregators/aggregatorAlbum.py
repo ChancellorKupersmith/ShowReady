@@ -92,7 +92,7 @@ async def find_albums(artist, spotify_client, lastfm_client):
                     log(2, f"Failed to fetch data. Status code:{resp.status_code}, Returning current aggregated albums")
                     return (False, albums, genres)
                 json_data = (resp.json())
-                log(0, f'resp: {json_data}')
+                # log(0, f'resp: {json_data}')
                 resp_total = json_data["total"]
                 for album in json_data["items"]:
                     albums.append({album['name'].lower(): Album(title=album['name'], spotifyexternalid=album['id'], artistid=artist_id)})

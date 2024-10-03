@@ -12,7 +12,7 @@ logging.basicConfig(
     filename=log_filename,
     filemode='w',
     format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.DEBUG
+    level=logging.INFO
 )
 def log(lvl, msg):
     if lvl == 0: logging.info(msg=msg)
@@ -59,12 +59,37 @@ def get_albums_fromDB(page_size, offset):
         return albums
 
 @timer_decorator
+def gather_artist_ids(songs):
+    return set(song.artist_id for song in songs)
+
+@timer_decorator
+def create_partitions(artist_ids):
+    if not artist_ids:
+        return
+    partition_queries = [
+        f"CREATE TABLE IF NOT EXISTS songs_artist_{artist_id} PARTITION OF Songs FOR VALUES IN ({artist_id});"
+        for artist_id in artist_ids
+    ]
+    # Join all partition creation queries into one to reduce overhead
+    combined_query = "\n".join(partition_queries)
+    with PostgresClient(log=log) as db:
+        db.query(query=combined_query)
+
+@timer_decorator
 def save_songs_inDB(songs_to_save):
     insert_query = """
         INSERT INTO Songs (title, artistid, albumid, albumtracknum, spotifyexternalid, spotifypreviewurl)
         VALUES %s
+        ON CONFLICT (title, artistid)
+        DO UPDATE SET
+            albumid = EXCLUDED.albumid,
+            albumtracknum = EXCLUDED.albumtracknum,
+            spotifyexternalid = EXCLUDED.spotifyexternalid,
+            spotifypreviewurl = EXCLUDED.spotifypreviewurl
     """
     try:
+        artist_ids = gather_artist_ids(songs_to_save)
+        create_partitions(artist_ids)
         with PostgresClient(log=log) as db:
             song_tuples = [ (s.title, s.artist_id, s.album_id, s.track_num, s.spotify_id, s.spotify_preview_url) for s in songs_to_save ]
             if len(song_tuples) > 0:

@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS Venues (
 );
 
 CREATE TABLE IF NOT EXISTS Events (
-    ID SERIAL PRIMARY KEY,
+    ID SERIAL,
     Name VARCHAR(300) NOT NULL,
     Url VARCHAR(600),
     Price VARCHAR(100),    
@@ -30,47 +30,10 @@ CREATE TABLE IF NOT EXISTS Events (
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
     UNIQUE (Name, EventDate),
+    PRIMARY KEY (id, eventdate),
     FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
 ) PARTITION BY RANGE (EventDate);
 
-CREATE TABLE IF NOT EXISTS Events_Partitioned (
-    ID SERIAL,
-    Name VARCHAR(300) NOT NULL,
-    Url VARCHAR(600),
-    Price VARCHAR(100),    
-    EventDate DATE NOT NULL,
-    EventTime VARCHAR(100),
-    AgeRestrictions VARCHAR(50),
-    Summary VARCHAR(6000),
-    TMID VARCHAR(36),
-    VenueID INT,
-    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Updated TIMESTAMP,
-    PRIMARY KEY (Name, EventDate),
-    FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
-) PARTITION BY RANGE (EventDate);
-
-DO $$
-DECLARE
-    StartDate DATE := '2024-08-26';
-    EndDate DATE := '2026-01-12';
-    CurDate DATE := StartDate;
-BEGIN
-    WHILE CurDate <= EndDate LOOP
-        EXECUTE format('
-            CREATE TABLE IF NOT EXISTS events_%s PARTITION OF Events_Partitioned
-            FOR VALUES FROM (%L) TO (%L);',
-            to_char(CurDate, 'IYYY_IW'),  -- Year and week number
-            CurDate,
-            CurDate + interval '1 week'
-        );
-        CurDate := CurDate + interval '1 week';
-    END LOOP;
-END $$;
-
-INSERT INTO Events_Partitioned (ID, Name, Url, Price, EventDate, EventTime, AgeRestrictions, Summary, TMID, VenueID, Created, Updated)
-SELECT ID, Name, Url, Price, EventDate, EventTime, AgeRestrictions, Summary, TMID, VenueID, Created, Updated
-FROM Events;
 
 CREATE TABLE IF NOT EXISTS Artists (
     ID SERIAL PRIMARY KEY,
@@ -104,21 +67,19 @@ CREATE TABLE IF NOT EXISTS Genres (
     Name VARCHAR(300) NOT NULL,
     ArtistID INT,
     AlbumID INT,
-    SongID INT,
     EventID INT,
+    EventDate DATE,
     VenueID INT,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
-    CONSTRAINT genres_distinct UNIQUE(ArtistID, AlbumID, SongID, EventID, VenueID),
+    CONSTRAINT distinct_artists UNIQUE (Name, ArtistID),
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE SET NULL,
-    FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL,
-    FOREIGN KEY (SongID) REFERENCES Songs(ID) ON DELETE SET NULL,
-    FOREIGN KEY (EventID) REFERENCES Events(ID) ON DELETE SET NULL,
+    FOREIGN KEY (EventID, EventDate) REFERENCES Events(ID, EventDate) ON DELETE SET NULL,
     FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS Songs (
-    ID SERIAL PRIMARY KEY,
+    ID SERIAL,
     Title VARCHAR(300) NOT NULL,
     ArtistID INT NOT NULL,
     AlbumID INT,
@@ -134,53 +95,18 @@ CREATE TABLE IF NOT EXISTS Songs (
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
     CONSTRAINT songs_unique_title_artist UNIQUE (Title, ArtistID),
+    PRIMARY KEY (ID, ArtistID),
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE,
     FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL
 ) PARTITION BY LIST (ArtistID);
-
-CREATE TABLE IF NOT EXISTS Songs_Partitioned (
-    ID SERIAL,
-    Title VARCHAR(300) NOT NULL,
-    ArtistID INT NOT NULL,
-    AlbumID INT,
-    AlbumTrackNum INT,
-    MBID VARCHAR(100),
-    SpotifyExternalId VARCHAR(30),
-    SpotifyPopularity INT,
-    SpotifyPreviewUrl VARCHAR(600),
-    LastFmUrl VARCHAR(600),
-    YTUrl VARCHAR(600),
-    -- used to identify if song has been scraped by youtube, Null if not attempted, true/false if url found
-    YTFound BOOLEAN,
-    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Updated TIMESTAMP,
-    PRIMARY KEY (Title, ArtistID),
-    CONSTRAINT songs_unique_title_artist UNIQUE (Title, ArtistID),
-    FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE,
-    FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL
-) PARTITION BY LIST (ArtistID);
-
-DO $$
-DECLARE
-    artist RECORD;
-BEGIN
-    FOR artist IN
-        SELECT DISTINCT ArtistID FROM Songs
-    LOOP
-        EXECUTE format('CREATE TABLE IF NOT EXISTS songs_artist_%s PARTITION OF Songs_Partitioned FOR VALUES IN (%s);', artist.ArtistID, artist.ArtistID);
-    END LOOP;
-END $$;
-
-INSERT INTO Songs_Partitioned (ID, Title, ArtistID, AlbumID, AlbumTrackNum, MBID, SpotifyExternalId, SpotifyPopularity, SpotifyPreviewUrl, LastFmUrl, YTUrl, YTFound, Created, Updated)
-SELECT ID, Title, ArtistID, AlbumID, AlbumTrackNum, MBID, SpotifyExternalId, SpotifyPopularity, SpotifyPreviewUrl, LastFmUrl, YTUrl, YTFound, Created, Updated
-FROM Songs;
 
 CREATE TABLE IF NOT EXISTS EventsArtists (
     EventID INT,
+    EventDate DATE,
     ArtistID INT,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (EventID, ArtistID),
-    FOREIGN KEY (EventID) REFERENCES Events(ID) ON DELETE CASCADE,
+    FOREIGN KEY (EventID, EventDate) REFERENCES Events(ID, EventDate) ON DELETE CASCADE,
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE
 );
 
@@ -190,6 +116,7 @@ CREATE TABLE IF NOT EXISTS Errors (
     AlbumID INT,
     ArtistID INT,
     EventID INT,
+    EventDate DATE,
     GenreID INT,
     SongID INT,
     VenueID INT,
@@ -197,9 +124,9 @@ CREATE TABLE IF NOT EXISTS Errors (
     Updated TIMESTAMP,
     FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE CASCADE,
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE,
-    FOREIGN KEY (EventID) REFERENCES Events(ID) ON DELETE CASCADE,
+    FOREIGN KEY (EventID, EventDate) REFERENCES Events(ID, EventDate) ON DELETE CASCADE,
     FOREIGN KEY (GenreID) REFERENCES Genres(ID) ON DELETE CASCADE,
-    FOREIGN KEY (SongID) REFERENCES Songs(ID) ON DELETE CASCADE,
+    FOREIGN KEY (SongID, ArtistID) REFERENCES Songs(ID, ArtistID) ON DELETE CASCADE,
     FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
 );
 
