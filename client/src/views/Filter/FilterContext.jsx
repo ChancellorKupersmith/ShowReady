@@ -110,11 +110,11 @@ export const FilterContextProvider = ({ children }) => {
     });
     useEffect(() => {
         sessionStorage.setItem('filters', JSON.stringify(filters));
+        // console.log(filters)
     }, [filters]);
     const updateFilters = (newFiltersObj) => {
         if(!newFiltersObj) return;
         setFilters(newFiltersObj);
-        // console.log(newFiltersObj);
     }
 
     return (

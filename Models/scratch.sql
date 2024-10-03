@@ -1,9 +1,9 @@
 -- SELECT g.Name AS GenreName, COUNT(s.ID) AS SongCount
 -- FROM Genres g
--- LEFT JOIN Artists a ON g.ArtistID = a.ID
--- JOIN Songs s ON a.ID = s.ArtistID
--- JOIN EventsArtists ON a.ID = ea.ArtistID
--- JOIN Events ON ea.EventID = e.ID
+-- JOIN Artists AS a ON g.ArtistID = a.ID
+-- JOIN Songs AS s ON a.ID = s.ArtistID
+-- JOIN EventsArtists AS ea ON a.ID = ea.ArtistID
+-- JOIN Events AS e ON ea.EventID = e.ID
 -- WHERE e.EventDate BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '1 week'
 -- GROUP BY g.Name
 -- ORDER BY SongCount DESC;

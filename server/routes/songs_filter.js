@@ -90,21 +90,22 @@ const songWhereConditionBuilder = async (req, res, next) => {
     let whereConditional = 'WHERE ';
 
     const { filters } = req.body;
-    if(filters.ex.genre?.names?.length) whereConditional += `g.Name NOT IN ('${filters.ex.genre.names.join(`', '`)}') AND `;
-    if(filters.req.genre?.names?.length) whereConditional += `g.Name IN ('${filters.req.genre.names.join(`', '`)}') AND `;
-    if(filters.ex.artist.names.length) whereConditional += `a.Name NOT IN ('${filters.ex.artist.names.join(`', '`)}') AND `;
-    if(filters.req.artist.names.length) whereConditional += `a.Name IN ('${filters.req.artist.names.join(`', '`)}') AND `;
+    if(filters?.ex?.genre?.names?.length) whereConditional += `g.Name NOT IN ('${filters.ex.genre.names.join(`', '`)}') AND `;
+    if(filters?.req?.genre?.names?.length) whereConditional += `g.Name IN ('${filters.req.genre.names.join(`', '`)}') AND `;
+    if(filters?.ex?.artist?.names?.length) whereConditional += `a.Name NOT IN ('${filters.ex.artist.names.join(`', '`)}') AND `;
+    if(filters?.req?.artist?.names?.length) whereConditional += `a.Name IN ('${filters.req.artist.names.join(`', '`)}') AND `;
     // TODO: handle from each artists
     // TODO: handle from artist musicbrainz meta
-    if(filters.ex.album.names.length) whereConditional += `al.Title NOT IN ('${filters.ex.album.names.join(`', '`)}') AND `;
-    if(filters.req.album.names.length) whereConditional += `al.Title IN ('${filters.req.album.names.join(`', '`)}') AND `;
+    if(filters?.ex?.album?.names?.length) whereConditional += `al.Title NOT IN ('${filters.ex.album.names.join(`', '`)}') AND `;
+    if(filters?.req?.album?.names?.length) whereConditional += `al.Title IN ('${filters.req.album.names.join(`', '`)}') AND `;
     // TODO: handle from each album
-    if(filters.ex.song.names.length) whereConditional += `s.Title NOT IN ('${filters.ex.song.names.join(`', '`)}') AND `;
-    if(filters.req.song.names.length) whereConditional += `s.Title IN ('${filters.req.song.names.join(`', '`)}') AND `;
-    if(filters.ex.source.spotify) whereConditional += `s.SpotifyExternalId IS NULL AND `;
-    if(filters.req.source.spotify) whereConditional += `s.SpotifyExternalId IS NOT NULL AND `;
-    if(filters.ex.source.youtube) whereConditional += `s.YTUrl IS NULL AND `;
-    if(filters.req.source.youtube) whereConditional += `s.YTFound = TRUE AND `;
+    if(filters?.ex?.song?.ids?.length) whereConditional += `s.id NOT IN ('${filters.ex.song.ids.join(`', '`)}') AND `
+    if(filters?.ex?.song?.names?.length) whereConditional += `s.Title NOT IN ('${filters.ex.song.names.join(`', '`)}') AND `;
+    if(filters?.req?.song?.names?.length) whereConditional += `s.Title IN ('${filters.req.song.names.join(`', '`)}') AND `;
+    if(filters?.ex?.source?.spotify) whereConditional += `s.SpotifyExternalId IS NULL AND `;
+    if(filters?.req?.source?.spotify) whereConditional += `s.SpotifyExternalId IS NOT NULL AND `;
+    if(filters?.ex?.source?.youtube) whereConditional += `s.YTUrl IS NULL AND `;
+    if(filters?.req?.source?.youtube) whereConditional += `s.YTFound = TRUE AND `;
     // remove trailing 'AND'
     if(whereConditional != 'WHERE ')
       whereConditional = whereConditional.substring(0, whereConditional.length - 4);
@@ -123,7 +124,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
   // ${/*'LEFT JOIN Genres AS g ON e.ID = g.EventID'*/''}
   const filterEventsQuery = `
     SELECT
-      ea.ArtistID, v.Name AS VenueName, e.EventDate
+      DISTINCT ON (ea.ArtistID) ea.ArtistID, v.Name AS VenueName, e.EventDate
       FROM Events e
     JOIN Venues as v ON e.VenueID = v.ID
     JOIN EventsArtists AS ea ON e.ID = ea.EventID AND e.EventDate = ea.EventDate
@@ -167,7 +168,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
     total_count AS (
       SELECT COUNT(*) AS total FROM data
     )
-    SELECT DISTINCT data.*, total_count.total
+    SELECT data.*, total_count.total
     FROM data, total_count
     LIMIT $1 OFFSET $2
   `;
@@ -182,7 +183,7 @@ const queryTotalResults = async (eventWhereConditional, songWhereConditional, fr
   const client = await pool.connect();
   const filterEventsQuery = `
     SELECT
-      ea.ArtistID, v.Name AS VenueName, e.EventDate
+      DISTINCT ON (ea.ArtistID) ea.ArtistID, v.Name AS VenueName, e.EventDate
       FROM Events e
     JOIN Venues as v ON e.VenueID = v.ID
     JOIN EventsArtists AS ea ON e.ID = ea.EventID AND e.EventDate = ea.EventDate
