@@ -128,7 +128,7 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
     }
     const getGenreFilterTabs = () => {
         let tabs = [];
-        tabs = [...tabs, ...populateTabs(tabs, tempFilters.req.genre.names, 'Genre:', 'label-reqfilter-genre')]
+        tabs = [...tabs, ...populateTabs(tempFilters.req.genre.names, 'Genre:', 'label-reqfilter-genre')]
         tabs = [...tabs, ...populateTabs(tempFilters.ex.genre.names, 'Genre:', 'label-exfilter-genre')]
 
         // set ellipsis tab
