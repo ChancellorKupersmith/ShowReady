@@ -1,33 +1,86 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Slider from 'react-slick'
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import './Landing.css'
 
-export const PlaylistCarousel = () => {
+export const PlaylistCarousel = ({ playlists }) => {
     var settings = {
       className: 'slider',
       dots: true,
-      lazyLoad: true,
       infinite: true,
-      speed: 500,
+      speed: 5000,
       slidesToShow: 3,
-      slidesToScroll: 3,
-      variableWidth: true,
+      slidesToScroll: 1,
+      autoplay: true,
     };
     return (
       <Slider {...settings}>
-        <div className='playlist-carousel-slide'>
-          <div className='radiogen-playlist'>
-            playlist img
-          </div>
-        </div>
+          { playlists }
       </Slider>
     );
 }
 
+const PlaylistCover = ({ img, imgheight, imgwidth, name }) => {
+  const coverStyle = {
+    border: 'solid red',
+    width: `300px`, // Has to be 640, 300, or 50px according to spotify use guidelines (https://developer.spotify.com/documentation/design)
+    height: `300px`, // Has to be 640, 300, or 50px according to spotify use guidelines (https://developer.spotify.com/documentation/design)
+    borderRadius: '15px',
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  };
+
+  const imageStyle = {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    borderRadius: '15px',
+  };
+
+  return (
+    <div style={coverStyle}>
+      <img src={img} alt={name} style={imageStyle} />
+      <div style={{
+        position: 'absolute',
+        bottom: '10px',
+        left: '10px',
+        color: '#fff',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        padding: '5px 10px',
+        borderRadius: '5px',
+      }}>
+        {name}
+      </div>
+    </div>
+  );
+};
+
 const LandingView = () => {
+    const [radiogenPlaylists, setRadiogenPlaylists] = useState([]);
+    // Fetch random radiogen playlists
+    useEffect(() => {
+      const fetchRadiogenPlaylists = async () => {
+          try{
+              const response = await fetch('/radiogen/random_playlists?limit=10');
+              console.log(response)
+              const data = await response.json();
+              console.log(data);
+              if(data){
+                setRadiogenPlaylists(data.map((playlist, index) => <PlaylistCover key={index} name={playlist.name} img={playlist.img} imgheight={playlist.imgheight} imgwidth={playlist.imgwidth}/>))
+              }
+          }catch(err){
+              console.error(err)
+          }
+      };
+      fetchRadiogenPlaylists();
+    }, []);
+
+
     const call_to_action_text = `
         A tool for discovering and supporting artists performing live in your area.
         - find upcoming concerts and generate custom playlists
@@ -47,9 +100,11 @@ const LandingView = () => {
                     {call_to_action_text}
                 </p>
             </div>
-            <div className='data-stats-container'>data stats slides</div>
+            <div className='data-stats-container'>
+              Total songs, total events this weekend/month/year, most/least popular artist performing this month
+            </div>
             <div className='playlists-carousel-container'>
-                <PlaylistCarousel />
+                <PlaylistCarousel playlists={radiogenPlaylists}/>
             </div>
         </div>
     );

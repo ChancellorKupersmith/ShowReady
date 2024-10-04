@@ -133,7 +133,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
   const filterSongsQuery = `
     WITH FromEachRankedSongs AS (
       SELECT 
-        a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
+        DISTINCT ON (a.ID, s.Title) a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
         al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
         s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
         s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
@@ -192,7 +192,7 @@ const queryTotalResults = async (eventWhereConditional, songWhereConditional, fr
   const filterSongsQuery = `
     WITH FromEachRankedSongs AS (
       SELECT 
-        a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
+        DISTINCT ON (a.ID, s.Title) a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
         al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
         s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
         s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre

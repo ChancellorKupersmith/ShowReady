@@ -8,6 +8,20 @@
 -- GROUP BY g.Name
 -- ORDER BY SongCount DESC;
 
+-- INSERT INTO SpotifyPlaylists (Name, SpotifyExternalId)
+-- VALUES ('This is Seattle Oct-2024', '5zQkAGDApz1YgmBG065qpe');
+-- INSERT INTO SpotifyPlaylists (Name, SpotifyExternalId)
+-- VALUES ('Seattle World Oct-2024', '4kwbd5OleUZvKzmiS7tsbP');
+-- INSERT INTO SpotifyPlaylists (Name, SpotifyExternalId)
+-- VALUES ('Seattle French Rap Oct-2024', '22JZno6BXETFY17NlrXp4a');
+-- INSERT INTO SpotifyPlaylists (Name, SpotifyExternalId)
+-- VALUES ('Seattle Other Oct-2024', '3hgGKHHRgsNzuztZpqAVvT');
+-- INSERT INTO SpotifyPlaylists (Name, SpotifyExternalId)
+-- VALUES ('Seattle Witchstep Oct-2024', '5GcPMi8Ec5miYs2XixUjCK');
+-- INSERT INTO SpotifyPlaylists (Name, SpotifyExternalId)
+-- VALUES ('Seattle Alternative Folk Oct-2024', '5d48BouZC08EutOZfOCPFj');
+-- INSERT INTO SpotifyPlaylists (Name, SpotifyExternalId)
+-- VALUES ('Seattle Indie Pop Oct-2024', '10tt4ZIQYwfkX8qs0dYRk9');
 
 -- CREATE TABLE IF NOT EXISTS Events_Partitioned (
 --     ID SERIAL,

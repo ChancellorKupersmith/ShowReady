@@ -6,6 +6,7 @@ const path = require('path');
 const songsRouter = require('./routes/songs_filter');
 const googleApiRouter = require('./routes/googleApi');
 const spotifyApiRouter = require('./routes/spotifyApi');
+const radiogenPlaylistRouter = require('./routes/radiogenPlaylists');
 
 const app = express();
 app.use(express.json());
@@ -29,6 +30,7 @@ app.use((err, req, res, next) => {
 app.use('/songs_list', songsRouter);
 app.use('/google_api', googleApiRouter);
 app.use('/spotify', spotifyApiRouter);
+app.use('/radiogen', radiogenPlaylistRouter);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

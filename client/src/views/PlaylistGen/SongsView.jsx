@@ -41,7 +41,7 @@ const SongsView = () => {
                     body: JSON.stringify(postData)
                 });
                 const data = await response.json();
-                // console.log(data);
+                console.log(data);
                 if(data[0].length > 0)
                     setTotalPages(Math.ceil(data[0][0].total / pageSize))
                 setSongs([...data[0]]);

@@ -130,6 +130,18 @@ CREATE TABLE IF NOT EXISTS Errors (
     FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS SpotifyPlaylists (
+    ID SERIAL PRIMARY KEY,
+    Name VARCHAR(300) NOT NULL,
+    Img VARCHAR(600),
+    ImgHeight INT,
+    ImgWidth INT,
+    SpotifyExternalId VARCHAR(30) UNIQUE,
+    SpotifyPopularity INT,
+    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Updated TIMESTAMP
+);
+
 CREATE OR REPLACE FUNCTION update_updated()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -170,5 +182,10 @@ EXECUTE FUNCTION update_updated();
 
 CREATE TRIGGER update_updated_trigger_errors
 BEFORE UPDATE ON Errors
+FOR EACH ROW
+EXECUTE FUNCTION update_updated();
+
+CREATE TRIGGER update_updated_trigger_spotify_playlists
+BEFORE UPDATE ON SpotifyPlaylists
 FOR EACH ROW
 EXECUTE FUNCTION update_updated();

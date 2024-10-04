@@ -207,11 +207,12 @@ class SpotifyClient:
         else:
             self.log(1, f'Error fetching access token, Status code {response.status_code}: {response.text}')
 
-    async def get(self, endpoint, params, max_retries=3):
-        url_req = self.base_url + endpoint
-        for p in params:
-            url_req += f"{p}&"
-        url = url_req.rstrip("&")
+    async def get(self, endpoint, params=None, max_retries=3):
+        url = self.base_url + endpoint
+        if params is not None:
+            for p in params:
+                url += f"{p}&"
+            url = url.rstrip("&")
         for attempt in range(max_retries):
             try:
                 # reassign access token each time inorder to keep update with each retry
@@ -346,3 +347,13 @@ class Genre:
         self.event_id = eventid
         self.event_date = eventdate
         self.venue_id = venueid
+
+class SpotifyPlaylist:
+    def __init__(self, id=None, name=None, spotifyexternalid=None, spotifypopularity=None, img=None, imgheight=None, imgwidth=None):
+        self.id = id
+        self.name = name
+        self.spotify_id = spotifyexternalid
+        self.spotify_popular = spotifypopularity
+        self.img = img
+        self.img_height = imgheight
+        self.img_width = imgwidth

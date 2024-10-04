@@ -135,7 +135,6 @@ const FilterList = ({handleFilterMenu, selectedMenu}) => {
         if(tabs.length >= MAX_TABS){
             tabs[MAX_TABS - 1] = <ReqExFilterTab key={'date-ellipsis'} value={'...'}/>
         }
-        console.log(`Tabs: ${tabs}`)
         return tabs;
     }
     const getDateFilterTabs = () => {
