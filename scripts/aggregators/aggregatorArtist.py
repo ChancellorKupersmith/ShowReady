@@ -45,9 +45,9 @@ def get_events_fromDB(page_size, offset):
     events = []
     eo_select_query = f"""
         SELECT name, id, eventdate FROM Events
-        WHERE created >= NOW() - INTERVAL '1 week'
         OFFSET {offset} LIMIT {page_size}
     """
+        # WHERE created >= NOW() - INTERVAL '1 week'
     tm_select_query = f"""
         SELECT Artists.name, Events.id, Events.tmid, Events.eventdate FROM Events
         JOIN EventsArtists AS ea ON ea.eventid = Events.id AND ea.eventdate = Events.eventdate
@@ -55,16 +55,17 @@ def get_events_fromDB(page_size, offset):
         WHERE
             Artists.spotifyexternalid IS NULL
             AND Events.tmid IS NOT NULL
-            AND Events.created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
+        ORDER BY Events.Eventdate DESC
         OFFSET {offset} LIMIT {page_size}
     """
+            # AND Events.created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
     try:
         with PostgresClient(log=log) as db:
             rows = db.query(query=eo_select_query, fetchall=True)
-            all_new_events = {row[1]: Event(name=row[0], id=row[1], eventdate=row[2]) for row in rows }
+            all_new_events = {row[1]: Event(name=row[0], id=row[1], event_date=row[2]) for row in rows }
             rows = db.query(query=tm_select_query, fetchall=True)
             for row in rows:
-                events.append(Event(name=row[0], id=row[1], tmid=row[2], eventdate=row[3]))
+                events.append(Event(name=row[0], id=row[1], tm_id=row[2], event_date=row[3]))
                 all_new_events.pop(row[1], None) # remove duplicate
             events += list(all_new_events.values())
     except Exception as e:
@@ -113,12 +114,22 @@ def save_artists_inDB(new_artists):
             return existing_artists
 
     insert_spotify_query = """
-        INSERT INTO Artists (name, spotifyexternalid, spotifypopularity)
+        INSERT INTO Artists (name, spotifyexternalid, spotifypopularity, spotifyimg)
         VALUES %s
         ON CONFLICT (name)
         DO UPDATE SET
             spotifyexternalid = EXCLUDED.spotifyexternalid,
-            spotifypopularity = EXCLUDED.spotifypopularity
+            spotifypopularity = EXCLUDED.spotifypopularity,
+            spotifyimg = EXCLUDED.spotifyimg
+        RETURNING name, id
+    """
+    update_spotify_query = """
+        INSERT INTO Artists (name, spotifypopularity, spotifyimg)
+        VALUES %s
+        ON CONFLICT (name)
+        DO UPDATE SET
+            spotifypopularity = EXCLUDED.spotifypopularity,
+            spotifyimg = EXCLUDED.spotifyimg
         RETURNING name, id
     """
     insert_lastfm_query = """
@@ -134,15 +145,25 @@ def save_artists_inDB(new_artists):
         # Insert/Update found artists
         existing_spotify_artists = get_existing_spotify_artists_fromDB()
         existing_lastfm_artists = get_existing_lastfm_artists_fromDB()
-        unique_spotify_artists = list(filter(lambda artist: artist.spotify_id not in existing_spotify_artists, new_artists.values()))
-        unique_lastfm_artists = list(filter(lambda artist: artist.name.lower() not in existing_lastfm_artists, new_artists.values()))
-        new_spotify_artists_tuples = [(a.name, a.spotify_id, a.spotify_popular) for a in unique_spotify_artists]
-        new_lastfm_artists_tuples = [(a.name, a.lastfm_url) for a in unique_lastfm_artists]
+        new_spotify_artists = list(filter(lambda artist: artist.spotify_id not in existing_spotify_artists, new_artists.values()))
+        new_spotify_artists_tuples = [(a.name, a.spotify_id, a.spotify_popular, a.spotify_img) for a in new_spotify_artists]
+        log(0, 'NEW SPOTIFY ARTISTS:')
+        log(0, new_spotify_artists_tuples)
+        update_spotify_artists = list(filter(lambda artist: artist.spotify_id in existing_spotify_artists, new_artists.values()))
+        update_spotify_artists_tuples = [(a.name, a.spotify_popular, a.spotify_img) for a in update_spotify_artists]
+        log(0, 'UPDATE SPOTIFY ARTISTS:')
+        log(0, update_spotify_artists_tuples)
+        new_lastfm_artists = list(filter(lambda artist: artist.name.lower() not in existing_lastfm_artists, new_artists.values()))
+        new_lastfm_artists_tuples = [(a.name, a.lastfm_url) for a in new_lastfm_artists]
+        log(0, 'NEW LASTFM ARTISTS:')
+        log(0, new_lastfm_artists_tuples)
         with PostgresClient(log=log) as db:
             rows = db.query(query=insert_spotify_query, data=new_spotify_artists_tuples, fetchall=True)
-            artist_name_ids = {row[0]: row[1] for row in rows}
+            artist_name_ids.update({row[0]: row[1] for row in rows})
+            rows = db.query(query=update_spotify_query, data=update_spotify_artists_tuples, fetchall=True)
+            artist_name_ids.update({row[0]: row[1] for row in rows})
             rows = db.query(query=insert_lastfm_query, data=new_lastfm_artists_tuples, fetchall=True)
-            artist_name_ids = {row[0]: row[1] for row in rows}
+            artist_name_ids.update({row[0]: row[1] for row in rows})
     except Exception as e:
         log(1, f"Error saving artist to db returning empty list, {e}")
         artist_name_ids.clear()
@@ -194,7 +215,15 @@ async def find_artists(events):
             else:
                 artist_list = json_data["items"]
                 sp_artist = artist_list[0]
-                a = Artist(name=sp_artist["name"], spotify_id=sp_artist["id"], spotify_popular=sp_artist["popularity"])
+                log(0, 'SP Artist:')
+                log(0, sp_artist)
+                artist_img = None
+                sp_artist_imgs = sp_artist.get('images')
+                if sp_artist_imgs is not None:
+                    artist_img = sp_artist_imgs[0].get('url')
+                    log(2, f'WARNING: aimg {artist_img}')
+                a = Artist(name=sp_artist["name"], spotify_id=sp_artist["id"], spotify_popular=sp_artist["popularity"], spotify_img=artist_img)
+                log(2, f'WARNING: a spotify img {a.spotify_img}')
                 artist = {a.name.lower(): a}
                 return (True, artist)
         except Exception as e:
@@ -223,7 +252,15 @@ async def find_artists(events):
                     return (False, artists)
             else:
                 lastfm_artist = artist_list[0]
-                a = Artist(name=lastfm_artist["name"], lastfm_url=lastfm_artist["url"])
+                lastfm_img = None
+                images = lastfm_artist.get('image')
+                if images is not None and len(images) > 0:
+                    for img in images:
+                        # exclude mock png lastfm provides
+                        lastfm_img = None if img['#text'].endswith('2a96cbd8b46e442fc41c2b86b821562f.png') else img['#text']
+                if lastfm_img is not None:
+                    log(0, f'LASTFM_IMG: {lastfm_img}')
+                a = Artist(name=lastfm_artist["name"], lastfm_url=lastfm_artist["url"], lastfm_img=lastfm_img)
                 artist = {a.name.lower(): a}
                 return (True, artist)
         except Exception as e:
@@ -242,8 +279,8 @@ async def find_artists(events):
             artists_not_found = {}
             num_new_events += 1
             tasks = [
-                query_lastFm_artist(lastfm_client, event.name, event.tmid),
-                query_spotify_artist(spotify_client, event.name, event.tmid)
+                query_lastFm_artist(lastfm_client, event.name, event.tm_id),
+                query_spotify_artist(spotify_client, event.name, event.tm_id)
             ]
             results = await asyncio.gather(*tasks)
             for res in results:
@@ -255,9 +292,12 @@ async def find_artists(events):
                             # and consolidate data if already found
                             if new_artist.spotify_id is None:
                                 artists[new_artist.name.lower()].lastfm_url = new_artist.lastfm_url
+                                artists[new_artist.name.lower()].lastfm_img = new_artist.lastfm_img
                             else:
                                 new_artist.lastfm_url = artists[new_artist.name.lower()].lastfm_url
+                                new_artist.lastfm_img = artists[new_artist.name.lower()].lastfm_img
                                 artists[new_artist.name.lower()] = new_artist
+                            log(2, f'WARNING new artist sp img: ({new_artist.name}, {new_artist.spotify_img})')
                         else:
                             artists[new_artist.name.lower()] = new_artist
                         # log(0, f"cached artist: {artists[new_artist.name.lower()].asdict()}")
@@ -316,9 +356,10 @@ async def main():
     for page in range(int(total / page_size)):
         events = get_events_fromDB(page_size, page * page_size)
         # Avoid unnecessary find_artist compute by filter new artists not saved in db
-        new_artist_events = list(filter(lambda event: event.name not in existing_artists.keys(), events))
-        log(0, f"number of new artist events: {len(new_artist_events)}")
-        new_artists = await find_artists(new_artist_events)
+        # new_artist_events = list(filter(lambda event: event.name not in existing_artists.keys(), events))
+        # log(0, f"number of new artist events: {len(new_artist_events)}")
+        # new_artists = await find_artists(new_artist_events)
+        new_artists = await find_artists(events)
         artist_name_ids = save_artists_inDB(new_artists)
         # Match events to artists for event-artist join table in db
         existing_artists.update(artist_name_ids)
@@ -331,7 +372,6 @@ async def main():
             else:
                 events_artists_list.append((artistId, event.id, event.date))
         log(2, f'Total artist not fonud events: {len(artist_not_found_events)}')
-
         save_errors_inDB(artist_not_found_events)
         save_eventsartists_inDB(events_artists_list)
     log(0, 'SUCCESSFULL ARTIST AGGREGATION!')

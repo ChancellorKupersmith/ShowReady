@@ -247,19 +247,16 @@ class SpotifyClient:
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class Artist:
-    def __init__(self, id=None, name=None, lastfm_url=None, lastfm_img=None, spotify_id=None, spotify_popular=None, spotify_img=None, dictionary=None, tm_id=None, tm_img=None, website=None, mb_id=None):
+    def __init__(self, id=None, name=None, lastfm_url=None, spotify_id=None, spotify_popular=None, dictionary=None, tmid=None, website=None, mbid=None):
         if dictionary is None:
             self.id = id
             self.name = name
             self.lastfm_url = lastfm_url
-            self.lastfm_img = lastfm_img
             self.spotify_id = spotify_id
             self.spotify_popular = spotify_popular
-            self.spotify_img = spotify_img
-            self.tm_id = tm_id
-            self.tm_img = tm_img
+            self.tmid = tmid
             self.website = website
-            self.mb_id = mb_id
+            self.mbid = mbid
         else:
             for key, value in dictionary.items():
                 setattr(self, key, value)
@@ -315,35 +312,31 @@ class Song:
         return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url)
 
 class Event:
-    def __init__(self, id=None, name=None, url=None, event_date=None, event_time=None, summary=None, age_restrictions=None, venue_id=None, tm_id=None, tm_img=None, price=None, tickets_link=None, eo_img=None):
+    def __init__(self, id=None, name=None, url=None, eventdate=None, eventtime=None, summary=None, agerestrictions=None, venueid=None, tmid=None, price=None):
         self.id = id
         self.name = name
         self.url = url
-        self.date = event_date
-        self.time = event_time
+        self.date = eventdate
+        self.time = eventtime
         self.summary = summary
-        self.age_restrictions = age_restrictions
-        self.venue_id = venue_id
-        self.tm_id = tm_id
+        self.age_restrictions = agerestrictions
+        self.venue_id = venueid
+        self.tmid = tmid
         self.price = price
-        self.tickets_link = tickets_link
-        self.eo_img = eo_img
-        self.tm_img = tm_img
-
 
 class Venue:
-    def __init__(self, id=None, name=None, venue_url=None, venue_address=None, hood=None, summary=None, eo_url=None, phone=None, lat=None, lng=None, tm_id=None):
+    def __init__(self, id=None, name=None, venueurl=None, venueaddress=None, hood=None, summary=None, eourl=None, phone=None, lat=None, lng=None, tmid=None):
         self.id = id
         self.name = name
-        self.venue_url = venue_url
-        self.venue_address = venue_address
+        self.venue_url = venueurl
+        self.venue_address = venueaddress
         self.hood= hood
         self.summary = summary
-        self.eo_url = eo_url
+        self.eourl = eourl
         self.phone = phone
         self.lat = lat
         self.lng = lng
-        self.tm_id = tm_id
+        self.tmid = tmid
 
 class Genre:
     def __init__(self, id=None, name=None, artistid=None, albumid=None, eventid=None, eventdate=None, venueid=None):
@@ -354,3 +347,13 @@ class Genre:
         self.event_id = eventid
         self.event_date = eventdate
         self.venue_id = venueid
+
+class SpotifyPlaylist:
+    def __init__(self, id=None, name=None, spotifyexternalid=None, spotifypopularity=None, img=None, imgheight=None, imgwidth=None):
+        self.id = id
+        self.name = name
+        self.spotify_id = spotifyexternalid
+        self.spotify_popular = spotifypopularity
+        self.img = img
+        self.img_height = imgheight
+        self.img_width = imgwidth

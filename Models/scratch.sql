@@ -1,4 +1,4 @@
--- SELECT g.Name AS GenreName, COUNT(s.ID) AS SongCount
+-- SELECT g.Name AS GenreName, COUNT(DISTINCT s.ID) AS SongCount
 -- FROM Genres g
 -- JOIN Artists AS a ON g.ArtistID = a.ID
 -- JOIN Songs AS s ON a.ID = s.ArtistID
@@ -43,12 +43,12 @@
 -- DO $$
 -- DECLARE
 --     StartDate DATE := '2024-08-26';
---     EndDate DATE := '2026-01-12';
+--     EndDate DATE := '2029-01-01';
 --     CurDate DATE := StartDate;
 -- BEGIN
 --     WHILE CurDate <= EndDate LOOP
 --         EXECUTE format('
---             CREATE TABLE IF NOT EXISTS events_%s PARTITION OF Events_Partitioned
+--             CREATE TABLE IF NOT EXISTS events_%s PARTITION OF Events
 --             FOR VALUES FROM (%L) TO (%L);',
 --             to_char(CurDate, 'IYYY_IW'),  -- Year and week number
 --             CurDate,

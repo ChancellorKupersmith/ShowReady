@@ -15,26 +15,36 @@ export const MapContextProvider = ({children}) => {
   // default center seattle
   const [center, setCenter] = useState({lat: 47.608013, lng: -122.3217481});
   const [zoom, setZoom] = useState(12);
-  // FIXME: change to query db for lat and lng
-  const findVenue = async (address) => {
-    try{
-        const params = new URLSearchParams({
-            address: address
-        });
-        const url = `/google_api/places?${params}`
-        const response = await fetch(url);
-        const data = await response.json();
-        console.log(data)
-        setCenter(data)
-        setZoom(19);
-    }catch(err){
-        console.error(err)
-    }
-  };
   const [allVenues, setAllVenues] = useState([]);
   const [venueMarkers, updateVenueMarkers] = useState({});
   const setVenueMarkers = (venues) => {
     updateVenueMarkers(venues);
+  };
+  // FIXME: change to query db for lat and lng
+  const findVenue = async (venueName) => {
+    allVenues.forEach(v => {
+      if(v.name == venueName) {
+        console.log(v)
+        setZoom(16);
+        setCenter({ lat: v.lat, lng: v.lng });
+        venueMarkers[v.name].openPopup();
+      }
+    })
+    
+    // try{
+    //     const params = new URLSearchParams({
+    //         address: address
+    //     });
+    //     const url = `/google_api/places?${params}`
+    //     const response = await fetch(url);
+    //     const data = await response.json();
+    //     console.log(data)
+    //     setCenter(data)
+    //     setZoom(19);
+    // }catch(err){
+    //     console.error(err)
+    // }
+
   };
 
   const { filters } = useSongsFilter();
@@ -54,7 +64,7 @@ export const MapContextProvider = ({children}) => {
               body: JSON.stringify(postData)
           });
           const data = await response.json();
-          // console.log(data);
+          console.log(data);
           setUpcomingEvents(data);
       } catch(err) {
           console.error(err)
@@ -106,7 +116,7 @@ const SeattleMap = () => {
               }
           }
         }));
-        console.log(`Requied ${venueName}`)
+        // console.log(`Requied ${venueName}`)
       }
     }
 
@@ -128,7 +138,7 @@ const SeattleMap = () => {
       mapRef.current.eachLayer(layer => {
         if(layer.options.id == `map-marker-${venueName}`) {
           mapRef.current.removeLayer(layer);
-          console.log(`Excluded ${venueName}`)
+          // console.log(`Excluded ${venueName}`)
         }
       });
     }
@@ -211,42 +221,50 @@ const SeattleMap = () => {
 
   }, []);
   
-/* INIT MARKERS
-  rerenders based on upcoming events to keep popup event info current
-  - removes previous marker instances
-  - for each venue (excluding those specified in filters)
-  - saves list to map context
-*/
-useEffect(() => {
-  const initMarkers = async () => {
+  /* INIT MARKERS
+    rerenders based on upcoming events to keep popup event info current
+    - removes previous marker instances
+    - for each venue (excluding those specified in filters)
+    - saves list to map context
+  */
+  useEffect(() => {
+    const initMarkers = async () => {
+      // only execute if map has loaded
+      if(mapRef.current){
+        // clear previous markers
+        mapRef.current.eachLayer(layer => {
+          if(layer instanceof L.Marker) {
+            mapRef.current.removeLayer(layer);
+          }
+        });
+
+        let venues;
+        if(allVenues.length == 0){
+          venues = await fetchVenues();
+        }
+        else {
+          venues = allVenues.filter(v => !filters.ex.location.venues.includes(v.name));
+        }
+        const markers = {};
+        venues.forEach(venue => {
+          markers[venue.name] = createMarker(mapRef.current, venue)
+        });
+        // save for access to markers through context provider
+        setVenueMarkers(markers)
+      }
+    };
+
+    initMarkers();
+  }, [upcomingEvents]);
+
+  /* Sync map view with center and zoom
+  */
+  useEffect(() => {
     // only execute if map has loaded
     if(mapRef.current){
-      // clear previous markers
-      mapRef.current.eachLayer(layer => {
-        if(layer instanceof L.Marker) {
-          mapRef.current.removeLayer(layer);
-        }
-      });
-
-      let venues;
-      if(allVenues.length == 0){
-        venues = await fetchVenues();
-      }
-      else {
-        venues = allVenues.filter(v => !filters.ex.location.venues.includes(v.name));
-      }
-      const markers = {};
-      venues.forEach(venue => {
-        markers[venue.name] = createMarker(mapRef.current, venue)
-      });
-      // save for access to markers through context provider
-      setVenueMarkers(markers)
+      mapRef.current.setView([center.lat, center.lng], zoom)
     }
-  };
-
-  initMarkers();
-}, [upcomingEvents]);
-
+  }, [center, zoom])
   // sync map markers with filters
   useEffect(() => {
     const addMissingMarkers = async () => {

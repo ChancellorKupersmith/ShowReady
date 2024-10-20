@@ -22,10 +22,12 @@ const SongsView = () => {
     const [songs, setSongs] = useState([]);
     const [events, setEvents] = useState({});
     const { bgColor } = useSourceData()
+    const [loading, setLoading] = useState(false); // Loading song state
 
     // Fetch songs on: first load, page change, pageSize change, filter change
     useEffect(() => {
         const fetchSongs = async () => {
+            setLoading(true);
             try{
                 const postData = {
                     page: page,
@@ -41,13 +43,15 @@ const SongsView = () => {
                     body: JSON.stringify(postData)
                 });
                 const data = await response.json();
-                console.log(data);
+                // console.log(data);
                 if(data[0].length > 0)
                     setTotalPages(Math.ceil(data[0][0].total / pageSize))
                 setSongs([...data[0]]);
-                setEvents(data[1])
-            }catch(err){
-                console.error(err)
+                setEvents(data[1]);
+            } catch(err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -122,21 +126,28 @@ const SongsView = () => {
                                 <SpotifyBtn />
                                 <YouTubeBtn />
                             </div>
-                            <ul>
-                                { songs.length > 0 &&
-                                songs.map((song, index) =>
-                                    <SongsListItem
-                                        key={index}
-                                        songTitle={song.songtitle}
-                                        artistName={song.artist}
-                                        albumName={song.albumtitle}
-                                        genre={song.genre}
-                                        spId={song.spid}
-                                        ytUrl={song.yturl}
-                                        events={events[song.artist]}
-                                    />)
-                                }
-                            </ul>
+                            { loading ?
+                                <div className="loading-animation">Loading...</div>
+                            : 
+                                <ul>
+                                    { songs.length > 0 &&
+                                    songs.map((song, index) =>
+                                        <SongsListItem
+                                            key={index}
+                                            songTitle={song.songtitle}
+                                            artistName={song.artist}
+                                            artistUrl={song.artistspid ? `https://open.spotify.com/artist/${song.artistspid}` : song.artistlastfmurl}
+                                            albumName={song.albumtitle}
+                                            albumUrl={song.albumspid ? `https://open.spotify.com/album/${song.albumspid}` : song.albumlastfmurl}
+                                            genre={song.genre}
+                                            spId={song.spid}
+                                            ytUrl={song.yturl}
+                                            events={events[song.artist]}
+                                            spotifyImg={song.spotifyimg}
+                                        />)
+                                    }
+                                </ul>
+                            }
                             <div className='footer'>
                                 <PrevBtn />
                                 <span> Page {page} of {totalPages} </span>

@@ -8,7 +8,7 @@ import { YouTubeIcon } from "./Source/Youtube";
 import { useMap } from "./Map/SeattleMapView";
 
 
-const SongsListItem = ({songId, songTitle, artistName, albumName, genre, eventLocation, date, spId, ytUrl, events}) => {
+const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, albumName, albumUrl, genre, eventLocation, date, spId, ytUrl, events}) => {
     const { filters, updateFilters } = useSongsFilter();
     const [isIncluded, setIsIncluded] = useState(true);
     const toggleIsInclude = () => {
@@ -35,7 +35,7 @@ const SongsListItem = ({songId, songTitle, artistName, albumName, genre, eventLo
                 const rect = elementRef.current.getBoundingClientRect();
                 setElementPosition({
                     top: rect.top + window.scrollY,
-                    left: rect.left + window.scrollX,
+                    right: rect.right + window.scrollX,
                 });
                 const halfwaypoint = window.innerHeight / 2 + 50;
                 setAboveHalfway(rect.top < halfwaypoint);
@@ -93,32 +93,47 @@ const SongsListItem = ({songId, songTitle, artistName, albumName, genre, eventLo
         // TODO: Try and make style on css
         const overlayStyle = {
             'top': aboveHalfway? `${Math.ceil(elementPosition.top * 0.6)}px` : `${Math.ceil(elementPosition.top * 0.8)}px`,
-            left: `${elementPosition.left - 200}px`
+            right: `${Math.ceil(elementPosition.right * 0.22)}px`
         }
 
         const { findVenue } = useMap();
         return (
             <div className="overlay" style={overlayStyle}>
+                { spotifyImg && 
+                    <div className="artist-img">
+                        <img src={spotifyImg} alt="artist image"/>
+                    </div>
+                }
                 <div className="meta-container">
                     <p className="song-title">{songTitle}</p>
                     <SourceMeta />
                 </div>
                 <div className="artist-album-container">
-                    <p className="artist-name">{artistName}</p>
+                    <p className="artist-name">
+                        <a href={artistUrl} target="_blank"> 
+                            {artistName}
+                        </a>
+                    </p>
                     { albumName && <p className="break">-</p> }
-                    { albumName && <p className="album-name">{albumName}</p> }
+                    { albumName &&
+                        <p className="album-name">
+                            <a href={albumUrl} target="_blank">
+                                {albumName}
+                            </a>
+                        </p> 
+                    }
                 </div>
                 { genre && <p className="genre-name">{genre}</p>}
                 <ul>
                     { events.length > 0 &&
                         events.map((event, index) =>
                             <div key={`event-info${index}`} className="event-info">
-                                <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
-                                <p className="location" onClick={() => findVenue(event.venueaddress)}>{event.venue}</p>
-                                <div className="price-time-container">
-                                    <p className="time">{event.eventtime}</p>
-                                    <p className="price">{event.price}</p>
-                                </div>
+                                <p className="location" onClick={() => findVenue(event.venue)}>{event.venue}</p>
+                                    <div className="price-time-container">
+                                        <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
+                                        <p className="time">{event.eventtime}</p>
+                                        <p className="price">{event.price}</p>
+                                    </div>
                             </div>
                         )
                     }

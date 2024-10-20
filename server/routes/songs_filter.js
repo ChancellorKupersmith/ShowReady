@@ -106,6 +106,7 @@ const songWhereConditionBuilder = async (req, res, next) => {
     if(filters?.req?.source?.spotify) whereConditional += `s.SpotifyExternalId IS NOT NULL AND `;
     if(filters?.ex?.source?.youtube) whereConditional += `s.YTUrl IS NULL AND `;
     if(filters?.req?.source?.youtube) whereConditional += `s.YTFound = TRUE AND `;
+    // whereConditional += `a.spotifyimg IS NOT NULL AND `;
     // remove trailing 'AND'
     if(whereConditional != 'WHERE ')
       whereConditional = whereConditional.substring(0, whereConditional.length - 4);
@@ -133,8 +134,8 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
   const filterSongsQuery = `
     WITH FromEachRankedSongs AS (
       SELECT 
-        DISTINCT ON (a.ID, s.Title) a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
-        al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
+        DISTINCT ON (a.ID, s.Title) a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl, a.SpotifyExternalId as ArtistSpID, a.spotifyimg as SpotifyImg,
+        al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl, al.SpotifyExternalId as AlbumSpID,
         s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
         s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
         ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY g.Name ORDER BY s.Title) AS rn_genre' : ''}
@@ -154,8 +155,8 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
   const query = `
     WITH data AS (
       SELECT
-        fs.Artist, fs.ArtistLastFmUrl,
-        fs.AlbumTitle, fs.AlbumLastFmUrl,
+        fs.Artist, fs.ArtistLastFmUrl, fs.ArtistSpID, fs.SpotifyImg,
+        fs.AlbumTitle, fs.AlbumLastFmUrl, fs.AlbumSpID,
         fs.SongTitle, fs.SpID, fs.Genre,
         fs.YTUrl, fs.SongLastFmUrl,
         fe.EventDate, fe.VenueName
@@ -276,7 +277,7 @@ const queryUpcomingEvents = async (minDate, maxDate) => {
   const client = await pool.connect();
   let query = `
     SELECT 
-      e.Name as EventName, e.EventDate, e.EventTime, e.Url, e.Price,
+      e.Name as EventName, e.EventDate, e.EventTime, e.Url, e.Price, e.EOImg, e.TMImg,
       v.Name AS VenueName, a.Name AS ArtistName
     FROM Events as e
     JOIN Venues as v ON v.ID = e.VenueID
@@ -292,6 +293,58 @@ const queryUpcomingEvents = async (minDate, maxDate) => {
   const result = await client.query(query);
   client.release();
   return result.rows;
+}
+
+const queryTotalSongsBetween = async (minDate, maxDate) => {
+  const client = await pool.connect();
+  const query = `
+    SELECT COUNT(s.*) FROM Songs s
+    JOIN Artists as a ON s.ArtistID = a.ID
+    JOIN EventsArtists as ea ON a.ID = ea.ArtistID
+    WHERE ea.EventDate >= $1 AND ea.EventDate <= $2
+  `;
+  const result = await client.query(query, [minDate, maxDate]);
+  client.release();
+  return result.rows[0];
+}
+const queryTotalSongs =  async () => {
+  const query = 'SELECT COUNT(*) FROM Songs';
+  const result = await client.query(query, [minDate, maxDate]);
+  client.release();
+  return result.rows[0];
+}
+const queryTotalEventsBetween = async (minDate, maxDate) => {
+  const client = await pool.connect();
+  const query = `
+    SELECT COUNT(ea.*) FROM EventsArtists ea
+    WHERE ea.EventDate >= $1 AND ea.EventDate <= $2
+  `;
+  const result = await client.query(query, [minDate, maxDate]);
+  client.release();
+  return result.rows[0];
+}
+const queryTotalEvents =  async () => {
+  const query = 'SELECT COUNT(DISTINCT *) FROM EventsArtists';
+  const result = await client.query(query, [minDate, maxDate]);
+  client.release();
+  return result.rows[0];
+}
+const queryTotalArtistsBetween = async (minDate, maxDate) => {
+  const client = await pool.connect();
+  const query = `
+    SELECT COUNT(a.*) FROM Artists a
+    JOIN EventsArtists as ea ON a.ID = ea.ArtistID
+    WHERE ea.EventDate >= $1 AND ea.EventDate <= $2
+  `;
+  const result = await client.query(query, [minDate, maxDate]);
+  client.release();
+  return result.rows[0];
+}
+const queryTotalArtists =  async () => {
+  const query = 'SELECT COUNT(DISTINCT *) FROM Artists';
+  const result = await client.query(query, [minDate, maxDate]);
+  client.release();
+  return result.rows[0];
 }
 
 
@@ -358,6 +411,204 @@ router.post('/upcoming_events', async (req, res, next) => {
   } catch (err) {
       console.error(`Error fetching upcoming events, `, err);
       next(err)
+  }
+});
+
+router.get('/total_songs', async (req, res, next) => {
+  try{
+    const time = req.query.time;
+    let total = null;
+    const today = new Date();
+    const dayOfWeek = today.getDate();
+    const month = today.getMonth() + 1; // adding one, zero-based month indexing (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth)
+    const year = today.getFullYear();
+    let minDate = '', maxDate = '';
+    switch(time){
+      case 'today':
+        // format date to string "YYYY-MM-DD"
+        const formattedDate = today.toISOString().split('T')[0];
+        total =  await queryTotalSongsBetween(formattedDate, formattedDate);
+        break;
+      case 'weekend':
+        const startOfWeekend = new Date(today);
+        const endOfWeekend = new Date();
+        // set start of weekend to Friday
+        if (dayOfWeek == 0) { // if Sunday
+          startOfWeekend.setDate(startOfWeekend.getDate() - 2);
+        }
+        else {
+          startOfWeekend.setDate(today.getDate() + (5 - dayOfWeek));
+        }
+        endOfWeekend.setDate(startOfWeekend.getDate() + 2);
+        minDate = startOfWeekend.toISOString().split('T')[0];
+        maxDate = endOfWeekend.toISOString().split('T')[0];
+        total =  await queryTotalSongsBetween(minDate, maxDate);
+        break;
+      case 'week':
+        const startOfWeek = new Date(today);
+        const endOfWeek = new Date();
+        // set start of week to Monday
+        if (dayOfWeek == 0) { // if Sunday
+          startOfWeek.setDate(today.getDate() - 6);
+        }
+        else {
+          startOfWeek.setDate(today.getDate() + (1 - dayOfWeek))
+        }
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        minDate = startOfWeek.toISOString().split('T')[0];
+        maxDate = endOfWeek.toISOString().split('T')[0];
+        total =  await queryTotalSongsBetween(minDate, maxDate);
+        break;
+      case 'month':
+        minDate = `${year}-${month}-01`;
+        maxDate = `${year}-${month + 1}-01`;
+        total =  await queryTotalSongsBetween(minDate, maxDate);
+        break;
+      case 'year':
+        minDate = `${year}-01-01`;
+        maxDate = `${year + 1}-01-01`;
+        total =  await queryTotalSongsBetween(minDate, maxDate);
+        break;
+      default:
+        total =  await queryTotalSongs();
+    }
+    res.send(total);
+  }
+  catch (err) {
+    console.error(`Error fetching total songs for landing page `, err);
+    next(err)
+  }
+});
+
+router.get('/total_events', async (req, res, next) => {
+  try{
+    const time = req.query.time;
+    let total = null;
+    const today = new Date();
+    const dayOfWeek = today.getDate();
+    const month = today.getMonth() + 1; // adding one, zero-based month indexing (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth)
+    const year = today.getFullYear();
+    let minDate = '', maxDate = '';
+    switch(time){
+      case 'today':
+        // format date to string "YYYY-MM-DD"
+        const formattedDate = today.toISOString().split('T')[0];
+        total =  await queryTotalEventsBetween(formattedDate, formattedDate);
+        break;
+      case 'weekend':
+        const startOfWeekend = new Date(today);
+        const endOfWeekend = new Date();
+        // set start of weekend to Friday
+        if (dayOfWeek == 0) { // if Sunday
+          startOfWeekend.setDate(startOfWeekend.getDate() - 2);
+        }
+        else {
+          startOfWeekend.setDate(today.getDate() + (5 - dayOfWeek));
+        }
+        endOfWeekend.setDate(startOfWeekend.getDate() + 2);
+        minDate = startOfWeekend.toISOString().split('T')[0];
+        maxDate = endOfWeekend.toISOString().split('T')[0];
+        total =  await queryTotalEventsBetween(minDate, maxDate);
+        break;
+      case 'week':
+        const startOfWeek = new Date(today);
+        const endOfWeek = new Date();
+        // set start of week to Monday
+        if (dayOfWeek == 0) { // if Sunday
+          startOfWeek.setDate(today.getDate() - 6);
+        }
+        else {
+          startOfWeek.setDate(today.getDate() + (1 - dayOfWeek))
+        }
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        minDate = startOfWeek.toISOString().split('T')[0];
+        maxDate = endOfWeek.toISOString().split('T')[0];
+        total =  await queryTotalEventsBetween(minDate, maxDate);
+        break;
+      case 'month':
+        minDate = `${year}-${month}-01`;
+        maxDate = `${year}-${month + 1}-01`;
+        total =  await queryTotalEventsBetween(minDate, maxDate);
+        break;
+      case 'year':
+        minDate = `${year}-01-01`;
+        maxDate = `${year + 1}-01-01`;
+        total =  await queryTotalEventsBetween(minDate, maxDate);
+        break;
+      default:
+        total =  await queryTotalEvents();
+    }
+    res.send(total);
+  }
+  catch (err) {
+    console.error(`Error fetching total events for landing page `, err);
+    next(err)
+  }
+});
+
+router.get('/total_artists', async (req, res, next) => {
+  try{
+    const time = req.query.time;
+    let total = null;
+    const today = new Date();
+    const dayOfWeek = today.getDate();
+    const month = today.getMonth() + 1; // adding one, zero-based month indexing (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth)
+    const year = today.getFullYear();
+    let minDate = '', maxDate = '';
+    switch(time){
+      case 'today':
+        // format date to string "YYYY-MM-DD"
+        const formattedDate = today.toISOString().split('T')[0];
+        total =  await queryTotalArtistsBetween(formattedDate, formattedDate);
+        break;
+      case 'weekend':
+        const startOfWeekend = new Date(today);
+        const endOfWeekend = new Date();
+        // set start of weekend to Friday
+        if (dayOfWeek == 0) { // if Sunday
+          startOfWeekend.setDate(startOfWeekend.getDate() - 2);
+        }
+        else {
+          startOfWeekend.setDate(today.getDate() + (5 - dayOfWeek));
+        }
+        endOfWeekend.setDate(startOfWeekend.getDate() + 2);
+        minDate = startOfWeekend.toISOString().split('T')[0];
+        maxDate = endOfWeekend.toISOString().split('T')[0];
+        total =  await queryTotalArtistsBetween(minDate, maxDate);
+        break;
+      case 'week':
+        const startOfWeek = new Date(today);
+        const endOfWeek = new Date();
+        // set start of week to Monday
+        if (dayOfWeek == 0) { // if Sunday
+          startOfWeek.setDate(today.getDate() - 6);
+        }
+        else {
+          startOfWeek.setDate(today.getDate() + (1 - dayOfWeek))
+        }
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        minDate = startOfWeek.toISOString().split('T')[0];
+        maxDate = endOfWeek.toISOString().split('T')[0];
+        total =  await queryTotalArtistsBetween(minDate, maxDate);
+        break;
+      case 'month':
+        minDate = `${year}-${month}-01`;
+        maxDate = `${year}-${month + 1}-01`;
+        total =  await queryTotalArtistsBetween(minDate, maxDate);
+        break;
+      case 'year':
+        minDate = `${year}-01-01`;
+        maxDate = `${year + 1}-01-01`;
+        total =  await queryTotalArtistsBetween(minDate, maxDate);
+        break;
+      default:
+        total =  await queryTotalArtists();
+    }
+    res.send(total);
+  }
+  catch (err) {
+    console.error(`Error fetching total artists for landing page `, err);
+    next(err)
   }
 });
 

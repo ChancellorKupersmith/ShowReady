@@ -1,13 +1,16 @@
 .landing-view {
-    width: 100%;
+    width: 100vw;
+    height: 93vh;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
 }
 .call-to-action-container {
     flex: 1;
     padding-left: 10px;
     padding-right: 10px;
-    border: solid blueviolet;
+    /* border: solid blueviolet; */
 }
 .call-to-action-container h1 {
     /* border: solid red; */
@@ -20,23 +23,20 @@
 }
 .data-stats-container {
     flex: 1;
-    border: solid green;
+    /* border: solid green; */
 }
 
 .playlists-carousel-container {
-    border: solid red;
+    /* border: solid red; */
     align-self: center;
     flex: 1;
     width: 96%;
-    height: 300px;
+    max-height: 640px;
+    /* max-width: 640px; */
 }
-/* .playlist-carousel-slide {
-    border: solid yellow;
-    width: 40%;
-    
+.playlist-cover {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    margin: 4px;
 }
-.radiogen-playlist {
-    border: solid blue;
-    color: white;
-    width: 40%
-} */
