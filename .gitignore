@@ -1,8 +1,9 @@
 *.log
+*.cache
 .data/
 .idea/
 .direnv/
-**/.env
+*.env
 logfile
 Notes.txt
 **/dist/

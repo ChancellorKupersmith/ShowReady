@@ -135,7 +135,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
     WITH FromEachRankedSongs AS (
       SELECT 
         DISTINCT ON (a.ID, s.Title) a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl, a.SpotifyExternalId as ArtistSpID, a.spotifyimg as SpotifyImg,
-        al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl, al.SpotifyExternalId as AlbumSpID,
+        al.ID AS AlbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl, al.SpotifyExternalId as AlbumSpID,
         s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
         s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
         ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY g.Name ORDER BY s.Title) AS rn_genre' : ''}

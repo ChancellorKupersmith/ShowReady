@@ -29,6 +29,7 @@
           psycopg2
           selenium
           python-dotenv
+          spotipy
         ]);
       in {
         default = pkgs.mkShell rec {
