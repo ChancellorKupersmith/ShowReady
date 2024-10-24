@@ -23,8 +23,6 @@ export const NotificationProvider = ({children}) => {
     const [notifications, setNotifications] = useState({});
 
     const addNotification = (notification) => {
-        // console.log('notification:')
-        // console.log(notification)
         setNotifications({
             ...notifications,
             [notification.id]: notification

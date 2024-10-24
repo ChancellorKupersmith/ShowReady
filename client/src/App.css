@@ -1,5 +1,4 @@
 #root {
-  /* max-width: 1280px; */
   margin: 0 auto;
   text-align: center;
   overflow-x: auto;
@@ -39,10 +38,8 @@ input {
   top: 0;
   right: 0;
   height: 30px; /* Height set for snap-container and snap-section dependencies */
-  /* width: 100%; */
   padding: 2px;
   background-color: transparent;
-  /* border: 1px solid #fff; */
   display: flex;
   justify-content: space-around;
   align-items: center;

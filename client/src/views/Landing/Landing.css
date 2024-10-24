@@ -10,10 +10,8 @@
     flex: 1;
     padding-left: 10px;
     padding-right: 10px;
-    /* border: solid blueviolet; */
 }
 .call-to-action-container h1 {
-    /* border: solid red; */
     text-align: left;
     font-size: 24px;
 }
@@ -23,16 +21,13 @@
 }
 .data-stats-container {
     flex: 1;
-    /* border: solid green; */
 }
 
 .playlists-carousel-container {
-    /* border: solid red; */
     align-self: center;
     flex: 1;
     width: 96%;
     max-height: 640px;
-    /* max-width: 640px; */
 }
 .playlist-cover {
     text-decoration: none;

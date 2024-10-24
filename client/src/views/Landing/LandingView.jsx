@@ -8,9 +8,6 @@ import './Landing.css'
 export const PlaylistCarousel = () => {
   const PlaylistCover = ({ img, imgheight, imgwidth, name, url }) => {
     const coverStyle = {
-      // border: 'solid red',
-      // width: `300px`, // Has to be 640, 300, or 50px according to spotify use guidelines (https://developer.spotify.com/documentation/design)
-      // height: `300px`, // Has to be 640, 300, or 50px according to spotify use guidelines (https://developer.spotify.com/documentation/design)
       borderRadius: '4px', // 2px for small devices 4px for large according to spotify use guidelines (https://developer.spotify.com/documentation/design)
       overflow: 'hidden',
       display: 'flex',
@@ -99,7 +96,7 @@ export const PlaylistCarousel = () => {
       </Slider>
     </div>
   );
-}
+};
 
 const LandingView = () => {
   const [totalSongsToday, setTotalSongsToday] = useState(0);
@@ -107,85 +104,32 @@ const LandingView = () => {
   const [totalSongsWeek, setTotalSongsWeek] = useState(0);
   const [totalSongsMonth, setTotalSongsMonth] = useState(0);
   const [totalSongsYear, setTotalSongsYear] = useState(0);
-  // fetch stats data
-  // useEffect(() => {
-  //   const fetchTotalSongs = async () => {
-  //     const feftchTotal = async (timeRange) => {
-  //       try {
-  //           const response = await fetch(`/songs_list/total_songs?time=${timeRange}`);
-  //           const data = await response.json();
-  //           return data['count'];
-  //       } catch(err){
-  //           console.error(err)
-  //       }
-  //     }
+  const call_to_action_text = (
+    <div className='call-to-action'>
+      <h3>Discover and Support Local Artists</h3>
+      <ul>
+        <li>
+          <strong>Prepare For The Show:</strong> Find upcoming concerts and generate custom playlists based on performing artists!
+        </li>
+        <li>
+          <strong>Stay Current On Your Local Music Scene:</strong> Follow r a d i o g e n on streaming services to updated on upcoming artists and support local performers.
+        </li>
+        <li>
+          <strong>Organic Discovery:</strong> Uncover new artists without paid promotions.
+        </li>
+      </ul>
+    </div>
+  );
 
-  //     const songsToday = await feftchTotal('today');
-  //     const songsThisWeekend = await feftchTotal('weekend');
-  //     const songsThisWeek = await feftchTotal('week');
-  //     const songsThisMonth = await feftchTotal('month');
-  //     const songsThisYear = await feftchTotal('year');
-  //     setTotalSongsToday(songsToday);
-  //     setTotalSongsWeekend(songsThisWeekend);
-  //     setTotalSongsWeek(songsThisWeek);
-  //     setTotalSongsMonth(songsThisMonth);
-  //     setTotalSongsYear(songsThisYear);
-  //     console.log(`songs today: ${songsToday}, weekend: ${songsThisWeekend}, week: ${songsThisWeek}, month: ${songsThisMonth}, year: ${songsThisYear}`)
-  //   };
-  //   fetchTotalSongs();
-
-  //   const fetchTotalEvents = async () => {
-  //     const feftchTotal = async (timeRange) => {
-  //       try {
-  //           const response = await fetch(`/songs_list/total_events?time=${timeRange}`);
-  //           const data = await response.json();
-  //           return data['count'];
-  //       } catch(err){
-  //           console.error(err)
-  //       }
-  //     }
-
-  //     const songsToday = await feftchTotal('today');
-  //     const songsThisWeekend = await feftchTotal('weekend');
-  //     const songsThisWeek = await feftchTotal('week');
-  //     const songsThisMonth = await feftchTotal('month');
-  //     const songsThisYear = await feftchTotal('year');
-  //     setTotalSongsToday(songsToday);
-  //     setTotalSongsWeekend(songsThisWeekend);
-  //     setTotalSongsWeek(songsThisWeek);
-  //     setTotalSongsMonth(songsThisMonth);
-  //     setTotalSongsYear(songsThisYear);
-  //     console.log(`events today: ${songsToday}, weekend: ${songsThisWeekend}, week: ${songsThisWeek}, month: ${songsThisMonth}, year: ${songsThisYear}`)
-
-  //   };
-  //   fetchTotalEvents()
-  // }, []);
-    const call_to_action_text = (
-      <div className='call-to-action'>
-        <h3>Discover and Support Local Artists</h3>
-        <ul>
-          <li>
-            <strong>Prepare For The Show:</strong> Find upcoming concerts and generate custom playlists based on performing artists!
-          </li>
-          <li>
-            <strong>Stay Current On Your Local Music Scene:</strong> Follow r a d i o g e n on streaming services to updated on upcoming artists and support local performers.
-          </li>
-          <li>
-            <strong>Organic Discovery:</strong> Uncover new artists without paid promotions.
-          </li>
-        </ul>
+  return (
+      <div id='landing-view' className='landing-view snap-section'>
+          <div className='call-to-action-container'>
+              <h1>r a d i o g e n . l i v e</h1>
+              { call_to_action_text }
+          </div>
+          <PlaylistCarousel />
       </div>
-    );
-
-    return (
-        <div id='landing-view' className='landing-view snap-section'>
-            <div className='call-to-action-container'>
-                <h1>r a d i o g e n . l i v e</h1>
-                { call_to_action_text }
-            </div>
-            <PlaylistCarousel />
-        </div>
-    );
+  );
 };
 
 export default LandingView;

@@ -14,7 +14,6 @@ import { useSourceData } from './Source/SourceContext';
 const SongsView = () => {
     const [isOpen, setIsOpen] = useState(false);
     const openCloseModal = () => setIsOpen(!isOpen)
-    /* TODO: Make songs lists page size dynamic to window size */
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const { filters } = useSongsFilter();
@@ -22,7 +21,7 @@ const SongsView = () => {
     const [songs, setSongs] = useState([]);
     const [events, setEvents] = useState({});
     const { bgColor } = useSourceData()
-    const [loading, setLoading] = useState(false); // Loading song state
+    const [loading, setLoading] = useState(false); // Loading song list state
 
     // Fetch songs on: first load, page change, pageSize change, filter change
     useEffect(() => {
@@ -34,7 +33,6 @@ const SongsView = () => {
                     limit: pageSize,
                     filters: filters
                 };
-                // console.log(filters)
                 const response = await fetch('/songs_list', {
                     method: 'POST',
                     headers: {
@@ -43,7 +41,6 @@ const SongsView = () => {
                     body: JSON.stringify(postData)
                 });
                 const data = await response.json();
-                // console.log(data);
                 if(data[0].length > 0)
                     setTotalPages(Math.ceil(data[0][0].total / pageSize))
                 setSongs([...data[0]]);
@@ -118,7 +115,6 @@ const SongsView = () => {
             {isOpen && createPortal(
                 <SpotifyContextProvider>
                     <div className='songs-view-container'>
-                        {/* TODO: Make songs lists page size dynamic to window size */}
                         <div className={`songs-list-container ${bgColor}`}>
                             <OrderByBtn />
                             <div className='source-tabs'>

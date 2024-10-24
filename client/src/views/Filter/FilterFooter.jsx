@@ -18,7 +18,6 @@ const FilterFooter = ({closeModal}) => {
                     body: JSON.stringify(postData)
                 });
                 const data = await response.json();
-                // console.log(data)
                 setTotalResults(data['total']);
             }catch(err){
                 console.log(err)

@@ -3,7 +3,6 @@ import ReactDOMServer from 'react-dom/server';
 import FilterView from '../../Filter/FilterView';
 import NotificationView from '../../Notification/NotificationView';
 import { displayDate } from "../../Filter/Menus/DateMenu";
-import VenueMarkerSVG from  '../../../assets/venue-marker.svg'
 import './Map.css'
 import { SpotifyContextProvider } from '../Source/Spotify';
 import SongsView from '../SongsView';
@@ -20,7 +19,6 @@ export const MapContextProvider = ({children}) => {
   const setVenueMarkers = (venues) => {
     updateVenueMarkers(venues);
   };
-  // FIXME: change to query db for lat and lng
   const findVenue = async (venueName) => {
     allVenues.forEach(v => {
       if(v.name == venueName) {
@@ -29,22 +27,7 @@ export const MapContextProvider = ({children}) => {
         setCenter({ lat: v.lat, lng: v.lng });
         venueMarkers[v.name].openPopup();
       }
-    })
-    
-    // try{
-    //     const params = new URLSearchParams({
-    //         address: address
-    //     });
-    //     const url = `/google_api/places?${params}`
-    //     const response = await fetch(url);
-    //     const data = await response.json();
-    //     console.log(data)
-    //     setCenter(data)
-    //     setZoom(19);
-    // }catch(err){
-    //     console.error(err)
-    // }
-
+    });
   };
 
   const { filters } = useSongsFilter();
@@ -92,7 +75,6 @@ const SeattleMap = () => {
     try {
         const response = await fetch('/songs_list/venue_markers');
         const data = await response.json();
-        // console.log(data)
         // save complete venues list for later filter sync
         setAllVenues(data);
         return data;
@@ -116,7 +98,6 @@ const SeattleMap = () => {
               }
           }
         }));
-        // console.log(`Requied ${venueName}`)
       }
     }
 
@@ -138,7 +119,6 @@ const SeattleMap = () => {
       mapRef.current.eachLayer(layer => {
         if(layer.options.id == `map-marker-${venueName}`) {
           mapRef.current.removeLayer(layer);
-          // console.log(`Excluded ${venueName}`)
         }
       });
     }

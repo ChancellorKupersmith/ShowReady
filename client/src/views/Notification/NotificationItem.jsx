@@ -25,9 +25,9 @@ export const ProgressBar = ({color, progress}) => {
 
 export const SpotifyNotificationItem = ({playlist}) => {
     /*  
-        // rgb(255, 0, 0) red 0%
-        // rgb(255, 255, 0) yellow 50%
-        // rgb(0, 255, 0) green 100%
+        rgb(255,   0, 0) red 0%
+        rgb(255, 255, 0) yellow 50%
+        rgb(  0, 255, 0) green 100%
         if(progress <= 50){
             green = 5 * progress
         }
@@ -37,10 +37,7 @@ export const SpotifyNotificationItem = ({playlist}) => {
         }
 
     */
-//    console.log(`playlist progress ${playlist.page_progress}`)
-//    console.log(`playlist size ${playlist.size}`)
     const progress = Math.floor(playlist.page_progress / playlist.size * 100);
-    // console.log(`progress ${progress}`)
 
     const red = progress > 50 ? (255 - (progress % 50) * 5) : 255;
     const green = progress <= 50 ? 5 * progress : 255;

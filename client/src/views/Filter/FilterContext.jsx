@@ -13,11 +13,6 @@ export const OrderBys = Object.freeze({
 const SongsFilterContext = createContext();
 export const useSongsFilter = () => useContext(SongsFilterContext);
 export const FilterContextProvider = ({ children }) => {
-    /* TODO: Filter States to implement
-        - set # from each venue
-        - exclude / only address
-        - map marker area
-    */
     const today = new Date();
     let monthFromToday = new Date();
     monthFromToday.setDate(today.getDate() + 30)
@@ -30,8 +25,6 @@ export const FilterContextProvider = ({ children }) => {
         priceGThan: '',
         priceLThan: '',
         randomSeed: (Date.now() / 1000) % 1,
-        // spotifyPopularityGThan: '',
-        // spotifyPopularityLThan: '',
         ex: {
             genre: {
                 names: [],
@@ -43,20 +36,16 @@ export const FilterContextProvider = ({ children }) => {
             location: {
                 venues: [],
                 hoods: [],
-                // addresses: [],
             },
             event: {
                 names: [],
-                // ageRestrictions: [],
             },
             artist: {
                 names: [],
-                // fromEach: '',
-                // musicbrainz meta
+
             },
             album: {
                 names: [],
-                // fromEach: '',
             },
             song: {
                 names: [],
@@ -83,12 +72,10 @@ export const FilterContextProvider = ({ children }) => {
             },
             event: {
                 names: [],
-                // ageRestrictions: [],
             },
             artist: {
                 names: [],
                 fromEach: 10,
-                // musicbrainz meta
             },
             album: {
                 names: [],
@@ -110,7 +97,6 @@ export const FilterContextProvider = ({ children }) => {
     });
     useEffect(() => {
         sessionStorage.setItem('filters', JSON.stringify(filters));
-        // console.log(filters)
     }, [filters]);
     const updateFilters = (newFiltersObj) => {
         if(!newFiltersObj) return;
