@@ -35,6 +35,9 @@
     /* max-width: 640px; */
 }
 .playlist-cover {
+    text-decoration: none;
+}
+.playlist-cover div {
     display: flex;
     align-items: center;
     flex-direction: column;

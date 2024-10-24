@@ -148,7 +148,7 @@ const SeattleMap = () => {
     return (
       <div className='venue-marker-popup'>
         <div className='title'>
-          <a className='venue-name' href={venue.venueurl}>{venue.name}</a>
+          <a className='venue-name' href={venue.venueurl} target='_blank'>{venue.name}</a>
           <div className='reqex-btn-container'>
               <button data-venue={venue.name} className='reqex-btn req-btn'>
                 <p>+</p>
@@ -160,12 +160,24 @@ const SeattleMap = () => {
         </div>
         <ul className='events-info-list'>
           { events && events.length > 0 &&
-              events.map((event, index) =>
-                <div key={`event-info${index}`} className='event-info-container'>
-                  <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
-                  <p className='event'>{event.eventname}</p>
-                </div>
-              )
+              events.map((event, index) => {
+                const imgSrc = event.eoimg ? (event.eoimg != venue.name ? event.eoimg : event.tmimg) : event.tmimg;
+                return (
+                  <a key={`event-info${index}`} href={ event.ticketslink ? event.ticketslink : event.url } target='_blank'>
+                    { imgSrc && 
+                      <img 
+                        className='eventImg'
+                        src={imgSrc}
+                        onClick={e => { e.preventDefault(); console.log(e.target.parentNode); e.target.parentNode.click(); }}
+                      />
+                    }
+                    <div className='event-info-container'>
+                      <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
+                      <p className='event'>{event.eventname}</p>
+                    </div>
+                  </a>
+                );
+              })
           }
         </ul>
       </div>

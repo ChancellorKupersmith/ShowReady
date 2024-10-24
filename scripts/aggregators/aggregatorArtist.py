@@ -356,10 +356,10 @@ async def main():
     for page in range(int(total / page_size)):
         events = get_events_fromDB(page_size, page * page_size)
         # Avoid unnecessary find_artist compute by filter new artists not saved in db
-        # new_artist_events = list(filter(lambda event: event.name not in existing_artists.keys(), events))
-        # log(0, f"number of new artist events: {len(new_artist_events)}")
-        # new_artists = await find_artists(new_artist_events)
-        new_artists = await find_artists(events)
+        new_artist_events = list(filter(lambda event: event.name not in existing_artists.keys(), events))
+        log(0, f"number of new artist events: {len(new_artist_events)}")
+        new_artists = await find_artists(new_artist_events)
+        # new_artists = await find_artists(events)
         artist_name_ids = save_artists_inDB(new_artists)
         # Match events to artists for event-artist join table in db
         existing_artists.update(artist_name_ids)

@@ -275,21 +275,21 @@ const queryVenues = async () => {
 
 const queryUpcomingEvents = async (minDate, maxDate) => {
   const client = await pool.connect();
+  let whereConditional = '';
+  if(minDate || maxDate){
+    whereConditional += `WHERE `;
+    if(minDate) whereConditional += `e.EventDate >= '${(new Date(minDate)).toUTCString()}' AND `;
+    whereConditional = maxDate ? whereConditional + `e.EventDate <= '${(new Date(maxDate)).toUTCString()}'` : whereConditional.substring(0, whereConditional.length - 4);
+  }
   let query = `
     SELECT 
-      e.Name as EventName, e.EventDate, e.EventTime, e.Url, e.Price, e.EOImg, e.TMImg,
-      v.Name AS VenueName, a.Name AS ArtistName
+      e.Name as EventName, e.EventDate, e.EventTime, e.Url, e.Price, e.EOImg, e.TMImg, e.TicketsLink,
+      v.Name AS VenueName
     FROM Events as e
     JOIN Venues as v ON v.ID = e.VenueID
-    JOIN EventsArtists as ea ON ea.EventID = e.ID AND ea.EventDate = e.EventDate
-    JOIN Artists as a ON a.ID = ea.ArtistID
+    ${whereConditional}
+    ORDER BY e.EventDate --client should lists events in asc order
   `;
-  // join artists
-  if(minDate || maxDate){
-    query += `WHERE `;
-    if(minDate) query += `e.EventDate >= '${(new Date(minDate)).toUTCString()}' AND `;
-    query = maxDate ? query + `e.EventDate <= '${(new Date(maxDate)).toUTCString()}'` : query.substring(0, query.length - 4)
-  }
   const result = await client.query(query);
   client.release();
   return result.rows;
@@ -613,3 +613,4 @@ router.get('/total_artists', async (req, res, next) => {
 });
 
 module.exports = router;
+"Alec Benjamin: 12 Notes Tour"
