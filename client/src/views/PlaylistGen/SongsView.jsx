@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SongsListItem from './SongsListItem';
-import CSVBtn from './Source/CSV';
+import AllBtn from './Source/All';
 import SongsSvg from '../../assets/song-list.svg'
 import NextSvg from '../../assets/next.svg'
 import PrevSvg from '../../assets/prev.svg'
@@ -118,7 +118,7 @@ const SongsView = () => {
                         <div className={`songs-list-container ${bgColor}`}>
                             <OrderByBtn />
                             <div className='source-tabs'>
-                                <CSVBtn />
+                                <AllBtn />
                                 <SpotifyBtn />
                                 <YouTubeBtn />
                             </div>

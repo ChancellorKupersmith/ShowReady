@@ -8,7 +8,7 @@ import { NotificationProvider } from '../Notification/NotificationView';
 const PlaylistGenView = () => {
 
     return (
-        <div id='songs-list-view'  className={`snap-section csv-bg-color`}>
+        <div id='songs-list-view'  className={`snap-section all-bg-color`}>
             <div className='playlist-gen-view-container'>
                 <FilterContextProvider>
                 <NotificationProvider>

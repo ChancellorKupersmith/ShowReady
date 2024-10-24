@@ -3,13 +3,13 @@ import React, { useState, createContext, useContext } from 'react';
 const SourceContext = createContext();
 export const useSourceData = () => useContext(SourceContext);
 export const SourceContextProvider = ({children}) => {
-    const CSV_SOURCE = 0;
-    const CSV_COLOR = 'csv-bg-color';
+    const ALL_SOURCE = 0;
+    const ALL_COLOR = 'all-bg-color';
     const SPOTIFY_SOURCE = 1;
     const SPOTIFY_COLOR = 'spotify-bg-color';
     const YOUTUBE_SOURCE = 2;
     const YOUTUBE_COLOR = 'youtube-bg-color'; 
-    const [bgColor, setBgColor] = useState(CSV_COLOR);
+    const [bgColor, setBgColor] = useState(ALL_COLOR);
     const [source, setSource] = useState(0);
 
     const changeSource = (src) => {
@@ -24,7 +24,7 @@ export const SourceContextProvider = ({children}) => {
                 setSource(2);
                 break;
             default:
-                setBgColor(CSV_COLOR);
+                setBgColor(ALL_COLOR);
                 setSource(0);
         }
     }
@@ -32,8 +32,8 @@ export const SourceContextProvider = ({children}) => {
     return (
         <SourceContext.Provider value={{
             source, changeSource, bgColor,
-            CSV_SOURCE, SPOTIFY_SOURCE, YOUTUBE_SOURCE,
-            CSV_COLOR, SPOTIFY_COLOR, YOUTUBE_COLOR
+            ALL_SOURCE, SPOTIFY_SOURCE, YOUTUBE_SOURCE,
+            ALL_COLOR, SPOTIFY_COLOR, YOUTUBE_COLOR
         }}>
             { children }
         </SourceContext.Provider>

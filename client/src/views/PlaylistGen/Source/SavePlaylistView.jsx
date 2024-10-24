@@ -164,7 +164,7 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
         console.error(err);
     }
 }
-// keeping out side hook for persisting between rerenders
+// keeping out side hook for persisting between rerenders, ensuring robust rate limiter
 let spotifyClient;
 export const SavePlaylistView = () => {
     const [playlistName, setPlaylistName] = useState('');
@@ -177,7 +177,7 @@ export const SavePlaylistView = () => {
         setIsPrivate(false);
         setModalIsOpen(!modalIsOpen);
     }
-    const { source, CSV_SOURCE, SPOTIFY_SOURCE, YOUTUBE_SOURCE } = useSourceData();
+    const { source, ALL_SOURCE, SPOTIFY_SOURCE, YOUTUBE_SOURCE } = useSourceData();
     // whenever spotify data changes update spotify client
     const { spotifyData } = useSpotifyData();
     useEffect(() => {
@@ -206,7 +206,8 @@ export const SavePlaylistView = () => {
 
     return (
         <div className='save-playlist-view-container'>
-            <button onClick={openCloseModal}>Generate Playlist</button>
+            {/* generate playist feature only for spotify atm */}
+            {source == SPOTIFY_SOURCE && <button onClick={openCloseModal}>Generate Playlist</button> }
             { modalIsOpen && createPortal(
                 <GenPlaylistModal 
                     closeModal={openCloseModal}
@@ -228,7 +229,7 @@ const GenPlaylistModal = ({closeModal, source, playlistName, nameHint, handleNam
     return (
         <div className='save-playlist-modal-container'>
             <div className='header'>
-                <h1>{`Generate ${source == 0 ? 'CSV' : source == 1 ? 'Spotify' : 'YouTube'} Playlist`}</h1>
+                <h1>{`Generate ${source == 0 ? 'All' : source == 1 ? 'Spotify' : 'YouTube'} Playlist`}</h1>
                 <button onClick={closeModal}>x</button>
             </div>
             <div className='save-playlist'>

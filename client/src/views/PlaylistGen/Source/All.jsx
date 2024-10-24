@@ -9,12 +9,12 @@ import { useSourceData } from './SourceContext';
         - change bg
 
 */
-const CSVBtn = () => {
+const AllBtn = () => {
     const { filters, updateFilters } = useSongsFilter();
-    const { source, changeSource, CSV_SOURCE } = useSourceData();
+    const { source, changeSource, ALL_SOURCE } = useSourceData();
     
     const handleOnClick = async () => {
-        if(source == CSV_SOURCE) return;
+        if(source == ALL_SOURCE) return;
 
         let newTotal = filters.total;
         if(filters.req.source.spotify)
@@ -33,14 +33,14 @@ const CSVBtn = () => {
                 }
             }
         });
-        changeSource(CSV_SOURCE);
+        changeSource(ALL_SOURCE);
     }
 
     return (
-        <button id='csv-btn' className={`source-btn ${source == CSV_SOURCE ? 'selected' : ''}`} onClick={()=>handleOnClick()}>CSV</button>
+        <button id='all-btn' className={`source-btn ${source == ALL_SOURCE ? 'selected' : ''}`} onClick={()=>handleOnClick()}>All</button>
     );
 }
 
-export default CSVBtn;
+export default AllBtn;
 
 
