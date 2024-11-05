@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext, createContext } from 'react';
 import { createPortal } from 'react-dom';
+import { toast } from 'react-toastify';
 import { useSongsFilter } from '../../Filter/FilterContext';
 import { useSourceData } from './SourceContext';
 import { Toggle } from '../../Filter/Menus/MenuUtils';
@@ -39,7 +40,7 @@ export const SavePlaylistSignalProvider = ({children}) => {
     )
 }
 
-const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, isPrivate, addSignal, abortSignal, addNotification) => {
+const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, isPrivate, addSignal, abortSignal, addNotification, toastID) => {
     const fetchTotalResults = async () => {
         try{
             const postData = {
@@ -100,7 +101,7 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                 body: JSON.stringify(postData)
             });
             const data = await response.json();
-            console.log(data)
+            // console.log(data)
             if(data.length > 0){
                 return [
                     data[0][0].total,
@@ -136,9 +137,12 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
             try{
                 let failed_tracks = [];
                 newPlaylist.size = Math.min(playlistSize, 10000);
-                const signal = addSignal(newPlaylist)
+                // const signal = addSignal(newPlaylist)
+                if(toastID.current === null){
+                    toastID.current = toast(`Saving ${i > 0 ? `${playlistName}(${i})` : playlistName}`, {progress: 1})
+                }
                 while(newPlaylist.page_progress < newPlaylist.size){
-                    if(signal.aborted) throw new Error('Canceled playlist');
+                    // if(signal.aborted) throw new Error('Canceled playlist');
                     
                     const [totalResults, URIs] = await fetchSpotifyTrackURIs(page_progress);
                     if(totalResults){
@@ -149,15 +153,20 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                     }
                     // update notification progress
                     newPlaylist.page_progress = newPlaylist.page_progress + 100;
-                    addNotification(newPlaylist)
+                    toast.update(toastID.current, { progress: newPlaylist.page_progress / newPlaylist.size })
+                    // addNotification(newPlaylist)
                     page_progress++;
                 }
-                if(failed_tracks.length > 0)
+                toast.done(toastID.current);
+                if(failed_tracks.length > 0){
                     console.error(failed_tracks);
+                    toast.error(`Failed adding ${failed_tracks}`);
+                }
             } catch(err) {
                 console.error(err);
+                toast.error('Error Creating Playlist')
                 await deleteSpotifyPlaylist(newPlaylist.id);
-                abortSignal(newPlaylist);
+                // abortSignal(newPlaylist);
             }
         }
     } catch(err) {
@@ -188,6 +197,7 @@ export const SavePlaylistView = () => {
 
     const { addSignal, abortSignal } = useSavePlaylistSignal();
     const { addNotification } = useNotifications();
+    const toastID = useRef(null);
     const { filters } = useSongsFilter();
     const hintPlaylistName = filters.dateGThan && filters.dateLThan ? `${displayDate(filters.dateGThan)} - ${displayDate(filters.dateLThan)}` : 'Name';
     const savePlaylist = async () => {
@@ -195,7 +205,7 @@ export const SavePlaylistView = () => {
         switch(source) {
             case SPOTIFY_SOURCE:
                 if(spotifyClient && spotifyData)
-                    await saveSpotifyPlaylist(spotifyClient, spotifyData, filters, name, isPrivate, addSignal, abortSignal, addNotification);
+                    await saveSpotifyPlaylist(spotifyClient, spotifyData, filters, name, isPrivate, addSignal, abortSignal, addNotification, toastID);
                 break;
             default:
                 console.log('source:' + source)

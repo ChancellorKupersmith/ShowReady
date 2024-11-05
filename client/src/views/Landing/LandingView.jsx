@@ -9,8 +9,61 @@ import "slick-carousel/slick/slick-theme.css";
 import './Landing.css'
 import { createPortal } from 'react-dom';
 
-export const PlaylistCarousel = () => {
-  const PlaylistCover = ({ img, imgheight, imgwidth, name, url }) => {
+const TypingAnimation = () => {
+  const phrases = [
+    'radio is discovering a new favorite',
+    'radio is remembering a classic',
+    'radio is staying current',
+    'radio is no decision fatigue',
+  ];
+  const [displayText, setDisplayText] = useState('');
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const typingSpeed = 45; // milliseconds
+  const deletingSpeed = 50; // milliseconds
+  const pauseDuration = 400; // milliseconds
+
+  // typing animation
+  useEffect(() => {
+    const currentPhrase = phrases[currentPhraseIndex];
+    let timer;
+    if (isDeleting) {
+      if (displayText.length > 9) {
+        timer = setTimeout(() => {
+          setDisplayText(displayText.slice(0, -1));
+        }, deletingSpeed);
+      } else {
+        timer = setTimeout(() => {
+          setIsDeleting(false);
+          setCurrentPhraseIndex((prevIndex) => {
+            return (prevIndex + 1) % phrases.length
+          });
+        }, pauseDuration - 400);
+      }
+    } else {
+      if (displayText.length < currentPhrase.length) {
+        timer = setTimeout(() => {
+          setDisplayText(currentPhrase.slice(0, displayText.length + 1));
+        }, typingSpeed);
+      } else {
+        timer = setTimeout(() => {
+          setIsDeleting(true);
+        }, pauseDuration);
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [displayText, isDeleting, currentPhraseIndex]);
+
+  return (
+    <div style={{ left: 0, fontSize: '24px', fontFamily: 'monospace' }}>
+      {displayText}
+    </div>
+  );
+};
+
+const FMRadio = () => {
+  const PlaylistCover = ({ img, url }) => {
     const coverStyle = {
       borderRadius: '4px', // 2px for small devices 4px for large according to spotify use guidelines (https://developer.spotify.com/documentation/design)
       overflow: 'hidden',
@@ -34,71 +87,131 @@ export const PlaylistCarousel = () => {
           <div className='img-container' style={coverStyle}>
             <img src={img} alt='Playlist Cover' style={imageStyle} />
           </div>
-          <div style={{
-            zIndex: '5',
-            bottom: '10px',
-            left: '10px',
-            color: '#fff',
-            backgroundColor: 'rgba(0, 0, 0, 0.6)',
-            padding: '5px 10px',
-            borderRadius: '4px', // 2px for small devices 4px for large according to spotify use guidelines (https://developer.spotify.com/documentation/design)
-          }}>
-            {name}
-          </div>
         </div>
       </a>
     );
   };
 
   const [radiogenPlaylists, setRadiogenPlaylists] = useState([]);
-  let sliderRef = useRef(null);
-  const StartPlaylistSlideShow = () => sliderRef.slickPlay();
+  const [playlistsCurrentIndex, setPlaylistCurIndex] = useState(0);
+  const [knobAngle, setKnobAngle] = useState(0);
   // on mount
   useEffect(() => {
     const fetchRadiogenPlaylists = async () => {
-        try{
-            const response = await fetch('/radiogen/random_playlists?limit=10');
-            const data = await response.json();
-            if(data){
-              console.log(data)
-              setRadiogenPlaylists(data.map((playlist, index) => 
-                <PlaylistCover 
-                  key={index}
-                  name={playlist.name}
-                  url={`https://open.spotify.com/playlist/${playlist.spotifyexternalid}`}
-                  img={playlist.img} imgheight={playlist.imgheight} imgwidth={playlist.imgwidth}
-                />
-              ))
-            }
-        }catch(err){
-            console.error(err)
-        }
+      try{
+          const response = await fetch('/radiogen/random_playlists?limit=10');
+          const data = await response.json();
+          if(data){
+            console.log(data)
+            setRadiogenPlaylists(data.reduce((acc, playlist) => {
+              acc.push({
+                name: playlist.name,
+                url: `https://open.spotify.com/playlist/${playlist.spotifyexternalid}`,
+                img: playlist.img,
+                imgheight: playlist.imgheight,
+                imgwidth: playlist.imgwidth
+              });
+              return acc;
+            }, []))
+          }
+      }catch(err){
+          console.error(err)
+      }
     };
     fetchRadiogenPlaylists();
 
-    const hidePlaylistNavButtons = () => {
-      const buttonsToHide = document.querySelectorAll('.slick-arrow');
-      buttonsToHide.forEach(button => button.style.display = 'none');
-    }
-    hidePlaylistNavButtons();
-    StartPlaylistSlideShow();
-  }, []);
+    const intervalID = setInterval(() => {
+      setKnobAngle((prev) => (prev + 36) % 360);
+      setPlaylistCurIndex((prev) => (prev + 1) % 10);
+    }, 3000);
 
-  const settings = {
-    className: 'slider',
-    infinite: true,
-    speed: 2000,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    autoplay: true,
-    pauseOnHover: true
-  };
+    return () => clearInterval(intervalID);
+  }, []);
+  
   return (
-    <div className='playlists-carousel-container'>
-      <Slider ref={slider => (sliderRef = slider)} {...settings}>
-          { radiogenPlaylists }
-      </Slider>
+    <div className="radio">
+      <div className="brand-logo">r a d i o g e n</div>
+      <div className="top-panel">
+        <div className='radio-display'>
+          { radiogenPlaylists.length && 
+            <PlaylistCover 
+              key={playlistsCurrentIndex}
+              img={radiogenPlaylists[playlistsCurrentIndex].img}
+              url={radiogenPlaylists[playlistsCurrentIndex].url}
+            />
+          }
+        </div>
+        <div className="dial">
+          <svg width="200" height="200">
+            <circle cx="75" cy="75" r="60" stroke="grey" fill='grey' strokeWidth="5" />
+            <line className="knob" x1="75" y1="15" x2="75" y2="35"
+              style={{'transform': `rotate(${knobAngle}deg)`}}
+            />
+          </svg>
+        </div>
+      </div>
+      <div className='playlist-label'>
+        { radiogenPlaylists.length &&
+          radiogenPlaylists[playlistsCurrentIndex].name 
+        }
+      </div>
     </div>
+  );
+};
+
+const SearchRadiogenPlaylists = () => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+      const fetchData = async () => {
+          if (!query) {
+              setResults([]);
+              return;
+          }
+          setLoading(true);
+          try {
+              const response = await fetch(`/radiogen/playlists?name=${query}`);
+              const data = await response.json();
+              console.log(data)
+              const names = data.map((result, index) => (
+                <li key={index}>
+                  <a href={`https://open.spotify.com/playlist/${result['spotifyexternalid']}`} target='_blank'>
+                    {result.name}
+                  </a>
+                </li>
+              ));
+              setResults(names);
+          } catch (error) {
+              console.error('Error fetching data:', error);
+          } finally {
+              setLoading(false);
+          }
+      };
+
+      const delayDebounceFn = setTimeout(() => {
+          fetchData();
+      }, 300);
+
+      return () => clearTimeout(delayDebounceFn);
+  }, [query]);
+
+  return (
+      <div className='playlist-search'>
+          <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search..."
+          />
+          {loading && <div>Loading...</div>}
+          {results.length > 0 && 
+              <ul>
+                  {results}
+              </ul>
+          }
+      </div>
   );
 };
 
@@ -167,8 +280,14 @@ const LandingView = () => {
             onChange={ event => setUserEmail(event.target.value) }
           />
         </div>
-        <label id='notes-label' htmlFor='notes-input'>Notes:</label>
-        <textarea id='notes-input' className='notes' type='text' value={userNote} onChange={ event => setUserNote(event.target.value) }/>
+        <label id='notes-label' htmlFor='notes-input'>Comment:</label>
+        <textarea
+          id='notes-input'
+          className='notes'
+          type='text'
+          value={userNote}
+          placeholder='anything to note'
+          onChange={ event => setUserNote(event.target.value) }/>
         <div>
           <button onClick={() => setBetaReqModalIsOpen(false)}>Cancel</button>
           <button onClick={sendBetaAccessReqEmail}>Send Request</button>
@@ -207,9 +326,11 @@ const LandingView = () => {
           {betaReqModalIsOpen && createPortal(<BetaAccess />, document.body)}
           <div className='call-to-action-container'>
             <h1>r a d i o g e n . l i v e</h1>
+            <TypingAnimation />
             { call_to_action_text }
           </div>
-          <PlaylistCarousel />
+          <SearchRadiogenPlaylists />
+          <FMRadio />
           <ToastContainer />
       </div>
   );

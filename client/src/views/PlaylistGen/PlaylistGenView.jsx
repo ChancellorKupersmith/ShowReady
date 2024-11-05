@@ -4,6 +4,7 @@ import { FilterContextProvider } from '../Filter/FilterContext';
 import { SavePlaylistSignalProvider } from './Source/SavePlaylistView';
 import './PlaylistGen.css'
 import { NotificationProvider } from '../Notification/NotificationView';
+import { ToastContainer } from 'react-toastify';
 
 const PlaylistGenView = () => {
 
@@ -20,6 +21,7 @@ const PlaylistGenView = () => {
                 </NotificationProvider>
                 </FilterContextProvider>
             </div>
+            <ToastContainer />
         </div>
     );
 };
