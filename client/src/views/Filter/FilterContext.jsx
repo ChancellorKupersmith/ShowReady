@@ -119,6 +119,7 @@ export const TempFilterContextProvider = ({ children }) => {
     const revertTempFilters = () => setTempFilters(filters);
     const saveTempFilters = () => updateFilters(tempFilters);
     const updateTempFilters = (newFiltersObj) => {
+        console.log(newFiltersObj)
         setTempFilters(newFiltersObj);
     }
 

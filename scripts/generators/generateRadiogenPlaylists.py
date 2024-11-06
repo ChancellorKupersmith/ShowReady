@@ -112,7 +112,8 @@ async def get_genre_playlist_tracklist(min_date, max_date, genre_name):
         WITH FromEachRankedSongs AS (
             SELECT 
                 DISTINCT (s.SpotifyExternalId),
-                ROW_NUMBER() OVER (PARTITION BY a.ID) AS rn_artist
+                -- random order to change tracklist on each update
+                ROW_NUMBER() OVER (PARTITION BY a.ID ORDER BY RANDOM()) AS rn_artist
             FROM Genres g
             -- joining on EventsArtists to ensure artists have been found
             JOIN EventsArtists AS ea ON g.ArtistID = ea.ArtistID
@@ -122,7 +123,6 @@ async def get_genre_playlist_tracklist(min_date, max_date, genre_name):
                 ea.EventDate BETWEEN '{min_date}' AND '{max_date}'
                 AND g.name = '{genre_name}'
                 AND s.SpotifyExternalId IS NOT NULL
-            -- random order to change tracklist on each update
             LIMIT 10000
         )
         SELECT SpotifyExternalId FROM FromEachRankedSongs WHERE rn_artist <= 20
@@ -212,7 +212,7 @@ async def main():
         client_id=os.getenv('SPOTIFY_CLIENT_ID'),
         client_secret=os.getenv('SPOTIFY_CLIENT_SECRET'),
         redirect_uri=os.getenv('SPOTIFY_REDIRECT_URI'),
-        scope='playlist-modify-public'
+        scope='playlist-modify-public playlist-modify-private'
     ))
 
     # mockPs = [
