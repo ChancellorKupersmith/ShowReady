@@ -1,9 +1,10 @@
 .playlist-gen-view-container {
     display: flex;
     flex-direction: row;
-    height: 100%;
     min-height: fit-content;
-    margin-top: 35px;
+    height: 93vh;
+    /* margin-top: 35px; */
+    align-items: center;
 }
 .all-bg-color { background-color: #abd3df; }
 .spotify-bg-color { background-color: #00dc52; }

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import ReactDOMServer from 'react-dom/server';
 import FilterView from '../../Filter/FilterView';
-import NotificationView from '../../Notification/NotificationView';
 import { displayDate } from "../../Filter/Menus/DateMenu";
 import './Map.css'
 import { SpotifyContextProvider } from '../Source/Spotify';
@@ -284,7 +283,6 @@ const SeattleMap = () => {
     <div className='map-container'>
       <SpotifyContextProvider>
         <div className='btn-tray'>
-            <NotificationView />
             <FilterView />
             <SongsView />
         </div>

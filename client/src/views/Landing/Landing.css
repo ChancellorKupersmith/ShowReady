@@ -1,9 +1,19 @@
+.landing-view {
+    width: 100vw;
+    height: 93vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
 .radio {
-    width: 300px;
-    height: 200px;
+    width: 500px;
+    height: 300px;
     background-color: #c08546; /* Wooden casing color */
     border-radius: 10px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
 }
 
 .top-panel, .bottom-panel {
@@ -15,9 +25,12 @@
 
 .brand-logo {
     font-family: serif;
-    font-size: 12px;
+    font-size: 14px;
     color: #fff;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    align-self: flex-start;
+    margin-left: 15px;
+    margin-top: 10px;
 }
 
 .dial {
@@ -49,20 +62,13 @@
     background-color: #808080;
 }
 
-.landing-view {
-    width: 100vw;
-    height: 93vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-}
 .beta-access-container {
-    border: solid;
+    border: solid 1px;
     width: 100vw;
     background-color: antiquewhite;
     color: black;
     text-decoration: none;
+    font-size: 14px;
     cursor: pointer;
 }
 .beta-request-modal {

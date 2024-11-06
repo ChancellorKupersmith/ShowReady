@@ -1,24 +1,20 @@
 import React from 'react';
 import SeattleMap, { MapContextProvider } from './Map/SeattleMapView';
 import { FilterContextProvider } from '../Filter/FilterContext';
-import { SavePlaylistSignalProvider } from './Source/SavePlaylistView';
 import './PlaylistGen.css'
-import { NotificationProvider } from '../Notification/NotificationView';
 import { ToastContainer } from 'react-toastify';
+import BetaAccess from '../Landing/BetaAccess';
 
 const PlaylistGenView = () => {
 
     return (
         <div id='songs-list-view'  className={`snap-section all-bg-color`}>
+            <BetaAccess />
             <div className='playlist-gen-view-container'>
                 <FilterContextProvider>
-                <NotificationProvider>
-                <SavePlaylistSignalProvider>
                 <MapContextProvider>
                     <SeattleMap/>
                 </MapContextProvider>
-                </SavePlaylistSignalProvider>
-                </NotificationProvider>
                 </FilterContextProvider>
             </div>
             <ToastContainer />

@@ -24,7 +24,7 @@ def get_total_events_fromDB():
     total = 0
     select_query= """
         SELECT COUNT(*) FROM Events
-        WHERE created >= NOW() - INTERVAL '1 week'
+        WHERE created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
     """
     try:
         with PostgresClient(log=log) as db:
@@ -45,9 +45,9 @@ def get_events_fromDB(page_size, offset):
     events = []
     eo_select_query = f"""
         SELECT name, id, eventdate FROM Events
+        WHERE created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
         OFFSET {offset} LIMIT {page_size}
     """
-        # WHERE created >= NOW() - INTERVAL '1 week'
     tm_select_query = f"""
         SELECT Artists.name, Events.id, Events.tmid, Events.eventdate FROM Events
         JOIN EventsArtists AS ea ON ea.eventid = Events.id AND ea.eventdate = Events.eventdate
@@ -55,10 +55,10 @@ def get_events_fromDB(page_size, offset):
         WHERE
             Artists.spotifyexternalid IS NULL
             AND Events.tmid IS NOT NULL
+            AND Events.created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
         ORDER BY Events.Eventdate DESC
         OFFSET {offset} LIMIT {page_size}
     """
-            # AND Events.created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
     try:
         with PostgresClient(log=log) as db:
             rows = db.query(query=eo_select_query, fetchall=True)

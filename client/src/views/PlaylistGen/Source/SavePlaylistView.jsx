@@ -6,41 +6,9 @@ import { useSourceData } from './SourceContext';
 import { Toggle } from '../../Filter/Menus/MenuUtils';
 import { getSpotifyClient, useSpotifyData } from './Spotify';
 import { displayDate } from '../../Filter/Menus/DateMenu';
-import { useNotifications } from '../../Notification/NotificationView';
 
-const SavePlaylistContext = createContext();
-export const useSavePlaylistSignal = () => useContext(SavePlaylistContext);
-export const SavePlaylistSignalProvider = ({children}) => {
-    const { addNotification, removeNotification } = useNotifications();
-    const [signals, setSignals] = useState({});
-    const addSignal = (playlist) => {
-        if(signals[playlist.id]) signals[playlist.id].abort();
-        const signal = new AbortController();
-        setSignals({
-            ...signals,
-            [playlist.id]: [signal]
-        });
-        playlist.onClose = () => abortSignal(playlist.id);
-        addNotification(playlist)
-        return signal;
-    }
-    const abortSignal = () => {
-        if(signals[id]){
-            signals[id].abort();
-            const { [id]: _, ...newSignals } = signals
-            setSignals(newSignals);
-            removeNotification(id)
-        }
-    }
 
-    return(
-        <SavePlaylistContext.Provider value={{ signals, addSignal, abortSignal }}>
-            { children }
-        </SavePlaylistContext.Provider>
-    )
-}
-
-const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, isPrivate, addSignal, abortSignal, addNotification, toastID) => {
+const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, isPrivate, toastID) => {
     const fetchTotalResults = async () => {
         try{
             const postData = {
@@ -137,13 +105,10 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
             try{
                 let failed_tracks = [];
                 newPlaylist.size = Math.min(playlistSize, 10000);
-                // const signal = addSignal(newPlaylist)
                 if(toastID.current === null){
                     toastID.current = toast(`Saving ${i > 0 ? `${playlistName}(${i})` : playlistName}`, {progress: 1})
                 }
-                while(newPlaylist.page_progress < newPlaylist.size){
-                    // if(signal.aborted) throw new Error('Canceled playlist');
-                    
+                while(newPlaylist.page_progress < newPlaylist.size){                  
                     const [totalResults, URIs] = await fetchSpotifyTrackURIs(page_progress);
                     if(totalResults){
                         const endpoint = `/playlists/${newPlaylist.id}/tracks`;
@@ -154,7 +119,6 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                     // update notification progress
                     newPlaylist.page_progress = newPlaylist.page_progress + 100;
                     toast.update(toastID.current, { progress: newPlaylist.page_progress / newPlaylist.size })
-                    // addNotification(newPlaylist)
                     page_progress++;
                 }
                 toast.done(toastID.current);
@@ -166,7 +130,6 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                 console.error(err);
                 toast.error('Error Creating Playlist')
                 await deleteSpotifyPlaylist(newPlaylist.id);
-                // abortSignal(newPlaylist);
             }
         }
     } catch(err) {
@@ -194,9 +157,6 @@ export const SavePlaylistView = () => {
             spotifyClient = getSpotifyClient(spotifyData)   
     }, [spotifyData]);
 
-
-    const { addSignal, abortSignal } = useSavePlaylistSignal();
-    const { addNotification } = useNotifications();
     const toastID = useRef(null);
     const { filters } = useSongsFilter();
     const hintPlaylistName = filters.dateGThan && filters.dateLThan ? `${displayDate(filters.dateGThan)} - ${displayDate(filters.dateLThan)}` : 'Name';
@@ -205,7 +165,7 @@ export const SavePlaylistView = () => {
         switch(source) {
             case SPOTIFY_SOURCE:
                 if(spotifyClient && spotifyData)
-                    await saveSpotifyPlaylist(spotifyClient, spotifyData, filters, name, isPrivate, addSignal, abortSignal, addNotification, toastID);
+                    await saveSpotifyPlaylist(spotifyClient, spotifyData, filters, name, isPrivate, toastID);
                 break;
             default:
                 console.log('source:' + source)
