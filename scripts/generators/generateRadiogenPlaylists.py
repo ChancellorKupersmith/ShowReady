@@ -72,8 +72,8 @@ def get_date_ranges():
 async def get_mode_genres_fromDB(min_date, max_date):
     select_query_genres = f"""
         SELECT DISTINCT g.name FROM Genres g
-        -- joining on EventsArtists to ensure artists have been found
-        JOIN EventsArtists AS ea ON g.ArtistID = ea.ArtistID
+        JOIN ArtistsGenres AS ag ON g.ID = ag.GenreID
+        JOIN EventsArtists AS ea ON ag.ArtistID = ea.ArtistID
         WHERE ea.EventDate BETWEEN '{min_date}' AND '{max_date}'
     """
     genres = []

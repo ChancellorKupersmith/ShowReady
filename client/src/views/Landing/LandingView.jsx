@@ -7,10 +7,9 @@ import './Landing.css'
 
 const TypingAnimation = () => {
   const phrases = [
-    'radio is discovering a new favorite',
-    'radio is remembering a classic',
-    'radio is staying current',
-    'radio is no decision fatigue',
+    'radio is finding a new favorite.',
+    'radio is no decision fatigue.',
+    'radio is nostalgia.',
   ];
   const [displayText, setDisplayText] = useState('');
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);

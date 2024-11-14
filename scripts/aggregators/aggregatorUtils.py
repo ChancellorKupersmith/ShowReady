@@ -330,7 +330,6 @@ class Event:
         self.eo_img = eo_img
         self.tm_img = tm_img
 
-
 class Venue:
     def __init__(self, id=None, name=None, venue_url=None, venue_address=None, hood=None, summary=None, eo_url=None, phone=None, lat=None, lng=None, tm_id=None):
         self.id = id
