@@ -1,0 +1,41 @@
+#l-view-container-home {
+    height: 120vh;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+}
+#l-home-header {
+    /* border: solid red; */
+}
+#l-home-body {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+}
+#l-home-body-grabber {
+    /* border: solid green; */
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+@media screen and (min-width: 600px) {
+    #l-home-body-grabber {
+        flex-direction: row-reverse;
+    }
+    #l-home-call-to-action {
+        width: 40%;
+    }
+
+}
+#l-home-call-to-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#l-home-footer {
+    /* border: solid blue; */
+    height: 20vh;
+}

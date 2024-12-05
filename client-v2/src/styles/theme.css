@@ -1,0 +1,53 @@
+:root {
+    color-scheme: light dark;
+    --dark-grey: #242424;
+    --grey: #333333;
+    --light-grey: #6c757d;
+    --white: #ffffff;
+    --blue: #02cdc0;
+    --light-mode-text-color: var(--dark-grey);
+    --light-mode-background-color: var(--white);
+    --light-mode-primary-color: var(--light-grey);
+    --light-mode-secondary-color: var(--grey);
+    --light-mode-accent-color: var(--grey);
+    --dark-mode-text-color: var(--white);
+    --dark-mode-background-color: var(--dark-grey);
+    --dark-mode-primary-color: var(--grey);
+    --dark-mode-secondary-color: var(--light-grey);
+    --dark-mode-accent-color: var(--blue);
+
+    --gap: 5px;
+
+}
+body {
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    font-family: 'Baloo 2';
+}
+
+.navbar {
+    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+}
+
+h1 {
+    font-size: 3rem;
+}
+h2 {
+    font-size: 2rem;
+}
+h3 {
+    font-size: 1rem;
+}
+
+@media screen and (min-width: 600px) {
+    h1 {
+        font-size: 4rem;
+    }
+    h2 {
+        font-size: 3rem;
+    }
+    h3 {
+        font-size: 2rem;
+    }
+}

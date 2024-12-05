@@ -1,0 +1,20 @@
+body {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    margin: 0px;
+    padding: 0px;
+}
+
+button {
+    display: inline-block;
+    text-align: center;
+    z-index: 2;
+    cursor: pointer;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+button:hover {
+    opacity: 0.7;
+}

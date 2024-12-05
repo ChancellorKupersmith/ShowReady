@@ -36,6 +36,7 @@
           buildInputs = [
             pkgs.postgresql15
             pkgs.postgresql16
+            pkgs.dart-sass
             pythonPackages
           ];
           GECKO_DRIVER_PATH = "${pkgs.geckodriver}/bin";

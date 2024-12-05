@@ -1,0 +1,25 @@
+.navbar {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    margin: auto; /*center div*/
+    height: 50px;
+    width: fit-content;
+    z-index: 1;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+}
+ul.btns-list {
+    width: 100%;
+    padding: 0px;
+    display: flex;
+    align-items: center;
+    list-style-type: none;    
+}
+
+.nav-btn {
+    border: solid red;
+    margin: 0px 5px;
+}
