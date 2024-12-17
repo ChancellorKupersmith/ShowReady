@@ -5,7 +5,7 @@ button.open-map-view {
     font-size: 1rem;
 }
 
-@media screen and (min-width: 600px) {
+@media screen and (min-width: 750px) {
     button.open-map-view {
         min-height: 60px;
     }
