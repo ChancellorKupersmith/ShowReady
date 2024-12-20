@@ -35,9 +35,9 @@ const SourceMenu = () => {
     }
 
     return (
-        <div className='filter-menu'>
+        <div className='filter-menu-x'>
             <div className='menu-inputs'>
-                <div className='menu-input'>
+                <div className='menu-input-container'>
                     <div className='reqex-input-container'>
                         <Toggle
                             id={'toggle-req-spotify'}
@@ -47,7 +47,7 @@ const SourceMenu = () => {
                         />
                     </div>
                 </div>
-                <div className='menu-input'>
+                <div className='menu-input-container'>
                     <div className='reqex-input-container'>
                         <Toggle
                             id={'toggle-ex-spotify'}

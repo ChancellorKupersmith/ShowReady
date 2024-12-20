@@ -1,6 +1,6 @@
 .navbar {
     position: absolute;
-    bottom: 15px;
+    bottom: 18px; /* right above Leaflet and OpenStreetMap trademark */
     left: 0;
     right: 0;
     margin: auto; /*center div*/
@@ -10,16 +10,54 @@
     border-radius: 15px;
     display: flex;
     align-items: center;
+
+    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
 }
 ul.btns-list {
     width: 100%;
     padding: 0px;
     display: flex;
     align-items: center;
+    justify-content: center;
     list-style-type: none;    
 }
-
-.nav-btn {
-    border: solid red;
-    margin: 0px 5px;
+ul.btns-list > * {
+    padding: 2px;
+}
+.nav-view-btn {
+    margin: 10px;
+}
+/* .nav-view-btn button {
+    padding: 8px;
+} */
+#filter-btn {
+    border: solid transparent;
+    padding: 0px 8px;
+    padding-top: 0px;
+    margin-right: 2px;
+    height: 34px;
+}
+#filter-btn.selected {
+    border: solid light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+}
+#songs-btn {
+    border: solid transparent;
+    padding: 0px 8px;
+    padding-top: 0px;
+    margin-left: 2px;
+    height: 34px;
+}
+#songs-btn.selected {
+    border: solid light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+}
+.svg-container {
+    /* border: solid red; */
+    margin-top: 0px;
+    height: 100%;
+    width: 100%;
+    color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+}
+.nav-map-btn {
+    /* margin: 1px; */
 }

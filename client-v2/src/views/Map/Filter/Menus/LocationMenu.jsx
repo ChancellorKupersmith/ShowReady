@@ -119,6 +119,7 @@ const LocationMenu = () => {
     const reqVenues = tempFilters.req.location.venues.map((venue, index) =>
         <ReqExFilterTab 
             key={`reqfilter-venue${index}`}
+            reqex={'req'}
             label={'Venue: '} value={venue}
             onClickFunc={() => removeReqVenue(venue)}
         />
@@ -126,6 +127,7 @@ const LocationMenu = () => {
     const exVenues = tempFilters.ex.location.venues.map((venue, index) =>
         <ReqExFilterTab 
             key={`exfilter-venue${index}`}
+            reqex={'ex'}
             label={'Venue: '} value={venue}
             onClickFunc={() => removeExVenue(venue)}
         />
@@ -133,6 +135,7 @@ const LocationMenu = () => {
     const reqHoods = tempFilters.req.location.hoods.map((hood, index) =>
         <ReqExFilterTab 
             key={`reqfilter-hood${index}`}
+            reqex={'req'}
             label={'Hood: '} value={hood}
             onClickFunc={() => removeReqHood(hood)}
         />
@@ -140,6 +143,7 @@ const LocationMenu = () => {
     const exHoods = tempFilters.ex.location.hoods.map((hood, index) =>
         <ReqExFilterTab 
             key={`exfilter-hood${index}`}
+            reqex={'ex'}
             label={'Hood: '} value={hood}
             onClickFunc={() => removeExHood(hood)}
         />
@@ -149,39 +153,45 @@ const LocationMenu = () => {
     const exChildren = [...exVenues, ...exHoods];
 
     return (
-        <div className='filter-menu'>
+        <div className='filter-menu-x'>
             <div className='menu-inputs'>
-                <div className='menu-input'>
-                    <label htmlFor='venueInput'>Venue: </label>
-                    <input
-                        className='reqex-input-container'
-                        type='text'
-                        id='venueInput'
-                        value={venueInput}
-                        onChange={handleVenueChange}
-                    />
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='venueInput'>Venue: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='text'
+                            id='venueInput'
+                            value={venueInput}
+                            onChange={handleVenueChange}
+                        />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqVenue}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exVenue}>Exclude</button>
                     </div>
                 </div>
-                <div className='menu-input'>
-                    <label htmlFor='hoodInput'>Hood: </label>
-                    <input
-                        className='reqex-input-container'
-                        type='text'
-                        id='hoodInput'
-                        value={hoodInput}
-                        onChange={handleHoodChange}
-                    />
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='hoodInput'>Hood: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='text'
+                            id='hoodInput'
+                            value={hoodInput}
+                            onChange={handleHoodChange}
+                        />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqHood}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exHood}>Exclude</button>
                     </div>
                 </div>
             </div>
-
-            <ReqExList reqChildren={reqChildren} exChildren={exChildren}/>
+            {
+                (reqChildren.length > 0 || exChildren.length > 0) &&
+                <ReqExList reqChildren={reqChildren} exChildren={exChildren}/>
+            }
         </div>
     );
 }

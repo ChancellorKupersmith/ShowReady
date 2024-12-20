@@ -94,6 +94,7 @@ const ArtistMenu = () => {
     const reqArtists = tempFilters.req.artist.names.map((artist, index) =>
         <ReqExFilterTab 
             key={`reqfilter-artist${index}`}
+            reqex={'req'}
             label={'Artist: '} value={artist}
             onClickFunc={() => removeReqArtist(artist)}
         />
@@ -101,49 +102,56 @@ const ArtistMenu = () => {
     const exArtists = tempFilters.ex.artist.names.map((artist, index) =>
         <ReqExFilterTab 
             key={`exfilter-artist${index}`}
+            reqex={'ex'}
             label={'Artist: '} value={artist}
             onClickFunc={() => removeExArtist(artist)}
         />
     );
 
     const reqChildren = [
-        (tempFilters.req.artist.fromEach && <ReqExFilterTab key={'reqfilter-artist-fromEach'} label={'From Each:'} value={`${tempFilters.req.artist.fromEach}`} onClickFunc={removeReqFromEach}/>),
+        (tempFilters.req.artist.fromEach && <ReqExFilterTab key={'reqfilter-artist-fromEach'} reqex={'req'} label={'From Each:'} value={`${tempFilters.req.artist.fromEach}`} onClickFunc={removeReqFromEach}/>),
         ...reqArtists
     ];
     const exChildren = [...exArtists];
 
     return (
-        <div className='filter-menu'>
+        <div className='filter-menu-x'>
             <div className='menu-inputs'>
-                <div className='menu-input'>
-                    <label htmlFor='artistInput'>Artist: </label>
-                    <input
-                        className='reqex-input-container'
-                        type='text'
-                        id='artistInput'
-                        value={artistInput}
-                        onChange={handleArtistChange}
-                    />
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='artistInput'>Artist: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='text'
+                            id='artistInput'
+                            value={artistInput}
+                            onChange={handleArtistChange}
+                        />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqArtist}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exArtist}>Exclude</button>
                     </div>
                 </div>
-                <div className='menu-input'>
-                    <label htmlFor='fromEachArtistInput'>#Songs From Each: </label>
-                    <input
-                        className='reqex-input-container'
-                        type='number'
-                        id='fromEachArtistInput'
-                        onChange={handleFromEachArtistChange}
-                    />
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='fromEachArtistInput'>#Songs From Each: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='number'
+                            id='fromEachArtistInput'
+                            onChange={handleFromEachArtistChange}
+                        />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn only' onClick={reqFromEach}>Require</button>
                     </div>
                 </div>
             </div>
-
-            <ReqExList reqChildren={reqChildren} exChildren={exChildren}/>
+            {
+                (reqChildren.length > 0 || exChildren.length > 0) &&
+                <ReqExList reqChildren={reqChildren} exChildren={exChildren}/>
+            }
         </div>
     );
 }

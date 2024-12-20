@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useSourceData } from './SourceContext';
 import { useSongsFilter } from '../../Filter/FilterContext';
-import SpotifyLogo from '../../../assets/spotify-logo.svg';
+import SpotifyLogo from '../../../../assets/spotify-logo.svg';
 
 const SpotifyContext = createContext();
 export const useSpotifyData = () => useContext(SpotifyContext);

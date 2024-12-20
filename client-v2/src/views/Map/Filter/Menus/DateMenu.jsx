@@ -168,6 +168,7 @@ const DateMenu = () => {
     const reqDates = tempFilters.req.date.dates.map((date, index) => 
         <ReqExFilterTab 
             key={`reqfilter-date${index}`}
+            reqex={'req'}
             label={'Date: '} value={displayDate(date)}
             onClickFunc={() => removeReqDate(date)}
         />
@@ -175,6 +176,7 @@ const DateMenu = () => {
     const exDates = tempFilters.ex.date.dates.map((date, index) => 
         <ReqExFilterTab 
             key={`exfilter-date${index}`}
+            reqex={'ex'}
             label={'Date: '} value={displayDate(date)}
             onClickFunc={() => removeExDate(date)}
         />
@@ -182,6 +184,7 @@ const DateMenu = () => {
     const reqTimes = tempFilters.req.date.eventTimes.map((time, index) =>
         <ReqExFilterTab
             key={`reqfilter-time${index}`}
+            reqex={'req'}
             label={'Time: '} value={time}
             onClickFunc={() => removeReqTime(time)}
         />
@@ -189,23 +192,24 @@ const DateMenu = () => {
     const exTimes = tempFilters.ex.date.eventTimes.map((time, index) =>
         <ReqExFilterTab
             key={`reqfilter-time${index}`}
+            reqex={'ex'}
             label={'Time: '} value={time}
             onClickFunc={() => removeExTime(time)}
         />
     );
 
     const reqChildren = [
-        (tempFilters.dateGThan && <ReqExFilterTab key={'reqfilter-gThan'} label={'After: '} value={displayDate(tempFilters.dateGThan)} onClickFunc={removeGThanDate}/>),
-        (tempFilters.dateLThan && <ReqExFilterTab key={'reqfilter-lThan'}  label={'Before: '} value={displayDate(tempFilters.dateLThan)} onClickFunc={removeLThanDate}/>),
+        (tempFilters.dateGThan && <ReqExFilterTab key={'reqfilter-gThan'} reqex={'req'} label={'After: '} value={displayDate(tempFilters.dateGThan)} onClickFunc={removeGThanDate}/>),
+        (tempFilters.dateLThan && <ReqExFilterTab key={'reqfilter-lThan'} reqex={'req'} label={'Before: '} value={displayDate(tempFilters.dateLThan)} onClickFunc={removeLThanDate}/>),
         ...reqDates,
         ...reqTimes
     ];
     const exChildren = [...exDates, ...exTimes];
-
     return (
-        <div className='filter-menu'>
+        <div className='filter-menu-x'>
             <div className='menu-inputs'>
-                <div className='menu-input'>
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
                         <label htmlFor='datesInput'>Event Date: </label>
                         <input
                             className='reqex-input-container'
@@ -214,54 +218,63 @@ const DateMenu = () => {
                             value={dateInput}
                             onChange={handleDateChange}
                         />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqDate}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exDate}>Exclude</button>
                     </div>
                 </div>
-                <div className='menu-input'>
-                    <label htmlFor='gThanDateInput'>Events After: </label>
-                    <input
-                        className='reqex-input-container'
-                        type='date'
-                        id='gThanDateInput'
-                        value={gThanDateInput}
-                        onChange={handleGThanDateChange}
-                    />
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='gThanDateInput'>Events After: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='date'
+                            id='gThanDateInput'
+                            value={gThanDateInput}
+                            onChange={handleGThanDateChange}
+                        />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn only' onClick={reqGThanDate}>Require</button>
                     </div>
                 </div>
-                <div className='menu-input'>
-                    <label htmlFor='lThanDateInput'>Events Before: </label>
-                    <input
-                        className='reqex-input-container'
-                        type='date'
-                        id='lThanDateInput'
-                        value={lThanDateInput}
-                        onChange={handleLThanDateChange}
-                    />
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='lThanDateInput'>Events Before: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='date'
+                            id='lThanDateInput'
+                            value={lThanDateInput}
+                            onChange={handleLThanDateChange}
+                        />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn only' onClick={reqLThanDate}>Require</button>
                     </div>
                 </div>
-                <div className='menu-input'>
-                    <label htmlFor='timesInput'>Event Times: </label>
-                    <input
-                        className='reqex-input-container'
-                        type='time'
-                        id='timesInput'
-                        value={timeInput}
-                        onChange={handleTimeChange}
-                    />
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='timesInput'>Event Times: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='time'
+                            id='timesInput'
+                            value={timeInput}
+                            onChange={handleTimeChange}
+                        />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqTime}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exTime}>Exclude</button>
                     </div>
                 </div>
             </div>
-
-            <ReqExList reqChildren={reqChildren} exChildren={exChildren}/>
+            {
+                (reqChildren.length > 0 || exChildren.length > 0) &&
+                <ReqExList reqChildren={reqChildren} exChildren={exChildren}/>
+            }
         </div>
     );
 }

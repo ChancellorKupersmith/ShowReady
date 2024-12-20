@@ -9,17 +9,31 @@ body, html {
     margin: 0 auto;
     position: relative;
     overflow-x: hidden;
+
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    font-family: 'Baloo 2';
 }
 
 button {
     display: inline-block;
     text-align: center;
-    z-index: 2;
+    z-index: 5;
     cursor: pointer;
     opacity: 1;
     transition: opacity 0.3s ease;
+
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    background-color: light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
 }
 
 button:hover {
     opacity: 0.7;
+}
+
+input {
+    padding: 4px;
 }

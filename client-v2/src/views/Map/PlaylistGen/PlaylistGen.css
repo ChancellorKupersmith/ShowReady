@@ -46,18 +46,6 @@
 .all-bg-color { background-color: #abd3df; }
 .spotify-bg-color { background-color: #00dc52; }
 .youtube-bg-color { background-color: #ff4d4d; }
-.svg-container {
-    max-width: fit-content;
-    max-height: fit-content;
-    color: #444444;
-}
-#songs-btn {
-    background-color: transparent;
-    border: solid transparent;
-}
-#songs-btn.selected {
-    border: solid black;
-}
 .songs-view-container {
     position: absolute;
     top: 12%;

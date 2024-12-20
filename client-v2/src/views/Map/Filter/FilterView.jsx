@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import './FilterView.css';
-import FilterSvg from '../../../assets/filter.svg';
+import FilterLightSvg from '../../../assets/filter-light.svg';
+import FilterDarkSvg from '../../../assets/filter-dark.svg';
 import FilterTitle from './FilterTitle';
 import FilterList from './FilterList';
 import FilterFooter from "./FilterFooter";
-import FilterMenu from './Menus/FilterMenu';
+// import FilterMenu from './Menus/FilterMenu';
+import FilterMenu from './FilterMenu';
+
 import { TempFilterContextProvider } from './FilterContext';
 
-const FilterView = () => {
+const FilterModal = () => {
     const [isOpen, setIsOpen] = useState(false);
     const closeModal = () => setIsOpen(!isOpen);
 
@@ -17,7 +20,7 @@ const FilterView = () => {
             <div className="svg-container">
                 <img
                     loading="lazy"
-                    src={FilterSvg}
+                    src={FilterDarkSvg}
                     alt='Filter'
                 />
             </div>
@@ -56,7 +59,6 @@ const FilterView = () => {
                 setFilterMenu('genre');
         };
     };
-
     return (
         <div>
             <FilterBtn onClick={() => closeModal()}/>
@@ -64,10 +66,7 @@ const FilterView = () => {
                 <TempFilterContextProvider>
                     <div className='filter-modal-container'>
                         <FilterTitle closeModal={closeModal} />
-                        <div className='contents'>
-                            <FilterList selectedMenu={filterMenu} handleFilterMenu={handleFilterMenu}/>
-                            <FilterMenu filterMenu={filterMenu}/>
-                        </div>
+                        <FilterMenu />
                         <FilterFooter closeModal={closeModal} />
                     </div>
                 </TempFilterContextProvider>,
@@ -79,4 +78,4 @@ const FilterView = () => {
 };
 
 
-export default FilterView;
+export default FilterModal;

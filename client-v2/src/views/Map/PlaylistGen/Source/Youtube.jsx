@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSongsFilter } from '../../Filter/FilterContext';
 import { useSourceData } from './SourceContext';
-import YouTubeLogo from '../../../assets/youtube-logo.svg';
+import YouTubeLogo from '../../../../assets/youtube-logo.svg';
 
 
 export const YouTubeIcon = ({url}) => {

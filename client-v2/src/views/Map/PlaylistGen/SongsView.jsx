@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import SongsListItem from './SongsListItem';
 import AllBtn from './Source/All';
-import SongsSvg from '../../assets/song-list.svg'
-import NextSvg from '../../assets/next.svg'
-import PrevSvg from '../../assets/prev.svg'
+import SongsDarkSvg from '../../../assets/song-list(1).svg'
+import NextSvg from '../../../assets/next.svg'
+import PrevSvg from '../../../assets/prev.svg'
 import { OrderByBtn, useSongsFilter } from '../Filter/FilterContext';
 import { SavePlaylistView } from "./Source/SavePlaylistView";
 import { SpotifyContextProvider, useSpotifyData, SpotifyBtn } from './Source/Spotify'
@@ -11,7 +11,7 @@ import { YouTubeBtn } from './Source/Youtube';
 import { createPortal } from 'react-dom';
 import { useSourceData } from './Source/SourceContext';
 
-const SongsView = () => {
+const SongsModal = () => {
     const [isOpen, setIsOpen] = useState(false);
     const openCloseModal = () => setIsOpen(!isOpen)
     const [page, setPage] = useState(1);
@@ -101,7 +101,7 @@ const SongsView = () => {
             <div className="svg-container">
                 <img
                     loading="lazy"
-                    src={SongsSvg}
+                    src={SongsDarkSvg}
                     alt='Songs'
                 />
             </div>
@@ -162,4 +162,4 @@ const SongsView = () => {
 }
 
 
-export default SongsView;
+export default SongsModal;

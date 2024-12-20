@@ -15,19 +15,7 @@
     --dark-mode-primary-color: var(--grey);
     --dark-mode-secondary-color: var(--light-grey);
     --dark-mode-accent-color: var(--blue);
-
     --gap: 5px;
-
-}
-body {
-    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
-    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
-    font-family: 'Baloo 2';
-}
-
-.navbar {
-    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
-    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
 }
 
 h1 {

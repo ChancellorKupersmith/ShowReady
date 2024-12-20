@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import AddSvg from '../../assets/add-circle.svg';
-import SubSvg from '../../assets/trash.svg';
+import AddSvg from '../../../assets/add-circle.svg';
+import SubSvg from '../../../assets/trash.svg';
 import { useSongsFilter } from "../Filter/FilterContext";
 import { displayDate } from "../Filter/Menus/DateMenu";
 import { SpotifyIcon } from "./Source/Spotify";

@@ -65,6 +65,7 @@ const SongMenu = () => {
     const reqSongs = tempFilters.req.song.names.map((song, index) =>
         <ReqExFilterTab 
             key={`reqfilter-song${index}`}
+            reqex={'req'}
             label={'Song: '} value={song}
             onClickFunc={() => removeReqSong(song)}
         />
@@ -72,6 +73,7 @@ const SongMenu = () => {
     const exSongs = tempFilters.ex.song.names.map((song, index) =>
         <ReqExFilterTab 
             key={`exfilter-song${index}`}
+            reqex={'ex'}
             label={'Song: '} value={song}
             onClickFunc={() => removeExSong(song)}
         />
@@ -81,25 +83,29 @@ const SongMenu = () => {
     const exChildren = [...exSongs];
 
     return (
-        <div className='filter-menu'>
+        <div className='filter-menu-x'>
             <div className='menu-inputs'>
-                <div className='menu-input'>
-                    <label htmlFor='songInput'>Song: </label>
-                    <input
-                        className='reqex-input-container'
-                        type='text'
-                        id='songInput'
-                        value={songInput}
-                        onChange={handleSongChange}
-                    />
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='songInput'>Song: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='text'
+                            id='songInput'
+                            value={songInput}
+                            onChange={handleSongChange}
+                        />
+                    </div>
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqSong}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exSong}>Exclude</button>
                     </div>
                 </div>
             </div>
-
-            <ReqExList reqChildren={reqChildren} exChildren={exChildren}/>
+            {
+                (reqChildren.length > 0 || exChildren.length > 0) &&
+                <ReqExList reqChildren={reqChildren} exChildren={exChildren}/>
+            }
         </div>
     );
 }
