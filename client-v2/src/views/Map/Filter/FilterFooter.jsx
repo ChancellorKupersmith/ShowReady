@@ -3,9 +3,12 @@ import { useTempSongsFilter } from "./FilterContext";
 
 const FilterFooter = ({closeModal}) => {
     const { tempFilters, revertTempFilters, saveTempFilters } = useTempSongsFilter();
-    const [totalResults, setTotalResults] = useState(0)
+    const [totalResults, setTotalResults] = useState(0);
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
         const fetchTotalResults = async () => {
+            setLoading(true);
             try{
                 const postData = {
                     filters: tempFilters
@@ -20,7 +23,9 @@ const FilterFooter = ({closeModal}) => {
                 const data = await response.json();
                 setTotalResults(data['total']);
             }catch(err){
-                console.log(err)
+                console.error(err)
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -38,7 +43,14 @@ const FilterFooter = ({closeModal}) => {
 
     return (
         <div className='filter-footer'>
-            {`Found: ${totalResults} Songs`}
+            { loading ?
+                <div className='loading-container'>
+                    Found:
+                    <div className="loading-animation"></div>
+                </div>
+            : 
+                `Found: ${totalResults} Songs`
+            }
             <div>
                 <button onClick={handleCancel}>Cancel</button>
                 <button onClick={handleSave}>Apply</button>

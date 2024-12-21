@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import './FilterView.css';
+// import './FilterView.css';
 import FilterLightSvg from '../../../assets/filter-light.svg';
 import FilterDarkSvg from '../../../assets/filter-dark.svg';
 import FilterTitle from './FilterTitle';
-import FilterList from './FilterList';
 import FilterFooter from "./FilterFooter";
-// import FilterMenu from './Menus/FilterMenu';
 import FilterMenu from './FilterMenu';
 
 import { TempFilterContextProvider } from './FilterContext';
@@ -28,37 +26,8 @@ const FilterModal = () => {
         return (
             <button id='filter-btn' className={isOpen? 'selected' : ''} onClick={closeModal}><FilterImg /></button>
         );
-    }; 
-
-
-    const [filterMenu, setFilterMenu] = useState('genre')
-    const handleFilterMenu = (label) => {
-        switch(label.toLowerCase()){
-            case 'location':
-                setFilterMenu('location');
-                break;
-            case 'event':
-                setFilterMenu('event');
-                break;
-            case 'artist':
-                setFilterMenu('artist');
-                break;
-            case 'album':
-                setFilterMenu('album');
-                break;
-            case 'song':
-                setFilterMenu('song');
-                break;
-            case 'source':
-                setFilterMenu('source');
-                break;
-            case 'date':
-                setFilterMenu('date');
-                break;
-            default:
-                setFilterMenu('genre');
-        };
     };
+
     return (
         <div>
             <FilterBtn onClick={() => closeModal()}/>

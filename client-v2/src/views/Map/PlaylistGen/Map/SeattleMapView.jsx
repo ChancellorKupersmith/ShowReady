@@ -1,6 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import FilterModal from '../../Filter/FilterView';
 import { displayDate } from "../../Filter/Menus/DateMenu";
 import './Map.css'
 import { useSongsFilter } from '../../Filter/FilterContext';

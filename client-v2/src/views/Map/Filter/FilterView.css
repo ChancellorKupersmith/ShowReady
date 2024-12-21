@@ -10,53 +10,6 @@
     align-items: center;
     overflow-y: scroll;
 }
-/* Order By css */
-.order-bys {
-    align-self: end;
-    margin-bottom: 1px;
-}
-.order-by-modal-container {
-    position: absolute;
-    top: 17%;
-    right: 5%;
-    z-index: 4;
-    border: 1px solid #888;
-    border-radius: 7px;
-    background-color: white;
-    height: fit-content;
-    width: fit-content;
-    display: flex;
-    flex-direction: column;
-    color: black;
-}
-.order-by-modal-container .title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid grey;
-}
-.order-by-modal-container .title h3 {
-    padding-left: 5px;
-    margin: 0;
-    font-size: small;
-}
-.order-by-modal-container .title button {
-    height: fit-content;
-    background-color: transparent;
-}
-.order-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid rgb(187, 187, 187);
-    font-size: 12px;
-    padding-right: 5px;
-}
-button.order-random {
-    align-self: center;
-    margin: 5px;
-    width: fit-content;
-}
 
 /* Filter Title css */
 

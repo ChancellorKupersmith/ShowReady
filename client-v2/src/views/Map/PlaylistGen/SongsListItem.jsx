@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import AddSvg from '../../../assets/add-circle.svg';
-import SubSvg from '../../../assets/trash.svg';
+import AddDarkSvg from '../../../assets/add-circle-dark.svg';
+import AddLightSvg from '../../../assets/add-circle-light.svg';
+import SubDarkSvg from '../../../assets/trash-dark.svg';
+import SubLightSvg from '../../../assets/trash-light.svg';
 import { useSongsFilter } from "../Filter/FilterContext";
 import { displayDate } from "../Filter/Menus/DateMenu";
 import { SpotifyIcon } from "./Source/Spotify";
@@ -12,22 +14,24 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
     const { filters, updateFilters } = useSongsFilter();
     const [isIncluded, setIsIncluded] = useState(true);
     const toggleIsInclude = () => {
-        updateFilters({
-            ...filters,
-            ex: {
-                ...filters.ex,
-                song: {
-                    ...filters.ex.song,
-                    ids: isIncluded ? [...filters.ex.song.ids, songId] : filters.ex.song.ids.filter(id => id !== songId)
-                }
-            }
-        });
+        // TODO: soft remove song to allow for undoing
+        // updateFilters({
+        //     ...filters,
+        //     ex: {
+        //         ...filters.ex,
+        //         song: {
+        //             ...filters.ex.song,
+        //             ids: isIncluded ? [...filters.ex.song.ids, songId] : filters.ex.song.ids.filter(id => id !== songId)
+        //         }
+        //     }
+        // });
         setIsIncluded(!isIncluded);
     };
 
     const [hovered, setHovered] = useState(false);
     const [aboveHalfway, setAboveHalfway] = useState(true);
     const [elementPosition, setElementPosition] = useState({top: 0, right: 0});
+    const isMobile = window.innerWidth <= 768;
     const elementRef = useRef(null);
     useEffect(() => {
         const updatePosition = () => {
@@ -56,7 +60,7 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
         <div className="svg-container">
             <img
                 loading="lazy"
-                src={AddSvg}
+                src={AddDarkSvg}
                 alt='Add'
             />
         </div>
@@ -65,7 +69,7 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
         <div className="svg-container">
             <img
                 loading="lazy"
-                src={SubSvg}
+                src={SubDarkSvg}
                 alt='Remove'
             />
         </div>
@@ -98,6 +102,11 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
         const { findVenue } = useMap();
         return (
             <div className="overlay" style={overlayStyle}>
+                { isMobile &&
+                    <div className="overlay-header">
+                        <button className="overlay-close" onClick={() => setHovered(false)}>x</button>
+                    </div>
+                }
                 { spotifyImg && 
                     <div className="artist-img">
                         <img src={spotifyImg} alt="artist image"/>
@@ -108,14 +117,14 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
                     <SourceMeta />
                 </div>
                 <div className="artist-album-container">
-                    <p className="artist-name">
+                    <p className="overlay-artist-name">
                         <a href={artistUrl} target="_blank"> 
                             {artistName}
                         </a>
                     </p>
-                    { albumName && <p className="break">-</p> }
+                    { albumName && <p className="overlay-break">-</p> }
                     { albumName &&
-                        <p className="album-name">
+                        <p className="overlay-album-name">
                             <a href={albumUrl} target="_blank">
                                 {albumName}
                             </a>
@@ -123,7 +132,7 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
                     }
                 </div>
                 { genre && <p className="genre-name">{genre}</p>}
-                <ul>
+                <ul className="overlay-events-list">
                     { events.length > 0 &&
                         events.map((event, index) =>
                             <div key={`event-info${index}`} className="event-info">
@@ -145,14 +154,14 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
         <div className={`songs-list-item ${isIncluded ? '' : 'dark-mode'}`}>
             <div>
                 <div 
-                    className="text-container"
+                    className="meta-container"
                     ref={elementRef}
                     onMouseEnter={() => setHovered(true)}
                     onMouseLeave={() => setHovered(false)}
                 >
                     <p className="song-title">{songTitle}</p>
-                    <div className="meta-container">
-                        <p className="artist-name">{artistName}</p>
+                    <div className="meta-container-bottom">
+                        <p className="song-list-item-artist-name">{artistName}</p>
                         <SourceMeta />
                     </div>
                     {hovered && <SongOverlay /> }

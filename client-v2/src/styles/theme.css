@@ -16,6 +16,7 @@
     --dark-mode-secondary-color: var(--light-grey);
     --dark-mode-accent-color: var(--blue);
     --gap: 5px;
+    --mobile-screen-size: 750px;
 }
 
 h1 {

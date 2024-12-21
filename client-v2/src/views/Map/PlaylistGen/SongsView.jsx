@@ -2,14 +2,17 @@ import React, { useState, useEffect } from 'react';
 import SongsListItem from './SongsListItem';
 import AllBtn from './Source/All';
 import SongsDarkSvg from '../../../assets/song-list(1).svg'
-import NextSvg from '../../../assets/next.svg'
-import PrevSvg from '../../../assets/prev.svg'
+import NextDarkSvg from '../../../assets/next-dark.svg'
+import NextDLightSvg from '../../../assets/next-light.svg'
+import PrevDarkSvg from '../../../assets/prev-dark.svg'
+import PrevLightSvg from '../../../assets/prev-light.svg'
 import { OrderByBtn, useSongsFilter } from '../Filter/FilterContext';
 import { SavePlaylistView } from "./Source/SavePlaylistView";
 import { SpotifyContextProvider, useSpotifyData, SpotifyBtn } from './Source/Spotify'
 import { YouTubeBtn } from './Source/Youtube';
 import { createPortal } from 'react-dom';
 import { useSourceData } from './Source/SourceContext';
+import '../../../styles/module/Map/songsList.css';
 
 const SongsModal = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +26,10 @@ const SongsModal = () => {
     const { bgColor } = useSourceData()
     const [loading, setLoading] = useState(false); // Loading song list state
 
+    const getTracksPageSize = () => {
+        const isMobileScreen = window.innerWidth <= 750;
+        return isMobileScreen ? 7 : 11;
+    }
     // Fetch songs on: first load, page change, pageSize change, filter change
     useEffect(() => {
         const fetchSongs = async () => {
@@ -30,7 +37,7 @@ const SongsModal = () => {
             try{
                 const postData = {
                     page: page,
-                    limit: pageSize,
+                    limit: getTracksPageSize(),
                     filters: filters
                 };
                 console.log(filters)
@@ -66,7 +73,7 @@ const SongsModal = () => {
             <div className="svg-container">
                 <img
                     loading="lazy"
-                    src={NextSvg}
+                    src={NextDarkSvg}
                     alt='Next Page'
                 />
             </div>
@@ -83,7 +90,7 @@ const SongsModal = () => {
             <div className="svg-container">
                 <img
                     loading="lazy"
-                    src={PrevSvg}
+                    src={PrevDarkSvg}
                     alt='Previous Page'
                 />
             </div>
@@ -117,38 +124,42 @@ const SongsModal = () => {
             {isOpen && createPortal(
                 <SpotifyContextProvider>
                     <div className='songs-view-container'>
-                        <div className={`songs-list-container ${bgColor}`}>
-                            <OrderByBtn />
-                            <div className='source-tabs'>
-                                <AllBtn />
-                                <SpotifyBtn />
-                                <YouTubeBtn />
+                        <div className={`songs-list-container` }>
+                            <div className='songs-list-header'>
+                                <OrderByBtn />
+                                <div className='source-tabs'>
+                                    <AllBtn />
+                                    <SpotifyBtn />
+                                    <YouTubeBtn />
+                                </div>
                             </div>
-                            { loading ?
-                                <div className="loading-animation">Loading...</div>
-                            : 
-                                <ul>
-                                    { songs.length > 0 &&
-                                    songs.map((song, index) =>
-                                        <SongsListItem
-                                            key={index}
-                                            songTitle={song.songtitle}
-                                            artistName={song.artist}
-                                            artistUrl={song.artistspid ? `https://open.spotify.com/artist/${song.artistspid}` : song.artistlastfmurl}
-                                            albumName={song.albumtitle}
-                                            albumUrl={song.albumspid ? `https://open.spotify.com/album/${song.albumspid}` : song.albumlastfmurl}
-                                            genre={song.genre}
-                                            spId={song.spid}
-                                            ytUrl={song.yturl}
-                                            events={events[song.artist]}
-                                            spotifyImg={song.spotifyimg}
-                                        />)
-                                    }
-                                </ul>
-                            }
+                            <div className='songs-list-body'>
+                                { loading ?
+                                    <div className="loading-animation">Loading...</div>
+                                : 
+                                    <ul>
+                                        { songs.length > 0 &&
+                                        songs.map((song, index) =>
+                                            <SongsListItem
+                                                key={index}
+                                                songTitle={song.songtitle}
+                                                artistName={song.artist}
+                                                artistUrl={song.artistspid ? `https://open.spotify.com/artist/${song.artistspid}` : song.artistlastfmurl}
+                                                albumName={song.albumtitle}
+                                                albumUrl={song.albumspid ? `https://open.spotify.com/album/${song.albumspid}` : song.albumlastfmurl}
+                                                genre={song.genre}
+                                                spId={song.spid}
+                                                ytUrl={song.yturl}
+                                                events={events[song.artist]}
+                                                spotifyImg={song.spotifyimg}
+                                            />)
+                                        }
+                                    </ul>
+                                }
+                            </div>
                             <div className='footer'>
                                 <PrevBtn />
-                                <span> Page {page} of {totalPages} </span>
+                                <span className='footer-page-num'> Page {page} of {totalPages} </span>
                                 <NextBtn />
                             </div>
                             <SavePlaylistView />

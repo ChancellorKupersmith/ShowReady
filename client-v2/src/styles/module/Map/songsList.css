@@ -1,0 +1,303 @@
+.songs-view-container {
+    position: absolute;
+    bottom: 69px; /* right above navbar */
+    right: 5%;
+    z-index: 2;
+    width: 90%;
+    height: 78%;
+    display: flex;
+    justify-content: center;
+    overflow-y: visible;
+    overflow-x: visible;
+}
+.songs-list-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: 97%;
+    padding: 6px;
+    overflow-x: visible;
+    overflow-y: visible;
+    border: 1.5px solid light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
+    border-radius: 7px;
+    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    
+}
+/* Header */
+.order-bys {
+    align-self: end;
+    margin-bottom: 1px;
+}
+.order-by-modal-container {
+    position: absolute;
+    top: 17%;
+    right: 5%;
+    z-index: 4;
+    border: 1px solid #888;
+    border-radius: 7px;
+    background-color: light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
+    height: fit-content;
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+}
+.order-by-modal-container .title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+}
+.order-by-modal-container .title h3 {
+    padding-left: 5px;
+    margin: 0;
+    font-size: small;
+}
+.order-by-modal-container .title button {
+    height: fit-content;
+    background-color: transparent;
+}
+.order-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    font-size: 12px;
+    padding-right: 5px;
+}
+button.order-random {
+    align-self: center;
+    margin: 5px;
+    width: fit-content;
+}
+.songs-list-header {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.songs-view-container .source-tabs {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    margin: 0px;
+    border-bottom: solid 1.5px light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+}
+button.source-btn {
+    flex: 1;
+    border-radius: 10px;
+    border: solid transparent 2px; /*to keep consistent sizing between when selected and not*/
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    margin-top: 4px;
+}
+button.source-btn.selected {
+    border: solid 1.5px light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    border-bottom: none;
+}
+
+/* Body */
+.songs-list-body {
+    flex: 6;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.songs-list-container ul {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding-inline-start: 0px; /* Remove default inline padding */
+}
+/* Song List Item Style */
+.songs-list-item {
+    border-radius: 10px;
+    box-sizing: border-box;
+    margin-top: 5px;
+    height: fit-content;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; 
+    background: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    transition: background 0.3s, color 0.3s;
+}
+.songs-list-item.dark-mode {
+    background: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    color: light-dark(var(--dark-mode-text-color), var(--light-mode-text-color));
+    opacity: 0.35;
+}
+.songs-list-item > div {
+    display: flex;
+    align-self: stretch;
+    flex: 1;
+}
+.songs-list-item .remove-toggle {
+    background-color: transparent;
+    cursor: pointer;
+    transition: background 0.3s, color 0.3s;
+}
+.meta-container {
+    display: flex;
+    padding-right: 5px;
+    padding-left: 5px;
+    flex-direction: column;
+    flex: 1;
+    max-width: 100%; /* Ensure text container does not exceed item width */
+    overflow: hidden; /* Hide overflow content */
+}
+.meta-container-bottom {
+    display: flex;
+    align-items: end;
+}
+.songs-list-item p {
+    width: fit-content;
+    margin: 2px;
+    font-size: small;
+    text-align: start;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.songs-list-item p:hover { /* Display full text on hover */
+    white-space: normal; /* Allow text to wrap */
+    overflow: visible;   /* Ensure the overflow is visible */
+    text-overflow: clip; /* Disable ellipsis */
+    max-width: max-content; 
+}
+p.song-title {
+    font-weight: bold;
+    max-width: 96%;
+    margin-top: 8px;
+}
+.song-list-item-artist-name {
+    font-size: 12px;
+    max-width: 80%;
+    align-self: center;
+}
+.source-meta-container {
+    display: flex;
+}
+.source-meta {
+    width: 20px;
+    height: 20px;
+    margin: 1px;
+    cursor: pointer;
+}
+/* Overlay */
+/* TODO: Organize and consolidate overlay css, names need to be more semantic */
+.overlay {
+    position: absolute;
+    right: 100px;
+    width: 200px;
+    height: fit-content;
+    overflow: auto;
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    border: 0.5px solid light-dark(var(--light-mode-text-color), var(--dark-mode-accent-color));
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    z-index: 6;
+}
+.overlay-header {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+}
+.overlay-close {
+    background-color: transparent;
+    padding: 0px;
+    color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+}
+.artist-img {
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+}
+.artist-img img {
+    height: 160px;
+    width: 160px;
+    border-radius: 5px;
+    border: solid 1px light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+}
+.artist-album-container {
+    display: flex;
+    align-items: center;
+}
+.overlay-artist-name {
+    align-self: center;
+    max-width: 80%;
+    padding-left: 0px;
+    font-size: 12px;
+}
+.overlay-album-name {
+    align-self: center;
+    padding-left: 0px;
+    font-size: 12px;
+}
+.overlay-break {
+    align-self: center;
+    font-size: 11px;
+    margin: 2px;
+}
+.overlay-events-list {
+    max-height: 300px;
+    height: fit-content;
+    overflow-y: auto;
+    /* border: solid red; */
+}
+.event-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+}
+.event-info .date {
+    min-width: fit-content;
+    margin: 0px;
+    padding: 0px;
+    font-weight: bold;
+    font-size: 12px;
+}
+.event-info .location {
+    font-weight: bold;
+    font-size: 14px;
+    text-align: left;
+    margin: 0px;
+    margin-left: 6px;
+    padding: 0px;
+    cursor: pointer;
+}
+.event-info .price-time-container {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+}
+.event-info .price-time-container p {
+    font-size: 10px;
+    white-space: nowrap; /* Allow text to wrap */
+    overflow: visible; /* Ensure the overflow is visible */
+    text-overflow: clip; /* Disable ellipsis */
+    max-width: max-content;
+}
+
+/* Footer */
+.footer {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.footer-page-num {
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color)) !important;
+}
+.footer button {
+    background-color: transparent;
+}
