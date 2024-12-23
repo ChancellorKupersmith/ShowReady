@@ -1,43 +1,27 @@
-import React, {useState, Suspense, startTransition, createContext, useContext} from 'react';
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/base.css';
 import './styles/theme.css';
 import './styles/layout/root.css';
+import { SpotifyContextProvider } from './views/Map/PlaylistGen/Source/Spotify.jsx';
 
-const MapView = React.lazy(() => import('./views/Map/MapView.jsx'));
 const HomeView = React.lazy(() => import('./views/Home/HomeView.jsx'));
-const LazyView = ({ child }) => (
-  <Suspense fallback={<div>Loading...</div>}>
-    { child }
-  </Suspense>
-);
-
-const ViewContext = createContext();
-export const useViewContext = () => useContext(ViewContext);
-export const ViewContextProvider = ({ children }) => {
-  const [currentView, updateCurrentView] = useState('home');
-  const handleViewChange = view => {
-    startTransition(() => updateCurrentView(view));
-  };
-
-  return (
-    <ViewContext.Provider value={{ currentView, handleViewChange }}>
-      { children }
-    </ViewContext.Provider>
-  );
-};
+const MapView = React.lazy(() => import('./views/Map/MapView.jsx'));
 
 function App() {
-  const { currentView } = useViewContext();
-  let view;
-  switch(currentView){
-    case 'map':
-      view = <MapView />;
-      break;
-    default:
-      view = <HomeView />;
-      break;
-  }
-  return <LazyView child={view}/>;
+
+  return (
+    <Router>
+      <Suspense>
+      <SpotifyContextProvider>
+        <Routes>
+          <Route path="/" element={<HomeView />} />
+          <Route path="/map" element={<MapView />} />
+        </Routes>
+      </SpotifyContextProvider>
+      </Suspense>
+    </Router>
+  );
 }
 
 

@@ -28,7 +28,7 @@ const SongsModal = () => {
 
     const getTracksPageSize = () => {
         const isMobileScreen = window.innerWidth <= 750;
-        return isMobileScreen ? 7 : 11;
+        return isMobileScreen ? 7 : 10;
     }
     // Fetch songs on: first load, page change, pageSize change, filter change
     useEffect(() => {
@@ -63,6 +63,39 @@ const SongsModal = () => {
 
         fetchSongs();
     }, [page, pageSize, filters]);
+
+
+    const { updateSpotifyData } = useSpotifyData();
+  const getCookie = (name) => {
+
+    const value = `; ${document.cookie}`;
+    console.log(value);
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  };
+  useEffect(() => {
+    try{
+      const accessTokenCookie = getCookie('access_token');
+      const refreshTokenCookie = getCookie('refresh_token');
+      const userMetaCookie = getCookie('user_meta');
+      let decodeduserMetaCookie = decodeURIComponent(userMetaCookie); 
+      const userMeta = JSON.parse(decodeduserMetaCookie);
+      if(userMeta){
+          const spotifyData = {
+            accessToken: accessTokenCookie,
+            refreshToken: refreshTokenCookie,
+            username: userMeta['username'],
+            spotifyID: userMeta['id'],
+            profileImgURL: userMeta['profileImg'],
+          };
+          console.log(spotifyData)
+          updateSpotifyData(spotifyData);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  },[]);
 
     const handlePageChange = newPage => {
         if(newPage != page && newPage >= 1 && newPage <= totalPages)
@@ -122,7 +155,7 @@ const SongsModal = () => {
         <li className='nav-btn'>
             <SongsBtn />
             {isOpen && createPortal(
-                <SpotifyContextProvider>
+                // <SpotifyContextProvider>
                     <div className='songs-view-container'>
                         <div className={`songs-list-container` }>
                             <div className='songs-list-header'>
@@ -164,8 +197,8 @@ const SongsModal = () => {
                             </div>
                             <SavePlaylistView />
                         </div>
-                    </div>
-                </SpotifyContextProvider>,
+                    </div>,
+                // </SpotifyContextProvider>,
                 document.body
             )}
         </li>

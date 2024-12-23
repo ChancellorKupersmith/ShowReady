@@ -1,5 +1,8 @@
-const express = require('express');
-const { Pool } = require('pg');
+import express from 'express';
+import pkg from 'pg';
+const { Pool } = pkg;
+import dotenv from 'dotenv'
+dotenv.config();
 
 const pool = new Pool({
   user: process.env.PG_USER,
@@ -34,9 +37,9 @@ const queryByNameRadioGenPlaylists = async (name) => {
 }
 
 // ROUTES
-const router = express.Router();
+const radiogenPlaylistRouter = express.Router();
 
-router.get('/random_playlists', async (req, res, next) => {
+radiogenPlaylistRouter.get('/random_playlists', async (req, res, next) => {
     try{
         const limit = req.query.limit;
         const result = await queryRandomRadioGenPlaylists(limit);
@@ -47,7 +50,7 @@ router.get('/random_playlists', async (req, res, next) => {
         next(err)
     }
 });
-router.get('/playlists', async (req, res, next) => {
+radiogenPlaylistRouter.get('/playlists', async (req, res, next) => {
     try{
         const name = req.query.name;
         const result = await queryByNameRadioGenPlaylists(name);
@@ -58,4 +61,4 @@ router.get('/playlists', async (req, res, next) => {
         next(err)
     }
 })
-module.exports = router;
+export default radiogenPlaylistRouter;

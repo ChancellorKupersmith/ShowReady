@@ -4,7 +4,8 @@ import { toast } from 'react-toastify';
 import { useSongsFilter } from '../../Filter/FilterContext';
 import { useSourceData } from './SourceContext';
 import { Toggle } from '../../Filter/Menus/MenuUtils';
-import { getSpotifyClient, useSpotifyData } from './Spotify';
+import { useSpotifyData } from './Spotify';
+import { getSpotifyClient } from './utils/spotifyClient';
 import { displayDate } from '../../Filter/Menus/DateMenu';
 
 

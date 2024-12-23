@@ -1,5 +1,8 @@
-const express = require('express');
-const { Pool } = require('pg');
+import express from 'express';
+import pkg from 'pg';
+const { Pool } = pkg;
+import dotenv from 'dotenv'
+dotenv.config();
 
 const pool = new Pool({
   user: process.env.PG_USER,
@@ -160,7 +163,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
       ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
         `;
   // console.log(filterSongsQuery)
-  console.log(queryParms)
+  // console.log(queryParms)
   const query = `
     WITH data AS (
       SELECT
@@ -182,7 +185,7 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
     ORDER BY ${orderBy}
     LIMIT $1 OFFSET $2
   `;
-  console.log(query)
+  // console.log(query)
   await client.query(`SELECT setseed(${randomSeed})`);
   const result = await client.query(query, queryParms);
   client.release();
@@ -366,9 +369,9 @@ const queryTotalArtists =  async () => {
 
 
 // ROUTES
-const router = express.Router();
+const songsRouter = express.Router();
 // (potential) Optimize TODO: setup cache of songs list to avoid many sql requests
-router.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
+songsRouter.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try {
     const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.randomSeed, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
@@ -382,7 +385,7 @@ router.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereCon
   }
 });
 
-router.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
+songsRouter.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try {
     const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.randomSeed, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
@@ -392,7 +395,7 @@ router.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWher
   }
 });
 
-router.post('/total_results', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
+songsRouter.post('/total_results', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try{
     const result = await queryTotalResults(req.eventWhereConditional, req.songWhereConditional, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const total = result.rows[0];
@@ -403,9 +406,9 @@ router.post('/total_results', reqQueryParamsCleaner, eventWhereConditionBuilder,
   }
 });
 
-router.get('/venue_markers', async (req, res, next) => {
+songsRouter.get('/venue_markers', async (req, res, next) => {
   try{
-      venues = await queryVenues();
+      const venues = await queryVenues();
       res.json(venues);
   } catch (err) {
       console.error(`Error fetching venues, `, err);
@@ -413,7 +416,7 @@ router.get('/venue_markers', async (req, res, next) => {
   }
 });
 
-router.post('/upcoming_events', async (req, res, next) => {
+songsRouter.post('/upcoming_events', async (req, res, next) => {
   try{
       const { filters } = req.body;
       const rows = await queryUpcomingEvents(filters.dateGThan, filters.dateLThan);
@@ -431,7 +434,7 @@ router.post('/upcoming_events', async (req, res, next) => {
   }
 });
 
-router.get('/total_songs', async (req, res, next) => {
+songsRouter.get('/total_songs', async (req, res, next) => {
   try{
     const time = req.query.time;
     let total = null;
@@ -497,7 +500,7 @@ router.get('/total_songs', async (req, res, next) => {
   }
 });
 
-router.get('/total_events', async (req, res, next) => {
+songsRouter.get('/total_events', async (req, res, next) => {
   try{
     const time = req.query.time;
     let total = null;
@@ -563,7 +566,7 @@ router.get('/total_events', async (req, res, next) => {
   }
 });
 
-router.get('/total_artists', async (req, res, next) => {
+songsRouter.get('/total_artists', async (req, res, next) => {
   try{
     const time = req.query.time;
     let total = null;
@@ -629,4 +632,4 @@ router.get('/total_artists', async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default songsRouter;

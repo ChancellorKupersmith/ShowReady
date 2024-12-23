@@ -39,7 +39,7 @@ ul.btns-list > * {
     height: 34px;
 }
 #filter-btn.selected {
-    border: solid light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    border: solid 1.5px light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
 }
 #songs-btn {
     border: solid transparent;
@@ -49,7 +49,7 @@ ul.btns-list > * {
     height: 34px;
 }
 #songs-btn.selected {
-    border: solid light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    border: solid 1.5px light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
 }
 .svg-container {
     /* border: solid red; */

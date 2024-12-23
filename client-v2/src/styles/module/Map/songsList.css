@@ -25,6 +25,12 @@
     
 }
 /* Header */
+.songs-list-header {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
 .order-bys {
     align-self: end;
     margin-bottom: 1px;
@@ -70,12 +76,6 @@ button.order-random {
     align-self: center;
     margin: 5px;
     width: fit-content;
-}
-.songs-list-header {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
 }
 .songs-view-container .source-tabs {
     display: flex;
