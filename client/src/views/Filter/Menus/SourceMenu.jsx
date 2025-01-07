@@ -5,7 +5,6 @@ import { Toggle } from './MenuUtils';
 
 const SourceMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
-    // input funcs
     const handleChangeReqSpotify = () => {
         const newTotal = tempFilters.req.source.spotify ? tempFilters.total - 1 : tempFilters.total + 1;
         updateTempFilters({

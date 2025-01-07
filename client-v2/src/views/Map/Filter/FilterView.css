@@ -1,0 +1,86 @@
+.filter-modal-container .contents {
+    flex: 10;
+    display: flex;
+    overflow-y: auto;
+
+}
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: scroll;
+}
+
+/* Filter Title css */
+
+/* Filter list css */
+.filter-list {
+    flex: 1;
+    border-radius: 2px;
+    border-right: solid #33333320;
+    overflow-y: auto;
+}
+.filter-list .header {
+    display: flex;
+    justify-content: space-between;
+}
+.filter-list .header .reqex-filter-tab {
+    flex: 0;
+    padding-left: 10px;
+}
+.filter-list h2 {
+    padding-left: 5px;
+    font-size: 14px;
+    font-weight: 540;
+    color: black;
+}
+.filter-label {
+    border: solid #6b6b6b69;
+    border-radius: 10px;
+    margin-left: 3px;
+    margin-right: 3px;
+    margin-bottom: 10px;
+    padding-left: 2px;
+    cursor: pointer;
+}
+.filter-label.selected {
+    border: solid #111111c1;
+}
+.filter-label h3 {
+    color: black;
+    font-size: 14px;
+    font-weight: 400;
+}
+.filter-label button {
+    border: transparent;
+    background-color: transparent;
+    cursor: pointer;
+}
+.filter-label .tabs-container {
+    display: flex;
+    flex-wrap: wrap;
+    overflow-x: auto;
+}
+.filter-list .reqex-filter-tab {
+    color: black;
+    padding: 0px 2px 0px 2px;
+    flex: 1 0 fit-content;
+    text-align: center;
+}
+.filter-list .reqex-filter-tab span {
+    margin: 2px;
+}
+.filter-list .reqex-filter-tab button {
+    color: black;
+}
+
+/* Filter menu css */
+/* .filter-menu-container {
+    flex: 2;
+    color: black;
+    background-color: #efefef;
+    height: 100%;
+} */
+
+
+

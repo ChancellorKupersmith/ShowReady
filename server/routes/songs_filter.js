@@ -1,5 +1,8 @@
-const express = require('express');
-const { Pool } = require('pg');
+import express from 'express';
+import pkg from 'pg';
+const { Pool } = pkg;
+import dotenv from 'dotenv'
+dotenv.config();
 
 const pool = new Pool({
   user: process.env.PG_USER,
@@ -16,6 +19,7 @@ const OrderBys = Object.freeze({
    VENUE_NAME: 'VenueName',
    RANDOM: 'RANDOM()',
 });
+
 const reqQueryParamsCleaner = (req, res, next) => {
   try {
     const { page, limit, filters } = req.body;
@@ -122,36 +126,44 @@ const songWhereConditionBuilder = async (req, res, next) => {
 
 const querySongsList = async (eventWhereConditional, songWhereConditional, queryParms, orderBy, randomSeed, fromEachGenre, fromEachArtist, fromEachAlbum) => {
   const client = await pool.connect();
-  // ${/*'LEFT JOIN Genres AS g ON e.ID = g.EventID'*/''}
   const filterEventsQuery = `
     SELECT
       DISTINCT ON (ea.ArtistID) ea.ArtistID, v.Name AS VenueName, e.EventDate
-      FROM Events e
+    FROM Events e
     JOIN Venues as v ON e.VenueID = v.ID
     JOIN EventsArtists AS ea ON e.ID = ea.EventID AND e.EventDate = ea.EventDate
     ${eventWhereConditional}
   `;
   const filterSongsQuery = `
-    WITH FromEachRankedSongs AS (
+    WITH Songies AS (
       SELECT 
-        DISTINCT ON (a.ID, s.Title) a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl, a.SpotifyExternalId as ArtistSpID, a.spotifyimg as SpotifyImg,
+        DISTINCT ON (a.ID, s.ID)
+        a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl, a.SpotifyExternalId as ArtistSpID, a.spotifyimg as SpotifyImg,
         al.ID AS AlbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl, al.SpotifyExternalId as AlbumSpID,
         s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
         s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
-        ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY g.Name ORDER BY s.Title) AS rn_genre' : ''}
-        ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY a.ID ORDER BY s.Title) AS rn_artist' : ''}
-        ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY al.ID ORDER BY s.Title) AS rn_album' : ''}
-      FROM Songs s
-      JOIN Artists AS a ON s.ArtistID = a.ID
+      FROM Artists a
+      JOIN Songs AS s ON a.ID = s.ArtistID
       LEFT JOIN Albums AS al ON s.AlbumID = al.ID
-      LEFT JOIN Genres AS g ON a.ID = g.ArtistID
+      LEFT JOIN ArtistsGenres AS ag ON a.ID = ag.ArtistID
+      LEFT JOIN Genres AS g ON ag.GenreID = g.ID
       ${songWhereConditional}
-    )
-    ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
-    ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
-    ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
-    ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
-  `;
+      ),
+      FromEachRankedSongs AS (
+        SELECT 
+          Songies.*
+          ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY Genre) AS rn_genre' : ''}
+          ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY ArtistID) AS rn_artist' : ''}
+          ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY AlbumID) AS rn_album' : ''}
+        FROM Songies
+      )
+      ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
+      ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
+      ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
+      ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
+        `;
+  // console.log(filterSongsQuery)
+  // console.log(queryParms)
   const query = `
     WITH data AS (
       SELECT
@@ -164,16 +176,16 @@ const querySongsList = async (eventWhereConditional, songWhereConditional, query
         (${filterEventsQuery}) AS fe
       JOIN
         (${filterSongsQuery}) AS fs ON fe.ArtistID = fs.ArtistID
-      ORDER BY ${orderBy}
     ),
     total_count AS (
       SELECT COUNT(*) AS total FROM data
     )
     SELECT data.*, total_count.total
     FROM data, total_count
+    ORDER BY ${orderBy}
     LIMIT $1 OFFSET $2
   `;
-  console.log(query)
+  // console.log(query)
   await client.query(`SELECT setseed(${randomSeed})`);
   const result = await client.query(query, queryParms);
   client.release();
@@ -191,20 +203,28 @@ const queryTotalResults = async (eventWhereConditional, songWhereConditional, fr
     ${eventWhereConditional}
   `;
   const filterSongsQuery = `
-    WITH FromEachRankedSongs AS (
+    WITH Songies AS (
       SELECT 
-        DISTINCT ON (a.ID, s.Title) a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl,
-        al.ID AS AbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl,
+        DISTINCT ON (a.ID, s.Title)
+        a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl, a.SpotifyExternalId as ArtistSpID, a.spotifyimg as SpotifyImg,
+        al.ID AS AlbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl, al.SpotifyExternalId as AlbumSpID,
         s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
         s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
-        ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY g.Name ORDER BY s.Title) AS rn_genre' : ''}
-        ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY a.ID ORDER BY s.Title) AS rn_artist' : ''}
-        ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY al.ID ORDER BY s.Title) AS rn_album' : ''}
-      FROM Songs s
-      JOIN Artists AS a ON s.ArtistID = a.ID
-      LEFT JOIN Albums AS al ON s.AlbumID = al.ID
-      LEFT JOIN Genres AS g ON a.ID = g.ArtistID
-      ${songWhereConditional}
+
+        FROM Songs s
+        JOIN Artists AS a ON s.ArtistID = a.ID
+        LEFT JOIN Albums AS al ON s.AlbumID = al.ID
+        LEFT JOIN ArtistsGenres AS ag ON a.ID = ag.ArtistID
+        LEFT JOIN Genres AS g ON ag.GenreID = g.ID
+        ${songWhereConditional}
+    ),
+    FromEachRankedSongs AS (
+      SELECT
+        Songies.*
+        ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY Genre) AS rn_genre' : ''}
+        ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY ArtistID) AS rn_artist' : ''}
+        ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY AlbumID) AS rn_album' : ''}
+      FROM Songies
     )
     ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
     ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
@@ -349,9 +369,9 @@ const queryTotalArtists =  async () => {
 
 
 // ROUTES
-const router = express.Router();
+const songsRouter = express.Router();
 // (potential) Optimize TODO: setup cache of songs list to avoid many sql requests
-router.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
+songsRouter.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try {
     const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.randomSeed, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
@@ -365,7 +385,7 @@ router.post('/', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereCon
   }
 });
 
-router.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
+songsRouter.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try {
     const result = await querySongsList(req.eventWhereConditional, req.songWhereConditional, req.cParams, req.orderBy, req.randomSeed, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const songsList = result.rows;
@@ -375,7 +395,7 @@ router.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWher
   }
 });
 
-router.post('/total_results', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
+songsRouter.post('/total_results', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
   try{
     const result = await queryTotalResults(req.eventWhereConditional, req.songWhereConditional, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
     const total = result.rows[0];
@@ -386,9 +406,9 @@ router.post('/total_results', reqQueryParamsCleaner, eventWhereConditionBuilder,
   }
 });
 
-router.get('/venue_markers', async (req, res, next) => {
+songsRouter.get('/venue_markers', async (req, res, next) => {
   try{
-      venues = await queryVenues();
+      const venues = await queryVenues();
       res.json(venues);
   } catch (err) {
       console.error(`Error fetching venues, `, err);
@@ -396,7 +416,7 @@ router.get('/venue_markers', async (req, res, next) => {
   }
 });
 
-router.post('/upcoming_events', async (req, res, next) => {
+songsRouter.post('/upcoming_events', async (req, res, next) => {
   try{
       const { filters } = req.body;
       const rows = await queryUpcomingEvents(filters.dateGThan, filters.dateLThan);
@@ -414,7 +434,7 @@ router.post('/upcoming_events', async (req, res, next) => {
   }
 });
 
-router.get('/total_songs', async (req, res, next) => {
+songsRouter.get('/total_songs', async (req, res, next) => {
   try{
     const time = req.query.time;
     let total = null;
@@ -480,7 +500,7 @@ router.get('/total_songs', async (req, res, next) => {
   }
 });
 
-router.get('/total_events', async (req, res, next) => {
+songsRouter.get('/total_events', async (req, res, next) => {
   try{
     const time = req.query.time;
     let total = null;
@@ -546,7 +566,7 @@ router.get('/total_events', async (req, res, next) => {
   }
 });
 
-router.get('/total_artists', async (req, res, next) => {
+songsRouter.get('/total_artists', async (req, res, next) => {
   try{
     const time = req.query.time;
     let total = null;
@@ -612,5 +632,4 @@ router.get('/total_artists', async (req, res, next) => {
   }
 });
 
-module.exports = router;
-"Alec Benjamin: 12 Notes Tour"
+export default songsRouter;

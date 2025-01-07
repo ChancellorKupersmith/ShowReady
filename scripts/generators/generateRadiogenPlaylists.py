@@ -10,8 +10,7 @@ from generatorUtils import *
 from dotenv import load_dotenv
 
 load_dotenv()
-"""
-    - create playlists based on:
+""" create playlists based on:
         for each genre and this is seattle (all genres) randomly select for:
             - Week
                 - this week
@@ -69,25 +68,6 @@ def get_date_ranges():
     return date_ranges
 
 @timer_decorator
-async def get_mode_genres_fromDB(min_date, max_date):
-    select_query_genres = f"""
-        SELECT DISTINCT g.name FROM Genres g
-        -- joining on EventsArtists to ensure artists have been found
-        JOIN EventsArtists AS ea ON g.ArtistID = ea.ArtistID
-        WHERE ea.EventDate BETWEEN '{min_date}' AND '{max_date}'
-    """
-    genres = []
-    try:
-        with PostgresClient(log=log) as db:
-            rows = db.query(query=select_query_genres, fetchall=True)
-            genres = [ Genre(name=row[0]) for row in rows ]
-            log(0, f'Genres: {genres}')
-    except Exception as e:
-        log(1, f"Error fetching genres for events between {min_date} and {max_date} from db returning empty array, {e}")
-    finally:
-        return genres
-
-@timer_decorator
 async def get_existing_playlists_fromDB(period):
     select_query_playlists = f"""
         SELECT ID, Name, SpotifyExternalID
@@ -106,26 +86,46 @@ async def get_existing_playlists_fromDB(period):
         return playlists
 
 @timer_decorator
-async def get_genre_playlist_tracklist(min_date, max_date, genre_name):
+async def get_mode_genres_fromDB(min_date, max_date):
+    select_query_genres = f"""
+        SELECT DISTINCT g.name FROM Genres g
+        JOIN ArtistsGenres AS ag ON g.ID = ag.GenreID
+        JOIN EventsArtists AS ea ON ag.ArtistID = ea.ArtistID
+        WHERE ea.EventDate BETWEEN '{min_date}' AND '{max_date}'
+    """
+    genres = []
+    try:
+        with PostgresClient(log=log) as db:
+            rows = db.query(query=select_query_genres, fetchall=True)
+            genres = [ Genre(name=row[0]) for row in rows ]
+            log(0, f'Genres: {genres}')
+    except Exception as e:
+        log(1, f"Error fetching genres for events between {min_date} and {max_date} from db returning empty array, {e}")
+    finally:
+        return genres
+
+@timer_decorator
+async def get_genre_playlist_tracklist(min_date, max_date, genre_name, songs_per_artist):
     log(0, f'SELECTING SONGS FOR GENRE: {genre_name}')
+    SPOTIFY_PLAYLIST_SIZE_LIMIT = 10000
     select_query_songs = f"""
         WITH FromEachRankedSongs AS (
             SELECT 
                 DISTINCT (s.SpotifyExternalId),
-                ROW_NUMBER() OVER (PARTITION BY a.ID) AS rn_artist
+                -- random order to change tracklist on each update
+                ROW_NUMBER() OVER (PARTITION BY s.ArtistID ORDER BY RANDOM()) AS rn_artist
             FROM Genres g
+            JOIN ArtistsGenres AS ag ON g.ID = ag.GenreID
             -- joining on EventsArtists to ensure artists have been found
-            JOIN EventsArtists AS ea ON g.ArtistID = ea.ArtistID
-            JOIN Artists AS a ON ea.ArtistID = a.ID
-            JOIN Songs AS s ON a.ID = s.ArtistID
+            JOIN EventsArtists AS ea ON ag.ArtistID = ea.ArtistID
+            JOIN Songs AS s ON ag.ArtistID = s.ArtistID
             WHERE 
                 ea.EventDate BETWEEN '{min_date}' AND '{max_date}'
                 AND g.name = '{genre_name}'
                 AND s.SpotifyExternalId IS NOT NULL
-            -- random order to change tracklist on each update
-            LIMIT 10000
+            LIMIT {SPOTIFY_PLAYLIST_SIZE_LIMIT}
         )
-        SELECT SpotifyExternalId FROM FromEachRankedSongs WHERE rn_artist <= 20
+        SELECT SpotifyExternalId FROM FromEachRankedSongs WHERE rn_artist <= {songs_per_artist}
     """
     log(0, f'TRACKLIST QUERY: {select_query_songs}')
     tracklist = []
@@ -212,79 +212,9 @@ async def main():
         client_id=os.getenv('SPOTIFY_CLIENT_ID'),
         client_secret=os.getenv('SPOTIFY_CLIENT_SECRET'),
         redirect_uri=os.getenv('SPOTIFY_REDIRECT_URI'),
-        scope='playlist-modify-public'
+        scope='playlist-modify-public playlist-modify-private'
     ))
 
-    # mockPs = [
-    #     {
-    #         'name': 'Seattle New Age Oct-2024',
-    #         'spotifyexternalid': '1ny0FJw2KpwU3pVUglbX2H'
-    #     },
-    #     {
-    #         'name': 'Seattle Singer-Songwriter Oct-2024',
-    #         'spotifyexternalid': '2PGfOUWHohaKqo2DGPMxOt'
-    #     },
-    #     {
-    #         'name': 'Seattle Classical/Vocal Oct-2024',
-    #         'spotifyexternalid': '6Ldomo0OUj5J1vE0ieu0LX'
-    #     },
-    #     {
-    #         'name': 'Seattle Americana Oct-2024',
-    #         'spotifyexternalid': '10q6WeA8wzt3V58KIhYkWr'
-    #     },
-    #     {
-    #         'name': 'Seattle Folk Oct-2024',
-    #         'spotifyexternalid': '71j4jixj84ccQg8rawgpQF'
-    #     },
-    #     {
-    #         'name': 'Seattle Punk Oct-2024',
-    #         'spotifyexternalid': '4XkHGPKOueSTs0y4cPbhus'
-    #     },
-    #     {
-    #         'name': 'Seattle Dance/Electronic Oct-2024',
-    #         'spotifyexternalid': '1wEu9tJgrQyslhay5950G3'
-    #     },
-    #     {
-    #         'name': 'Seattle Alternative Rock Oct-2024',
-    #         'spotifyexternalid': '3oZU2ekgiPkUqZf3yVNlZj'
-    #     },
-    #     {
-    #         'name': 'Seattle Indie Rock Oct-2024',
-    #         'spotifyexternalid': '5w32nmTVwp83x9svuNfbS8'
-    #     },
-    #     {
-    #         'name': 'This is Seattle Oct-2024',
-    #         'spotifyexternalid': '5zQkAGDApz1YgmBG065qpe'
-    #     },
-    #     {
-    #         'name': 'Seattle French Rap Oct-2024',
-    #         'spotifyexternalid': '22JZno6BXETFY17NlrXp4a'
-    #     },
-    #     {
-    #         'name': 'Seattle World Oct-2024',
-    #         'spotifyexternalid': '4kwbd5OleUZvKzmiS7tsbP'
-    #     },
-    #     {
-    #         'name': 'Seattle Hip-Hop/Rap Oct-2024',
-    #         'spotifyexternalid': '5awQ6zlRXznfvyeg8lkYJP'
-    #     },
-    #     {
-    #         'name': 'Seattle Other Oct-2024',
-    #         'spotifyexternalid': '3hgGKHHRgsNzuztZpqAVvT'
-    #     },
-    #     {
-    #         'name': 'Seattle Witchstep Oct-2024',
-    #         'spotifyexternalid': '5GcPMi8Ec5miYs2XixUjCK'
-    #     },
-    #     {
-    #         'name': 'Seattle Alternative Folk Oct-2024',
-    #         'spotifyexternalid': '5d48BouZC08EutOZfOCPFj'
-    #     },
-    #     {
-    #         'name': 'Seattle Indie Pop Oct-2024',
-    #         'spotifyexternalid': '10tt4ZIQYwfkX8qs0dYRk9'
-    #     }
-    # ]
     # Get most frequent genres for given timelines
     date_ranges = get_date_ranges()
     for period in date_ranges.keys():
@@ -316,8 +246,10 @@ async def main():
             try:
                 genre_name = extract_genre(playlist.name)
                 if genre_name is None:
-                    continue # skip playlist that isn't genre specific or if 
-                tracklist = await get_genre_playlist_tracklist(min_date, max_date, genre_name)
+                    continue # skip playlist that isn't genre specific or if
+                # TODO: dynamically set songs per artist based on Spotify playlist size limit and number of artists included in genre to maximize tracklist size and ensure every relevant artist is included.
+                songs_per_artist = 20
+                tracklist = await get_genre_playlist_tracklist(min_date, max_date, genre_name, songs_per_artist)
                 #  clear current playlist
                 spotipy_client.playlist_replace_items(playlist.spotify_id, [])
                 if len(tracklist) > 0:

@@ -42,6 +42,7 @@ const ArtistMenu = () => {
         setArtistInput('')
     };
     const reqFromEach = () => {
+        console.log(fromEachArtist)
         if(fromEachArtist == null) return;
         const newTotal = tempFilters.req.artist.fromEach ? tempFilters.total : tempFilters.total + 1;
         updateTempFilters({
