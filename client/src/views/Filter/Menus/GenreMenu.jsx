@@ -8,7 +8,6 @@ const GenreMenu = () => {
     const [genreInput, setGenreInput] = useState('');
     // input funcs
     const handleGenreChange = (event) => setGenreInput(event.target.value);
-    // TODO: can have a max from each genre 
     // reqex btn funcs
     const reqGenre = () => {
         if(!genreInput) return;

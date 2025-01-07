@@ -9,7 +9,6 @@ const AlbumMenu = () => {
     const [fromEachAlbum, setFromEachAlbum] = useState(tempFilters.req.album.fromEach);
     // input funcs
     const handleAlbumChange = (event) => setAlbumInput(event.target.value);
-    // TODO: inform user you can have a max from each album 
     const handleFromEachAlbumChange = (event) => setFromEachAlbum(Math.max(0, Math.min(event.target.value, tempFilters.req.artist.fromEach ? tempFilters.req.artist.fromEach : Number.MAX_SAFE_INTEGER)));
     // reqex btn funcs
     const reqAlbum = () => {

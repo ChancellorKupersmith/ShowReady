@@ -3,6 +3,7 @@
 .data/
 .idea/
 .direnv/
+.vscode/
 *.env
 logfile
 Notes.txt

@@ -1,45 +1,14 @@
 import React, { useState, useEffect, useRef, useContext, createContext } from 'react';
 import { createPortal } from 'react-dom';
+import { toast } from 'react-toastify';
 import { useSongsFilter } from '../../Filter/FilterContext';
 import { useSourceData } from './SourceContext';
 import { Toggle } from '../../Filter/Menus/MenuUtils';
 import { getSpotifyClient, useSpotifyData } from './Spotify';
 import { displayDate } from '../../Filter/Menus/DateMenu';
-import { useNotifications } from '../../Notification/NotificationView';
 
-const SavePlaylistContext = createContext();
-export const useSavePlaylistSignal = () => useContext(SavePlaylistContext);
-export const SavePlaylistSignalProvider = ({children}) => {
-    const { addNotification, removeNotification } = useNotifications();
-    const [signals, setSignals] = useState({});
-    const addSignal = (playlist) => {
-        if(signals[playlist.id]) signals[playlist.id].abort();
-        const signal = new AbortController();
-        setSignals({
-            ...signals,
-            [playlist.id]: [signal]
-        });
-        playlist.onClose = () => abortSignal(playlist.id);
-        addNotification(playlist)
-        return signal;
-    }
-    const abortSignal = () => {
-        if(signals[id]){
-            signals[id].abort();
-            const { [id]: _, ...newSignals } = signals
-            setSignals(newSignals);
-            removeNotification(id)
-        }
-    }
 
-    return(
-        <SavePlaylistContext.Provider value={{ signals, addSignal, abortSignal }}>
-            { children }
-        </SavePlaylistContext.Provider>
-    )
-}
-
-const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, isPrivate, addSignal, abortSignal, addNotification) => {
+const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, isPrivate, toastID) => {
     const fetchTotalResults = async () => {
         try{
             const postData = {
@@ -100,7 +69,7 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                 body: JSON.stringify(postData)
             });
             const data = await response.json();
-            console.log(data)
+            // console.log(data)
             if(data.length > 0){
                 return [
                     data[0][0].total,
@@ -136,10 +105,10 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
             try{
                 let failed_tracks = [];
                 newPlaylist.size = Math.min(playlistSize, 10000);
-                const signal = addSignal(newPlaylist)
-                while(newPlaylist.page_progress < newPlaylist.size){
-                    if(signal.aborted) throw new Error('Canceled playlist');
-                    
+                if(toastID.current === null){
+                    toastID.current = toast(`Saving ${i > 0 ? `${playlistName}(${i})` : playlistName}`, {progress: 1})
+                }
+                while(newPlaylist.page_progress < newPlaylist.size){                  
                     const [totalResults, URIs] = await fetchSpotifyTrackURIs(page_progress);
                     if(totalResults){
                         const endpoint = `/playlists/${newPlaylist.id}/tracks`;
@@ -149,22 +118,25 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                     }
                     // update notification progress
                     newPlaylist.page_progress = newPlaylist.page_progress + 100;
-                    addNotification(newPlaylist)
+                    toast.update(toastID.current, { progress: newPlaylist.page_progress / newPlaylist.size })
                     page_progress++;
                 }
-                if(failed_tracks.length > 0)
+                toast.done(toastID.current);
+                if(failed_tracks.length > 0){
                     console.error(failed_tracks);
+                    toast.error(`Failed adding ${failed_tracks}`);
+                }
             } catch(err) {
                 console.error(err);
+                toast.error('Error Creating Playlist')
                 await deleteSpotifyPlaylist(newPlaylist.id);
-                abortSignal(newPlaylist);
             }
         }
     } catch(err) {
         console.error(err);
     }
 }
-// keeping out side hook for persisting between rerenders
+// keeping out side hook for persisting between rerenders, ensuring robust rate limiter
 let spotifyClient;
 export const SavePlaylistView = () => {
     const [playlistName, setPlaylistName] = useState('');
@@ -177,7 +149,7 @@ export const SavePlaylistView = () => {
         setIsPrivate(false);
         setModalIsOpen(!modalIsOpen);
     }
-    const { source, CSV_SOURCE, SPOTIFY_SOURCE, YOUTUBE_SOURCE } = useSourceData();
+    const { source, ALL_SOURCE, SPOTIFY_SOURCE, YOUTUBE_SOURCE } = useSourceData();
     // whenever spotify data changes update spotify client
     const { spotifyData } = useSpotifyData();
     useEffect(() => {
@@ -185,9 +157,7 @@ export const SavePlaylistView = () => {
             spotifyClient = getSpotifyClient(spotifyData)   
     }, [spotifyData]);
 
-
-    const { addSignal, abortSignal } = useSavePlaylistSignal();
-    const { addNotification } = useNotifications();
+    const toastID = useRef(null);
     const { filters } = useSongsFilter();
     const hintPlaylistName = filters.dateGThan && filters.dateLThan ? `${displayDate(filters.dateGThan)} - ${displayDate(filters.dateLThan)}` : 'Name';
     const savePlaylist = async () => {
@@ -195,7 +165,7 @@ export const SavePlaylistView = () => {
         switch(source) {
             case SPOTIFY_SOURCE:
                 if(spotifyClient && spotifyData)
-                    await saveSpotifyPlaylist(spotifyClient, spotifyData, filters, name, isPrivate, addSignal, abortSignal, addNotification);
+                    await saveSpotifyPlaylist(spotifyClient, spotifyData, filters, name, isPrivate, toastID);
                 break;
             default:
                 console.log('source:' + source)
@@ -206,7 +176,8 @@ export const SavePlaylistView = () => {
 
     return (
         <div className='save-playlist-view-container'>
-            <button onClick={openCloseModal}>Generate Playlist</button>
+            {/* generate playist feature only for spotify atm */}
+            {source == SPOTIFY_SOURCE && <button onClick={openCloseModal}>Generate Playlist</button> }
             { modalIsOpen && createPortal(
                 <GenPlaylistModal 
                     closeModal={openCloseModal}
@@ -228,7 +199,7 @@ const GenPlaylistModal = ({closeModal, source, playlistName, nameHint, handleNam
     return (
         <div className='save-playlist-modal-container'>
             <div className='header'>
-                <h1>{`Generate ${source == 0 ? 'CSV' : source == 1 ? 'Spotify' : 'YouTube'} Playlist`}</h1>
+                <h1>{`Generate ${source == 0 ? 'All' : source == 1 ? 'Spotify' : 'YouTube'} Playlist`}</h1>
                 <button onClick={closeModal}>x</button>
             </div>
             <div className='save-playlist'>

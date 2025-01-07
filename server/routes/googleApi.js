@@ -1,11 +1,13 @@
-const express = require('express');
-const fetch = require('node-fetch');
+import express from 'express';
+import fetch from 'node-fetch';
+import dotenv from 'dotenv'
+dotenv.config();
 
-const router = express.Router();
+const googleApiRouter = express.Router();
 
-router.get('/client_api_key', async (req, res) => res.json({ apiKey: process.env.GOOGLE_MAPS_API_KEY_CLIENT}));
+googleApiRouter.get('/client_api_key', async (req, res) => res.json({ apiKey: process.env.GOOGLE_MAPS_API_KEY_CLIENT}));
 
-router.get('/places', async (req, res, next) => {
+googleApiRouter.get('/places', async (req, res, next) => {
     const { address } = req.query;
     try{
         const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(address)}&inputtype=textquery&fields=geometry&key=${process.env.GOOGLE_MAPS_API_KEY}`;
@@ -21,4 +23,4 @@ router.get('/places', async (req, res, next) => {
     }
 });
 
-module.exports = router;
+export default googleApiRouter;

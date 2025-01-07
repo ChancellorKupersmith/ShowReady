@@ -90,7 +90,6 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
     }
 
     const SongOverlay = () => {
-        // TODO: Try and make style on css
         const overlayStyle = {
             'top': aboveHalfway? `${Math.ceil(elementPosition.top * 0.6)}px` : `${Math.ceil(elementPosition.top * 0.8)}px`,
             right: `${Math.ceil(elementPosition.right * 0.22)}px`

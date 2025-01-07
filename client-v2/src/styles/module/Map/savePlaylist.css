@@ -1,0 +1,89 @@
+/* Save Playlist Style */
+.save-playlist-view-container button {
+    margin: 0px;
+}
+.save-playlist-modal-container {
+    position: absolute;
+    top: 30%;
+    right: 5%;
+    z-index: 4;
+    height: fit-content;
+    width: 90%;
+    padding: 4px;
+    border: 1px solid light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
+    border-radius: 7px;
+    background: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    display: flex;
+    flex-direction: column;
+}
+.save-playlist-modal-container .header {
+    flex: 1;
+    border-radius: 5px;
+    padding: 0px;
+    margin: 0px;
+    border-bottom: solid 1px light-dark(var(--light-mode-secondary-color), var(--dark-mode-background-color));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* border: solid red; */
+}
+
+
+.save-playlist-modal-container .header h1 {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 540;
+    /* color: black; */
+    margin-bottom: 5px;
+    margin-left: 5px;
+    /* text-align: center; */
+    /* border: solid red; */
+}
+.save-playlist-modal-container .header p {
+    font-size: 17px;
+    font-weight: 540;
+    /* color: black; */
+    margin-bottom: 5px;
+    margin-left: 5px;
+}
+.save-playlist-modal-container .header button {
+    background-color: transparent;
+    /* color: #5b616a; */
+    border: none;
+    margin-right: 2px;
+    font-size: 18px;
+    padding: 0px 4px;
+}
+
+.save-playlist {
+    display: flex;
+    align-items: center;
+    padding-top: 20px;
+}
+#playlist-name-input {
+    position: relative;
+    left: 1%;
+    flex: 5;
+    display: flex;
+    align-items: center;
+}
+.save-playlist input {
+    width: 40%;
+}
+#playlist-name-input label {
+    margin-right: 4px;
+}
+.save-playlist-footer {
+    margin-top: 4px;
+    padding-top: 8px;
+    /* border-top: solid 0.5px light-dark(var(--light-mode-secondary-color), var(--dark-mode-background-color)); */
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.save-playlist-footer button {
+    width: 200px;
+    margin: 2px;
+    margin-top: 0px;
+}

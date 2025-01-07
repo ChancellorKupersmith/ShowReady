@@ -98,7 +98,7 @@ async def find_albums(artist, spotify_client, lastfm_client):
                     albums.append({album['name'].lower(): Album(title=album['name'], spotifyexternalid=album['id'], artistid=artist_id)})
                     album_genres = album.get('genres')
                     if album_genres is not None:
-                        genres.extend([(Genre(name=g, artistid=artist_id), album['name'].lower()) for g in album_genres])
+                        genres += [ Genre(name=g, artistid=artist_id) for g in album_genres ]
                 offset += limit
             return (True, albums, genres)
         except Exception as e:
@@ -107,9 +107,9 @@ async def find_albums(artist, spotify_client, lastfm_client):
 
     failed_artists = []
     artist_albums = {}
-    genres = {}
+    genres = {} # using dict to ensure uniqueness of (genre.name, genre.artist_id)
     try:
-        # 3rd party searches albums concurrently 
+        # concurrently search 3rd parties for album data 
         tasks = [
             query_lastFm_albums(lastfm_client, artist.name, artist.id),
             query_spotify_albums(spotify_client, artist.spotify_id, artist.id, artist.name)
@@ -135,7 +135,7 @@ async def find_albums(artist, spotify_client, lastfm_client):
                     else:
                         artist_albums[key] = album
             for g in found_genres:
-                genres[g[1]] = g[0]
+                genres[f"{g.name}-{g.artist_id}"] = g
             itr += 1
     except Exception as e:
         log(1, f"ERROR fetching artist albums, {e}")
@@ -176,26 +176,40 @@ def save_errors_inDB(artists_not_found):
         log(1, f"Error saving errors to db, {e}")
 
 @timer_decorator
-def save_genres_inDB(found_genres, saved_albums):
+def save_genres_inDB(found_genres):
     """
-        found_genres structure: (Genre, album_title)
-        saved_albums structure: {album_title: Album}
+        found_genres structure: {f"{g.name}-{g.artist_id}":  [Genre,]}
     """
-    insert_query = """
-        INSERT INTO Genres (name, artistid, albumid)
+    insert_query_genres = """
+        INSERT INTO Genres (name)
         VALUES %s
+        ON CONFLICT (name) DO UPDATE
+            SET name = EXCLUDED.name -- redundant update to ensure ids returned for join table insert
+        RETURNING Name, ID;
     """
     try:
-        genres = []
-        for g in found_genres:
-            album = saved_albums.get(g[1])
-            if album is not None:
-                g.album_id = album.id
-            genres.append((g.name, g.artist_id, g.album_id))
+        db_genre_ids = {} # {genre.name: genre.id}
+        unique_genres = set()
+        for g in found_genres.values():
+            unique_genres.add(g.name)
         with PostgresClient(log=log) as db:
-            db.query(query=insert_query, data=genres)
+            result = db.query(query=insert_query_genres, data=list(unique_genres), fetchall=True)
+            db_genre_ids = { row[0]: row[1] for row in result }
     except Exception as e:
         log(1, f"Error saving Genres to db: {e}")
+    insert_query_artistsgenres = """
+        INSERT INTO ArtistsGenres (artistid, genreid)
+        VALUES %s
+        ON CONFLICT DO NOTHING
+    """
+    try:
+        artists_genres = []
+        for genres in found_genres.values():
+            artists_genres += [ (g.artist_id, db_genre_ids[g.name]) for g in genres ] 
+        with PostgresClient(log=log) as db:
+            db.query(query=insert_query_artistsgenres, data=artists_genres)
+    except Exception as e:
+        log(1, f"Error saving ArtistsGenres to db: {e}")
 
 @timer_decorator
 def get_albums_fromDB():
@@ -235,7 +249,7 @@ async def main():
             if len(errors) > 0:
                 save_errors_inDB(errors)
             if found_genres:
-                save_genres_inDB(found_genres, saved_albums)
+                save_genres_inDB(found_genres)
     log(0, 'SUCCESSFULL ALBUM AGGREGATION!')
     print(f'Completed album aggregator, logs: {log_filename}')
 asyncio.run(main())

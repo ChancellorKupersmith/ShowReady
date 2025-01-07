@@ -1,0 +1,65 @@
+.beta-access-container {
+    border: solid 1px;
+    width: 100%;
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    color: light-dark(var(--dark-mode-text-color), var(--light-mode-text-color));
+    text-decoration: none;
+    text-align: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+.beta-request-modal {
+    position: absolute;
+    top: 12%;
+    right: 5%;
+    z-index: 6;
+    border: 1px solid light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
+    border-radius: 7px;
+    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    height: 80%;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+.beta-request-modal .input-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+.beta-request-modal label {
+    margin-left: 10px;
+}
+label#notes-label {
+    align-self: flex-start;
+}
+.beta-request-modal input {
+    height: 20%;
+    width: 95%;
+    margin: 5px;
+    padding: 14px;
+    border-radius: 5px;
+    border: solid 1px light-dark(var(--light-mode-secondary-color), var(--dark-mode-accent-color));
+}
+.beta-request-modal input.invalid {
+    border: solid red;
+}
+.beta-request-modal textarea.notes {
+    height: 50%;
+    width: 96%;
+    border-radius: 5px;
+    border: solid 1px light-dark(var(--light-mode-background-color), var(--dark-mode-accent-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    padding: 10px;
+    /* text-indent: 10px; */
+}
+textarea.notes::placeholder {
+    color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    opacity: 0.5;
+}
+.beta-request-modal button {
+    margin: 10px;
+}

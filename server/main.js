@@ -1,15 +1,19 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-var cookieParser = require('cookie-parser');
-const path = require('path');
-const songsRouter = require('./routes/songs_filter');
-const googleApiRouter = require('./routes/googleApi');
-const spotifyApiRouter = require('./routes/spotifyApi');
-const radiogenPlaylistRouter = require('./routes/radiogenPlaylists');
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import songsRouter from './routes/songs_filter.js';
+import googleApiRouter from './routes/googleApi.js';
+import spotifyApiRouter from './routes/spotifyApi.js';
+import radiogenPlaylistRouter from './routes/radiogenPlaylists.js';
+import dotenv from 'dotenv'
+dotenv.config();
 
 const app = express();
 app.use(express.json());
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, '../client/dist')))
    .use(cookieParser())
    .use(cors({ 

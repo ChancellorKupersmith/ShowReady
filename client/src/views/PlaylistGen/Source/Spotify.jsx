@@ -47,7 +47,7 @@ export const SpotifyIcon = ({url}) => {
         - displays logout btn
             - delete state
             - remove spotify only filters
-            - select csv
+            - select all
         - adds filters for only spotify songs
 */
 export const SpotifyBtn = () => {
