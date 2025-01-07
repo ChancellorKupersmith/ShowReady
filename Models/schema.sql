@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS Events (
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
     UNIQUE (Name, EventDate),
-    PRIMARY KEY (id, eventdate),
+    PRIMARY KEY (ID, EventDate),
     FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
 ) PARTITION BY RANGE (EventDate);
 
