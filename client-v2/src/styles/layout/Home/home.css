@@ -23,16 +23,15 @@
 }
 #l-home-body-grabber {
     /* border: solid green; */
-    width: fit-content;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 @media screen and (min-width: 750px) {
     #l-home-body-grabber {
+        /* border: solid red; */
         flex-direction: row-reverse;
         justify-content: space-between;
-        /* border: solid red; */
         width: 100%;
     }
     #l-home-call-to-action {
@@ -41,6 +40,7 @@
 
 }
 #l-home-call-to-action {
+    width: fit-content;
     display: flex;
     flex-direction: column;
     justify-content: center;

@@ -7,7 +7,7 @@ import { useSongsFilter } from "../Filter/FilterContext";
 import { displayDate } from "../Filter/Menus/DateMenu";
 import { SpotifyIcon } from "./Source/Spotify";
 import { YouTubeIcon } from "./Source/Youtube";
-import { useMap } from "./Map/SeattleMapView";
+import { useMap } from "../SeattleMap";
 
 
 const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, albumName, albumUrl, genre, eventLocation, date, spId, ytUrl, events}) => {

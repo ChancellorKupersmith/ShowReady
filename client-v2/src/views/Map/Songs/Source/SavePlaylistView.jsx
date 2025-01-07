@@ -7,6 +7,7 @@ import { Toggle } from '../../Filter/Menus/MenuUtils';
 import { useSpotifyData } from './Spotify';
 import { getSpotifyClient } from './utils/spotifyClient';
 import { displayDate } from '../../Filter/Menus/DateMenu';
+import '../../../../styles/module/Map/savePlaylist.css';
 
 
 const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, isPrivate, toastID) => {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { displayDate } from "../../Filter/Menus/DateMenu";
-import './Map.css'
-import { useSongsFilter } from '../../Filter/FilterContext';
+import { displayDate } from "./Filter/Menus/DateMenu";
+import '../../styles/module/Map/map.css';
+import { useSongsFilter } from './Filter/FilterContext';
 
 const MapContext = createContext();
 export const useMap = () => useContext(MapContext);
@@ -123,33 +123,41 @@ const SeattleMap = () => {
   const MarkerPopup = ({venue, events}) => {
     return (
       <div className='venue-marker-popup'>
-        <div className='title'>
-          <a className='venue-name' href={venue.venueurl} target='_blank'>{venue.name}</a>
-          <div className='reqex-btn-container'>
-              <button data-venue={venue.name} className='reqex-btn req-btn'>
+        <div className='venue-marker-popup-title-container'>
+          <a className='venue-marker-popup-title' href={venue.venueurl} target='_blank'>{venue.name}</a>
+          <div className='venue-marker-popup-title-reqex-btn-container'>
+              <button data-venue={venue.name} className='venue-marker-popup-title-reqex-btn req-btn'>
                 <p>+</p>
               </button>
-              <button data-venue={venue.name} className='reqex-btn ex-btn'>
+              <button data-venue={venue.name} className='venue-marker-popup-title-reqex-btn ex-btn'>
                 <p>-</p>
               </button>
           </div>
         </div>
-        <ul className='events-info-list'>
+        <ul className='venue-marker-popup-events-container'>
           { events && events.length > 0 &&
               events.map((event, index) => {
                 const imgSrc = event.eoimg ? (event.eoimg != venue.name ? event.eoimg : event.tmimg) : event.tmimg;
                 return (
-                  <a key={`event-info${index}`} href={ event.ticketslink ? event.ticketslink : event.url } target='_blank'>
+                  <a className='venue-marker-popup-event' key={`event-info${index}`} href={ event.ticketslink ? event.ticketslink : event.url } target='_blank'>
                     { imgSrc && 
                       <img 
-                        className='eventImg'
+                        className='venue-marker-popup-event-img'
                         src={imgSrc}
                         onClick={e => { e.preventDefault(); console.log(e.target.parentNode); e.target.parentNode.click(); }}
                       />
                     }
-                    <div className='event-info-container'>
-                      <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
-                      <p className='event'>{event.eventname}</p>
+                    <div className='venue-popup-event-info-container'
+                    onClick={e => { e.preventDefault(); console.log(e.target.parentNode); e.target.parentNode.click(); }}
+                    >
+                      <div className='venue-popup-event-info'>
+                        <div className='venue-popup-event-time'>
+                          <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
+                          <p className='time'>{event.eventtime}</p>
+                        </div>
+                        <p className='price'>{event.price}</p>
+                      </div>
+                      <p className='venue-popup-event-name'>{event.eventname}</p>
                     </div>
                   </a>
                 );

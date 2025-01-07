@@ -1,6 +1,8 @@
 .radio-container {
     /* border: solid white; */
     width: 100%;
+    min-width: 406px;
+    max-width: 509px;
     height: 100%;
     margin: 10px;
 }

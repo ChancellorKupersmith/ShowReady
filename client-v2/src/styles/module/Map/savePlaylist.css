@@ -1,62 +1,6 @@
-/* 
-    .playlist-gen-view-container {
-        display: flex;
-        flex-direction: row;
-        min-height: fit-content;
-        height: 93%;
-        margin-top: 35px;
-        align-items: center; 
-    }
-*/
-.root-layout {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2.5px;
-}
-
-/* Desktop screen layout */
-@media (min-width: 768px) {
-    .root-layout {
-        flex-direction: row;
-    }
-}
-
-/* Mobile screen layout */
-@media (max-width: 767px) {
-    .root-layout {
-        flex-direction: column;
-        align-items: center; /* Optional: center items vertically */
-    }
-}
-.root-layout .nav {
-    border: solid red;
-    width: 40px;
-}
-
-.root-layout .view {
-    border: solid blue;
-    flex: 4;
-}
-
-.playlist-gen-view-container {
-    display: grid;
-    min-height: fit-content;
-    height: 100%;
-    border: solid red;
-}
-.all-bg-color { background-color: #abd3df; }
-.spotify-bg-color { background-color: #00dc52; }
-.youtube-bg-color { background-color: #ff4d4d; }
-
-/* Song List Stlye */
-
-/* Song List Item Style */
-
-
-
 /* Save Playlist Style */
 .save-playlist-view-container button {
-    margin: 4px;
+    margin: 0px;
 }
 .save-playlist-modal-container {
     position: absolute;
@@ -66,47 +10,55 @@
     height: fit-content;
     width: 90%;
     padding: 4px;
-    border: 1px solid #888;
+    border: 1px solid light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
     border-radius: 7px;
-    background-color: white;
+    background: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
     display: flex;
     flex-direction: column;
 }
 .save-playlist-modal-container .header {
     flex: 1;
     border-radius: 5px;
-    border-bottom: solid #33333320;
+    padding: 0px;
+    margin: 0px;
+    border-bottom: solid 1px light-dark(var(--light-mode-secondary-color), var(--dark-mode-background-color));
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    /* border: solid red; */
 }
+
+
 .save-playlist-modal-container .header h1 {
     flex: 1;
     font-size: 17px;
     font-weight: 540;
-    color: black;
+    /* color: black; */
     margin-bottom: 5px;
     margin-left: 5px;
-    text-align: center;
+    /* text-align: center; */
+    /* border: solid red; */
 }
 .save-playlist-modal-container .header p {
     font-size: 17px;
     font-weight: 540;
-    color: black;
+    /* color: black; */
     margin-bottom: 5px;
     margin-left: 5px;
 }
 .save-playlist-modal-container .header button {
     background-color: transparent;
-    color: #5b616a;
+    /* color: #5b616a; */
     border: none;
     margin-right: 2px;
     font-size: 18px;
+    padding: 0px 4px;
 }
 
 .save-playlist {
     display: flex;
     align-items: center;
-    color: black;
+    padding-top: 20px;
 }
 #playlist-name-input {
     position: relative;
@@ -124,8 +76,8 @@
 .save-playlist-footer {
     margin-top: 4px;
     padding-top: 8px;
-    border-top: solid #33333320;
-    border-radius: 5px;
+    /* border-top: solid 0.5px light-dark(var(--light-mode-secondary-color), var(--dark-mode-background-color)); */
+    border-radius: 2px;
     display: flex;
     align-items: center;
     justify-content: center;

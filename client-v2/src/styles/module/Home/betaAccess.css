@@ -1,8 +1,8 @@
 .beta-access-container {
     border: solid 1px;
     width: 100%;
-    background-color: antiquewhite;
-    color: black;
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    color: light-dark(var(--dark-mode-text-color), var(--light-mode-text-color));
     text-decoration: none;
     text-align: center;
     font-size: 14px;
@@ -12,11 +12,11 @@
     position: absolute;
     top: 12%;
     right: 5%;
-    z-index: 4;
-    border: 1px solid #888;
+    z-index: 6;
+    border: 1px solid light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
     border-radius: 7px;
-    background-color: white;
-    color: black;
+    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
     height: 80%;
     width: 90%;
     display: flex;
@@ -36,10 +36,12 @@ label#notes-label {
     align-self: flex-start;
 }
 .beta-request-modal input {
-    border: solid grey 1px;
     height: 20%;
     width: 95%;
     margin: 5px;
+    padding: 14px;
+    border-radius: 5px;
+    border: solid 1px light-dark(var(--light-mode-secondary-color), var(--dark-mode-accent-color));
 }
 .beta-request-modal input.invalid {
     border: solid red;
@@ -47,11 +49,16 @@ label#notes-label {
 .beta-request-modal textarea.notes {
     height: 50%;
     width: 96%;
-    border-radius: 10px;
-    background-color: white;
-    color: black;
-    /* padding-left: 10px; */
+    border-radius: 5px;
+    border: solid 1px light-dark(var(--light-mode-background-color), var(--dark-mode-accent-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    padding: 10px;
     /* text-indent: 10px; */
+}
+textarea.notes::placeholder {
+    color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    opacity: 0.5;
 }
 .beta-request-modal button {
     margin: 10px;

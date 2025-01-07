@@ -1,9 +1,8 @@
 import React from 'react';
-import SeattleMap, { MapContextProvider } from './PlaylistGen/Map/SeattleMapView';
+import SeattleMap, { MapContextProvider } from './SeattleMap';
 import { FilterContextProvider } from './Filter/FilterContext';
-import { SourceContextProvider } from './PlaylistGen/Source/SourceContext';
+import { SourceContextProvider } from './Songs/Source/SourceContext';
 import NavBar from './Navbar';
-import './PlaylistGen/PlaylistGen.css'
 import { ToastContainer } from 'react-toastify';
 
 const MapView = () => {

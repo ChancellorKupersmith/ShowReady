@@ -199,7 +199,7 @@ label.toggle {
     transition: 0.3s;
 }
 .toggle input:checked + span {
-    background-color: #00c853;
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
 }
 .toggle input:checked + span::before {
     transform: translateX(25px);
@@ -214,7 +214,7 @@ label.toggle {
     height: 10%;
     padding: 0px 10px 0px 10px;
     font-size: 16px;
-    color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));;
+    color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
 }
 .filter-footer button {
     margin: 4px 2px;

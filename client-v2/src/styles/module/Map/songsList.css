@@ -104,12 +104,14 @@ button.source-btn.selected {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow-y: auto;
+     /* border: solid blue; */
 }
 .songs-list-container ul {
-    height: 100%;
+    height: fit-content;
     width: 100%;
-    margin: 0;
     padding-inline-start: 0px; /* Remove default inline padding */
+    /* border: solid red; */
 }
 /* Song List Item Style */
 .songs-list-item {
@@ -292,12 +294,18 @@ p.song-title {
 .footer {
     flex: 1;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* border: solid red; */
+}
+.songs-page-nav {
+    display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.footer-page-num {
+.songs-page-num {
     color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color)) !important;
 }
-.footer button {
+.songs-page-nav button {
     background-color: transparent;
 }

@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './styles/base.css';
 import './styles/theme.css';
 import './styles/layout/root.css';
-import { SpotifyContextProvider } from './views/Map/PlaylistGen/Source/Spotify.jsx';
+import { SpotifyContextProvider } from './views/Map/Songs/Source/Spotify';
 
 const HomeView = React.lazy(() => import('./views/Home/HomeView.jsx'));
 const MapView = React.lazy(() => import('./views/Map/MapView.jsx'));

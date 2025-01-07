@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Filter/FilterView';
-import './PlaylistGen/SongsView';
+import './Songs/SongsView';
 import '../../styles/module/Map/navbar.css';
 import FilterModal from './Filter/FilterView';
-import SongsModal from './PlaylistGen/SongsView';
+import SongsModal from './Songs/SongsView';
 
 const NavViewBtn = ({icon, route}) => {
     const navigate = useNavigate();
