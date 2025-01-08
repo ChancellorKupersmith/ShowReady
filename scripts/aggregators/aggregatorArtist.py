@@ -143,6 +143,7 @@ def save_artists_inDB(new_artists_batch):
     artist_name_ids = {}
     for na in new_artists_batch:
         new_artists = { 'debugging': na }
+        log(0, na)
         try:
             # Insert/Update found artists
             existing_spotify_artists = get_existing_spotify_artists_fromDB()
