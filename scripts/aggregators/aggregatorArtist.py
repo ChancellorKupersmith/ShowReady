@@ -141,6 +141,7 @@ def save_artists_inDB(new_artists_batch):
         RETURNING name, id
     """
     artist_name_ids = {}
+    log(0, new_artists_batch.values())
     for na in new_artists_batch:
         new_artists = { 'debugging': na }
         log(0, na)
