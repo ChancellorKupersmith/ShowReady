@@ -179,6 +179,7 @@ def save_artists_inDB(new_artists_batch):
         #     artist_name_ids.clear()
         # finally:
         #     return artist_name_ids
+    return artist_name_ids
 
 def save_eventsartists_inDB(events_artists_to_store):
     insert_query = """
@@ -372,7 +373,8 @@ async def main():
         # new_artists = await find_artists(events)
         artist_name_ids = save_artists_inDB(new_artists)
         # Match events to artists for event-artist join table in db
-        existing_artists.update(artist_name_ids)
+        if artist_name_ids is not None:
+            existing_artists.update(artist_name_ids)
         events_artists_list = []
         artist_not_found_events = []
         for event in events:
