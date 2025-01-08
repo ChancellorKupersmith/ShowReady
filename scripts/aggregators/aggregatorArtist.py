@@ -161,12 +161,18 @@ def save_artists_inDB(new_artists_batch):
             log(0, 'NEW LASTFM ARTISTS:')
             log(0, new_lastfm_artists_tuples)
             with PostgresClient(log=log) as db:
-                rows = db.query(query=insert_spotify_query, data=new_spotify_artists_tuples, fetchall=True)
-                artist_name_ids.update({row[0]: row[1] for row in rows})
-                rows = db.query(query=update_spotify_query, data=update_spotify_artists_tuples, fetchall=True)
-                artist_name_ids.update({row[0]: row[1] for row in rows})
-                rows = db.query(query=insert_lastfm_query, data=new_lastfm_artists_tuples, fetchall=True)
-                artist_name_ids.update({row[0]: row[1] for row in rows})
+                if len(new_spotify_artists_tuples) > 0:
+                    rows = db.query(query=insert_spotify_query, data=new_spotify_artists_tuples, fetchall=True)
+                    log(2, 'hit 1')
+                    artist_name_ids.update({row[0]: row[1] for row in rows})
+                if len(update_spotify_artists_tuples) > 0:
+                    rows = db.query(query=update_spotify_query, data=update_spotify_artists_tuples, fetchall=True)
+                    log(2, 'hit 2')
+                    artist_name_ids.update({row[0]: row[1] for row in rows})
+                if len(new_lastfm_artists_tuples) > 0:
+                    rows = db.query(query=insert_lastfm_query, data=new_lastfm_artists_tuples, fetchall=True)
+                    log(2, 'hit 3')
+                    artist_name_ids.update({row[0]: row[1] for row in rows})
         except Exception as e:
             log(1, f"Error saving artist to db, {e}")
         #     log(1, f"Error saving artist to db returning empty list, {e}")
