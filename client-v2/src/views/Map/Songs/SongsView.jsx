@@ -18,8 +18,7 @@ const SongsModal = () => {
     const openCloseModal = () => setIsOpen(!isOpen)
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [songs, setSongs] = useState([]);
-    const [events, setEvents] = useState({});
+    const [songsList, setSongsList] = useState([]);
     const [loading, setLoading] = useState(false); // Loading song list state
     
     const getTracksPageSize = () => {
@@ -51,11 +50,11 @@ const SongsModal = () => {
                     body: JSON.stringify(postData)
                 });
                 const data = await response.json();
-                if(data[0].length > 0)
-                    setTotalPages(Math.ceil(data[0][0].total / pageSize))
-                console.log(data)
-                setSongs([...data[0]]);
-                setEvents(data[1]);
+                if(data[1])
+                    setTotalPages(Math.ceil(data[1] / pageSize))
+                console.log(data[0])
+                
+                setSongsList([...data[0]]);
             } catch(err) {
                 console.error(err);
             } finally {
@@ -174,8 +173,8 @@ const SongsModal = () => {
                                 <div className="loading-animation"></div>
                             : 
                                 <ul>
-                                    { songs.length > 0 &&
-                                    songs.map((song, index) =>
+                                    { songsList.length > 0 &&
+                                    songsList.map((song, index) =>
                                         <SongsListItem
                                             key={index}
                                             songTitle={song.songtitle}
@@ -183,10 +182,10 @@ const SongsModal = () => {
                                             artistUrl={song.artistspid ? `https://open.spotify.com/artist/${song.artistspid}` : song.artistlastfmurl}
                                             albumName={song.albumtitle}
                                             albumUrl={song.albumspid ? `https://open.spotify.com/album/${song.albumspid}` : song.albumlastfmurl}
-                                            genre={song.genre}
+                                            genres={song.genres}
                                             spId={song.spid}
                                             ytUrl={song.yturl}
-                                            events={events[song.artist]}
+                                            events={song.events}
                                             spotifyImg={song.spotifyimg}
                                         />)
                                     }
