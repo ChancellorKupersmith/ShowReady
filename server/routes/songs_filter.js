@@ -12,45 +12,38 @@ const pool = new Pool({
 });
 const MAX_PAGE_SIZE = 200;
 const DEFAULT_PAGE_SIZE = 100;
-// TODO: remove venue name as order by and convert price to number to allow comparison
+// TODO: convert price to number to allow comparison
 const OrderBys = Object.freeze({
-   ARTIST: 'Artist',
-   SONG_NAME: 'SongTitle',
-   EVENT_DATE: 'EventDate',
-   EVENT_PRICE: 'Price',
-   VENUE_NAME: 'VenueName',
-   RANDOM: 'RANDOM()',
+  SONG_NAME: 1,
+  ARTIST: 2,
+  EVENT_DATE: 3,
+  EVENT_PRICE: 4,
+  RANDOM: 5,
 });
 
 const reqQueryParamsCleaner = (req, res, next) => {
   try {
     const { page, limit, filters } = req.body;
     req.pageSize = Math.min(MAX_PAGE_SIZE, parseInt(limit) || DEFAULT_PAGE_SIZE);
-    req.pageNum = parseInt(page) || 0;
+    req.pageNum = Math.max((parseInt(page) - 1 || 0), 0);
     req.fromEachArtist = filters.req.artist.fromEach? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, parseInt(filters.req.artist.fromEach))) : null;
     req.fromEachAlbum = filters.req.album.fromEach? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, parseInt(filters.req.album.fromEach))) : null;
     req.fromEachGenre = filters.req.genre.fromEach? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, parseInt(filters.req.genre.fromEach))) : null;
-    let orderBy = filters.orderBy || 2;
-    switch (orderBy) {
+    switch (filters.orderBy) {
       case 1:
-        orderBy = OrderBys.SONG_NAME;
+        req.orderBy = OrderBys.SONG_NAME;
         break;
       case 2:
-        orderBy = OrderBys.EVENT_DATE;
+        req.orderBy = OrderBys.ARTIST;
         break;
       case 3:
-        orderBy = OrderBys.VENUE_NAME;
-        break;
-      case 4:
-        orderBy = OrderBys.RANDOM;
+        req.orderBy = OrderBys.EVENT_DATE;
         break;
       default:
-        orderBy = OrderBys.ARTIST;
+        req.orderBy = OrderBys.RANDOM;
     }
-    if(filters.descending) orderBy += ' DESC';
+    req.orderByDesc = filters.descending;
     req.randomSeed = filters.randomSeed ? filters.randomSeed : (Date.now() / 1000) % 1;
-    // req.cParams = [req.pageSize, req.pageNum];
-    req.orderBy = orderBy;
     next();
   } catch (err) {
     next(err);
@@ -185,7 +178,7 @@ const albumWhereConditionBuilder = async (req, res, next) => {
   }
 };
 
-const fetchAllData = async (eventWhereConditional, venueWhereConditional, artistWhereConditional, genreWhereConditional, songWhereConditional, albumWhereConditional, pageSize, pageNum, orderBy, randomSeed, fromEachGenre, fromEachArtist, fromEachAlbum) => {
+const fetchAllData = async (eventWhereConditional, venueWhereConditional, artistWhereConditional, genreWhereConditional, songWhereConditional, albumWhereConditional, pageSize, pageNum, orderBy, orderByDesc, fromEachGenre, fromEachArtist, fromEachAlbum) => {
   const client = await pool.connect();
   const filterEventsQuery = `
     SELECT
@@ -220,18 +213,18 @@ const fetchAllData = async (eventWhereConditional, venueWhereConditional, artist
       ) AS g ON ag.GenreID = g.ID
     ) AS a ON ea.ArtistID = a.ID
   `;
-  // console.log(filterEventsQuery)
   const filterEventsResult = await client.query(filterEventsQuery);
-  // console.log(filterEventsResult.rows)
+  
   const filteredArtistIDs = filterEventsResult.rows.map(row => row.artistid);
-
+  // if no artists found return empty list
+  if(!filteredArtistIDs.length) return [[], 0];
   const filterSongsQuery = `
     SELECT
     DISTINCT ON (s.Title, s.ArtistID)
     al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl, al.SpotifyExternalId as AlbumSpID,
-    s.Title AS SongTitle, s.SpotifyExternalID AS SpID, s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, s.ArtistID
+    s.Title AS SongTitle, s.SpotifyExternalID AS SpID, s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, s.ArtistID, s.ID AS SongID
     FROM (
-      SELECT s.Title, s.SpotifyExternalID, s.YTUrl, s.LastFmUrl, s.ArtistID,
+      SELECT s.Title, s.SpotifyExternalID, s.YTUrl, s.LastFmUrl, s.ArtistID, s.ID,
       s.AlbumID FROM Songs s
       ${songWhereConditional}
       ${songWhereConditional == '' ? 'WHERE ' : 'AND '}
@@ -240,73 +233,115 @@ const fetchAllData = async (eventWhereConditional, venueWhereConditional, artist
     LEFT JOIN Albums AS al on s.AlbumID = al.ID
     ${albumWhereConditional}
   `;
-  // ${// handling random ordering manually later in process to avoid reording every index
-  //   orderBy != OrderBys.RANDOM ? `LIMIT ${pageSize} OFFSET ${pageNum}` : ''
-  // }
-  // console.log(filterSongsQuery)
+  // console.log(filterSongsQuery);
   const filterSongsResult = await client.query(filterSongsQuery);
-  // console.log(filterSongsResult.rows);
 
   // prepare data for client side
-    // combine db query results on artistids
-    const artistEvents = filterEventsResult.rows.reduce((acc, row) => {
-      if(!acc[row.artistid]){
-        acc[row.artistid] = []
-      }
-      acc[row.artistid].push(row);
-      return acc;
-    }, {});
-    let songsList = filterSongsResult.rows.map((row) => {
-      row['artist'] = artistEvents[row.artistid][0].artist;
-      row['artistspid'] = artistEvents[row.artistid][0].artistspid;
-      row['artistlastfmurl'] = artistEvents[row.artistid][0].artistlastfmurl;
-      row['spotifyimg'] = artistEvents[row.artistid][0].spotifyimg;
-      // avoid genre duplicates, (handling outside of sql query because DISTINCT ON could exclude multiple event dates)
-      row['genres'] = Object.values(artistEvents[row.artistid].reduce((acc, event) => {
-        acc[event.genre] = event.genre
-        return acc;
-      }, {}));
-      // avoid event date duplicates, (handling outside of sql query because DISTINCT ON could exclude multiple genres)
-      row['events'] = Object.values(artistEvents[row.artistid].reduce((acc, event) => {
-        acc[event.eventdate] = {
-          'event': event.event,
-          'venue': event.venue,
-          'eventdate': event.eventdate,
-          'eventtime': event.eventtime,
-          'price': event.price
-        }
-        return acc;
-      }, {}));
-      return row;
-    });
-    const songsListTotal = songsList.length; // save total results before partitioning based on page size
-    // TODO: handle fromEach album, aritst and genre in efficient way
-    // handle ordering
-      // sort by song title
-      // TODO: handle desc vs ascending for each case
-      switch(orderBy){
-        case OrderBys.SONG_NAME:
-          songsList.sort((a, b) => a.songtitle.toLowerCase().localeCompare(b.songtitle.toLowerCase()));
-          break;
-        case OrderBys.ARTIST:
-          songsList.sort((a,b) => a.artist.toLowerCase().localeCompare(b.artist.toLowerCase()));
-          break;
-        case OrderBys.EVENT_DATE:
-          // asc: sort by each song's smallest event date
-          songsList.sort((a,b) => new Date(Math.min(...a.events.map(e => new Date(e.eventdate)))) - new Date(Math.min(...b.events.map(e => new Date(e.eventdate)))))
-          break;
-        // case OrderBys.EVENT_PRICE:
-        //   songsList.sort((a,b) => Math.min(...a.events.map(e => e.price)) - Math.min(...b.events.map(e => e.price)))
-        //   break;
-        default:
-          break;
-      };
-    // handle pagination
-    if(orderBy != OrderBys.RANDOM){
-      const start = pageNum * pageSize;
-      songsList = songsList.slice(start, start + pageSize);
+  // handling filtering logic outside of sql query to improve read times and reduce memory requirements for pg server
+  // combine db query results on artistids
+  const artistEvents = filterEventsResult.rows.reduce((acc, row) => {
+    if(!acc[row.artistid]){
+      acc[row.artistid] = []
     }
-    else{// manually grab random indexes in songs list
+    acc[row.artistid].push(row);
+    return acc;
+  }, {});
+  let songsList = filterSongsResult.rows.map((row) => {
+    row['artist'] = artistEvents[row.artistid][0].artist;
+    row['artistspid'] = artistEvents[row.artistid][0].artistspid;
+    row['artistlastfmurl'] = artistEvents[row.artistid][0].artistlastfmurl;
+    row['spotifyimg'] = artistEvents[row.artistid][0].spotifyimg;
+    // avoid genre duplicates, (handling outside of sql query because DISTINCT ON could exclude multiple event dates)
+    row['genres'] = Object.values(artistEvents[row.artistid].reduce((acc, event) => {
+      acc[event.genre] = event.genre
+      return acc;
+    }, {}));
+    // avoid event date duplicates, (handling outside of sql query because DISTINCT ON could exclude multiple genres)
+    row['events'] = Object.values(artistEvents[row.artistid].reduce((acc, event) => {
+      acc[event.eventdate] = {
+        'event': event.event,
+        'venue': event.venue,
+        'eventdate': event.eventdate,
+        'eventtime': event.eventtime,
+        'price': event.price
+      }
+      return acc;
+    }, {}));
+    return row;
+  });
+  // manipulating songsList by reference instead of by value to avoid overhead of cloning large list
+  const fromEachFiltering = () => {
+    const visitedFromEachSongs = {
+      'artists': {},
+      'albums': {},
+      'genres': {}
+    };
+    const fromEachSongs = {}; // using map to avoid duplicate songs when combining fromEach filters
+
+    const handleFromEachs = (category) => {
+      let fromEachNum;
+      if (category === 'artists') fromEachNum = fromEachArtist;
+      if (category === 'albums') fromEachNum = fromEachAlbum;
+
+      songsList.forEach((song) => {
+        if(category === 'genres') {
+          song['genres'].forEach(genre => {
+            if(!visitedFromEachSongs['genres'][genre]) visitedFromEachSongs[category][genre] = 0;
+            if(visitedFromEachSongs['genres'][genre] < fromEachGenre){
+              visitedFromEachSongs['genres'][genre]++;
+              fromEachSongs[song.songid] = song;
+            }
+          });
+          return;
+        }
+
+        let categoryKey;
+        if (category === 'artists') categoryKey = song.artist;
+        if (category === 'albums') categoryKey = song.album;
+        if(!visitedFromEachSongs[category][categoryKey]) visitedFromEachSongs[category][categoryKey] = 0;
+        if(visitedFromEachSongs[category][categoryKey] < fromEachNum) {
+          visitedFromEachSongs[category][categoryKey]++;
+          fromEachSongs[song.songid] = song;
+        }
+      });
+    };
+    if(fromEachGenre) handleFromEachs('genres');
+    if(fromEachArtist) handleFromEachs('artists');
+    if(fromEachAlbum) handleFromEachs('albums');
+    if(Object.values(fromEachSongs).length > 0) songsList = Object.values(fromEachSongs);
+  };
+  fromEachFiltering();
+  // handle ordering
+  const orderSongsList = () => {
+    switch(orderBy){
+      case OrderBys.SONG_NAME:
+        songsList.sort((a, b) => orderByDesc ? 
+          b.songtitle.toLowerCase().localeCompare(b.songtitle.toLowerCase())
+        : a.songtitle.toLowerCase().localeCompare(b.songtitle.toLowerCase()));
+        break;
+      case OrderBys.ARTIST:
+        songsList.sort((a,b) => orderByDesc ? 
+          b.artist.toLowerCase().localeCompare(a.artist.toLowerCase()) 
+        : a.artist.toLowerCase().localeCompare(b.artist.toLowerCase()));
+        break;
+      case OrderBys.EVENT_DATE:
+        // asc: sort by each song's smallest event date
+        songsList.sort((a,b) => orderByDesc ?
+          new Date(Math.max(...a.events.map(e => new Date(e.eventdate)))) - new Date(Math.max(...b.events.map(e => new Date(e.eventdate))))
+        : new Date(Math.min(...a.events.map(e => new Date(e.eventdate)))) - new Date(Math.min(...b.events.map(e => new Date(e.eventdate)))))
+        break;
+      // case OrderBys.EVENT_PRICE:
+      //   songsList.sort((a,b) => Math.min(...a.events.map(e => e.price)) - Math.min(...b.events.map(e => e.price)))
+      //   break;
+      default:
+        break;
+    };
+  };
+  orderSongsList();
+  // handle pagination
+  const songsListTotal = songsList.length; // save total songs list length before partitioning based on page size
+  const paginateSongsList = () => {
+    if(orderBy == OrderBys.RANDOM){ // manually grab random indexes in songs list
       // TODO: implement custom seeded random int generator for pagination (needed if wanting save and display list orders to match)
       const randomIndexes = new Set();
       while(randomIndexes.size < pageSize){
@@ -315,173 +350,15 @@ const fetchAllData = async (eventWhereConditional, venueWhereConditional, artist
       }
       songsList = Array.from(randomIndexes).map(index => songsList[index]);
     }
+    else{
+      const start = pageNum * pageSize;
+      songsList = songsList.slice(start, start + pageSize);
+    }
+  };
+  paginateSongsList();
 
   return [songsList, songsListTotal];
 };
-
-const querySongsList = async (eventWhereConditional, songWhereConditional, queryParms, orderBy, randomSeed, fromEachGenre, fromEachArtist, fromEachAlbum) => {
-  const client = await pool.connect();
-  const filterEventsQuery = `
-    SELECT
-      DISTINCT ea.ArtistID
-    FROM Events e
-    JOIN Venues as v ON e.VenueID = v.ID
-    JOIN EventsArtists AS ea ON e.ID = ea.EventID AND e.EventDate = ea.EventDate
-    JOIN Artists AS a ON ea.ArtistID = a.ID
-    ${eventWhereConditional}
-  `;
-
-  const artistIDsResult = await client.query(filterEventsQuery);
-  const filteredArtistIDs = artistIDsResult.rows.map(row => row.artistid);
-  console.log(filteredArtistIDs)
-  //  maybe store event results in hash map if needing to join on artistid
-  const filterSongsQuery = `
-    WITH Songies AS (
-      SELECT 
-        DISTINCT ON (a.ID, s.ID)
-        a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl, a.SpotifyExternalId as ArtistSpID, a.spotifyimg as SpotifyImg,
-        al.ID AS AlbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl, al.SpotifyExternalId as AlbumSpID,
-        s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
-        s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
-      FROM Artists a
-      JOIN Songs AS s ON a.ID = s.ArtistID
-      LEFT JOIN Albums AS al ON s.AlbumID = al.ID
-      LEFT JOIN ArtistsGenres AS ag ON a.ID = ag.ArtistID
-      LEFT JOIN Genres AS g ON ag.GenreID = g.ID
-      ${songWhereConditional}
-      ${songWhereConditional == '' ? 'WHERE ' : 'AND '}
-      ${`a.ID IN ('${filteredArtistIDs.join(`', '`)}')`}
-      ),
-      FromEachRankedSongs AS (
-        SELECT 
-          Songies.*
-          ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY Genre) AS rn_genre' : ''}
-          ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY ArtistID) AS rn_artist' : ''}
-          ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY AlbumID) AS rn_album' : ''}
-        FROM Songies
-      )
-      ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
-      ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
-      ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
-      ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
-  `;
-  const query = `
-    WITH data AS (
-      SELECT
-        fs.Artist, fs.ArtistLastFmUrl, fs.ArtistSpID, fs.SpotifyImg,
-        fs.AlbumTitle, fs.AlbumLastFmUrl, fs.AlbumSpID,
-        fs.SongTitle, fs.SpID, fs.Genre,
-        fs.YTUrl, fs.SongLastFmUrl
-      FROM
-        (${filterSongsQuery}) AS fs
-    ),
-    total_count AS (
-      SELECT COUNT(*) AS total FROM data
-    )
-    SELECT data.*, total_count.total
-    FROM data, total_count
-    ORDER BY ${orderBy}
-    LIMIT $1 OFFSET $2
-  `;
-  console.log(query)
-  await client.query(`SELECT setseed(${randomSeed})`);
-  const result = await client.query(query, queryParms);
-  client.release();
-  return result;
-};
-
-const queryTotalResults = async (eventWhereConditional, songWhereConditional, fromEachGenre, fromEachArtist, fromEachAlbum) => {
-  const client = await pool.connect();
-  const filterEventsQuery = `
-    SELECT
-      DISTINCT ON (ea.ArtistID) ea.ArtistID, v.Name AS VenueName, e.EventDate
-      FROM Events e
-    JOIN Venues as v ON e.VenueID = v.ID
-    JOIN EventsArtists AS ea ON e.ID = ea.EventID AND e.EventDate = ea.EventDate
-    ${eventWhereConditional}
-  `;
-  const filterSongsQuery = `
-    WITH Songies AS (
-      SELECT 
-        DISTINCT ON (a.ID, s.Title)
-        a.ID AS ArtistID, a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl, a.SpotifyExternalId as ArtistSpID, a.spotifyimg as SpotifyImg,
-        al.ID AS AlbumID, al.Title AS AlbumTitle, al.LastFmUrl AS AlbumLastFmUrl, al.SpotifyExternalId as AlbumSpID,
-        s.Title AS SongTitle, s.SpotifyExternalID AS SpID,
-        s.YTUrl AS YTUrl, s.LastFmUrl AS SongLastFmUrl, g.Name AS Genre
-
-        FROM Songs s
-        JOIN Artists AS a ON s.ArtistID = a.ID
-        LEFT JOIN Albums AS al ON s.AlbumID = al.ID
-        LEFT JOIN ArtistsGenres AS ag ON a.ID = ag.ArtistID
-        LEFT JOIN Genres AS g ON ag.GenreID = g.ID
-        ${songWhereConditional}
-    ),
-    FromEachRankedSongs AS (
-      SELECT
-        Songies.*
-        ${fromEachGenre ? ', ROW_NUMBER() OVER (PARTITION BY Genre) AS rn_genre' : ''}
-        ${fromEachArtist ? ', ROW_NUMBER() OVER (PARTITION BY ArtistID) AS rn_artist' : ''}
-        ${fromEachAlbum ? ', ROW_NUMBER() OVER (PARTITION BY AlbumID) AS rn_album' : ''}
-      FROM Songies
-    )
-    ${fromEachGenre ? `SELECT * FROM FromEachRankedSongs WHERE rn_genre <= ${fromEachGenre} ${fromEachArtist || fromEachAlbum ? 'UNION ' : ''}` : ''}
-    ${fromEachArtist ? `SELECT * FROM FromEachRankedSongs WHERE rn_artist <= ${fromEachArtist} ${fromEachAlbum ? 'UNION ' : ''}` : ''}
-    ${fromEachAlbum ? `SELECT * FROM FromEachRankedSongs WHERE rn_album <= ${fromEachAlbum}` : ''}
-    ${!(fromEachGenre || fromEachArtist || fromEachAlbum) ? 'SELECT * FROM FromEachRankedSongs' : ''}
-  `;
-  // const query = `
-  //   WITH data AS (
-  //     SELECT
-  //       fs.SongTitle
-  //     FROM
-  //       (${filterEventsQuery}) AS fe
-  //     JOIN
-  //       (${filterSongsQuery}) AS fs
-  //     ON
-  //       fe.ArtistID = fs.ArtistID
-  //   ),
-  //   total_count AS (
-  //     SELECT COUNT(*) AS total FROM data
-  //   )
-  //   SELECT total
-  //   FROM total_count
-  // `;
-  // const result = await client.query(query);
-
-  const eventsResult = client.query(filterEventsQuery);
-  // Maybe store event results in hashmap if joing data is needed
-
-  const songsResult = client.query(filterSongsQuery);
-  client.release();
-  return result;
-};
-
-const queryEventsList = async (songs) => {
-  const client = await pool.connect();
-  const query = `
-    SELECT 
-      e.url AS Url, e.EventDate, e.Summary,
-      e.EventTime, e.Price, e.AgeRestrictions,
-      v.Name as Venue, v.Hood, v.VenueAddress,
-      a.Name AS Artist, a.LastFmUrl AS ArtistLastFmUrl
-    FROM Events as e
-    JOIN EventsArtists AS ea ON ea.EventID = e.ID AND ea.EventDate = e.EventDate
-    JOIN Artists AS a ON a.ID = ea.ArtistID
-    JOIN Venues AS v ON v.ID = e.VenueID
-    WHERE a.Name = $1
-    ORDER BY e.EventDate
-  `;
-  let artistEvents = {}
-  for(let i=0; i<songs.length; i++){
-    if(!artistEvents[songs[i].artist]){
-      const result = await client.query(query, [songs[i].artist]);
-      artistEvents[songs[i].artist] = result.rows
-    }
-  }
-  client.release();
-  return artistEvents;
-}
-
 const queryVenues = async () => {
   const client = await pool.connect();
   const query = `
@@ -494,8 +371,7 @@ const queryVenues = async () => {
   const result = await client.query(query);
   client.release();
   return result.rows;
-}
-
+};
 const queryUpcomingEvents = async (minDate, maxDate) => {
   const client = await pool.connect();
   let whereConditional = '';
@@ -516,60 +392,7 @@ const queryUpcomingEvents = async (minDate, maxDate) => {
   const result = await client.query(query);
   client.release();
   return result.rows;
-}
-
-const queryTotalSongsBetween = async (minDate, maxDate) => {
-  const client = await pool.connect();
-  const query = `
-    SELECT COUNT(s.*) FROM Songs s
-    JOIN Artists as a ON s.ArtistID = a.ID
-    JOIN EventsArtists as ea ON a.ID = ea.ArtistID
-    WHERE ea.EventDate >= $1 AND ea.EventDate <= $2
-  `;
-  const result = await client.query(query, [minDate, maxDate]);
-  client.release();
-  return result.rows[0];
-}
-const queryTotalSongs =  async () => {
-  const query = 'SELECT COUNT(*) FROM Songs';
-  const result = await client.query(query, [minDate, maxDate]);
-  client.release();
-  return result.rows[0];
-}
-const queryTotalEventsBetween = async (minDate, maxDate) => {
-  const client = await pool.connect();
-  const query = `
-    SELECT COUNT(ea.*) FROM EventsArtists ea
-    WHERE ea.EventDate >= $1 AND ea.EventDate <= $2
-  `;
-  const result = await client.query(query, [minDate, maxDate]);
-  client.release();
-  return result.rows[0];
-}
-const queryTotalEvents =  async () => {
-  const query = 'SELECT COUNT(DISTINCT *) FROM EventsArtists';
-  const result = await client.query(query, [minDate, maxDate]);
-  client.release();
-  return result.rows[0];
-}
-const queryTotalArtistsBetween = async (minDate, maxDate) => {
-  const client = await pool.connect();
-  const query = `
-    SELECT COUNT(a.*) FROM Artists a
-    JOIN EventsArtists as ea ON a.ID = ea.ArtistID
-    WHERE ea.EventDate >= $1 AND ea.EventDate <= $2
-  `;
-  const result = await client.query(query, [minDate, maxDate]);
-  client.release();
-  return result.rows[0];
-}
-const queryTotalArtists =  async () => {
-  const query = 'SELECT COUNT(DISTINCT *) FROM Artists';
-  const result = await client.query(query, [minDate, maxDate]);
-  client.release();
-  return result.rows[0];
-}
-
+};
 
 // ROUTES
 const songsRouter = express.Router();
@@ -588,7 +411,11 @@ songsRouter.post('/',
         req.albumWhereConditional,
         req.pageSize,
         req.pageNum,
-        req.orderBy 
+        req.orderBy,
+        req.orderByDesc,
+        req.fromEachGenre,
+        req.fromEachArtist,
+        req.fromEachAlbum
       );
       res.json(filteredResults);
     } catch (err) {
@@ -596,34 +423,57 @@ songsRouter.post('/',
     }
 });
 
-songsRouter.post('/save', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
-  try {
-    const filteredResults = await fetchAllData(
-      req.eventWhereConditional,
-      req.venueWhereConditional,
-      req.artistWhereConditional,
-      req.genreWhereConditional,
-      req.songWhereConditional,
-      req.albumWhereConditional,
-      req.pageSize,
-      req.pageNum,
-      req.orderBy 
-    );
-    res.json(filteredResults);
-  } catch (err) {
-    next(err);
-  }
+songsRouter.post('/save',
+  reqQueryParamsCleaner, eventWhereConditionBuilder, venueWhereConditionBuilder, 
+  artistWhereConditionBuilder, genreWhereConditionBuilder, songWhereConditionBuilder, albumWhereConditionBuilder,
+  async (req, res, next) => {
+    try {
+      const filteredResults = await fetchAllData(
+        req.eventWhereConditional,
+        req.venueWhereConditional,
+        req.artistWhereConditional,
+        req.genreWhereConditional,
+        req.songWhereConditional,
+        req.albumWhereConditional,
+        req.pageSize,
+        req.pageNum,
+        req.orderBy,
+        req.orderByDesc,
+        req.fromEachGenre,
+        req.fromEachArtist,
+        req.fromEachAlbum
+      );
+      res.json(filteredResults);
+    } catch (err) {
+      next(err);
+    }
 });
 
-songsRouter.post('/total_results', reqQueryParamsCleaner, eventWhereConditionBuilder, songWhereConditionBuilder, async (req, res, next) => {
-  try{
-    const result = await queryTotalResults(req.eventWhereConditional, req.songWhereConditional, req.fromEachGenre, req.fromEachArtist, req.fromEachAlbum);
-    const total = result.rows[0];
-    // console.log(total)
-    res.json(total)
-  } catch (err) {
-    next(err);
-  }
+songsRouter.post('/total_results',
+  reqQueryParamsCleaner, eventWhereConditionBuilder, venueWhereConditionBuilder, 
+  artistWhereConditionBuilder, genreWhereConditionBuilder, songWhereConditionBuilder, albumWhereConditionBuilder, 
+  async (req, res, next) => {
+    try{
+      const filteredResults = await fetchAllData(
+        req.eventWhereConditional,
+        req.venueWhereConditional,
+        req.artistWhereConditional,
+        req.genreWhereConditional,
+        req.songWhereConditional,
+        req.albumWhereConditional,
+        req.pageSize,
+        req.pageNum,
+        req.orderBy,
+        req.orderByDesc,
+        req.fromEachGenre,
+        req.fromEachArtist,
+        req.fromEachAlbum
+      );
+      const total = filteredResults[1];
+      res.json(total);
+    } catch (err) {
+      next(err);
+    }
 });
 
 songsRouter.get('/venue_markers', async (req, res, next) => {
@@ -651,204 +501,6 @@ songsRouter.post('/upcoming_events', async (req, res, next) => {
   } catch (err) {
       console.error(`Error fetching upcoming events, `, err);
       next(err)
-  }
-});
-
-songsRouter.get('/total_songs', async (req, res, next) => {
-  try{
-    const time = req.query.time;
-    let total = null;
-    const today = new Date();
-    const dayOfWeek = today.getDate();
-    const month = today.getMonth() + 1; // adding one, zero-based month indexing (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth)
-    const year = today.getFullYear();
-    let minDate = '', maxDate = '';
-    switch(time){
-      case 'today':
-        // format date to string "YYYY-MM-DD"
-        const formattedDate = today.toISOString().split('T')[0];
-        total =  await queryTotalSongsBetween(formattedDate, formattedDate);
-        break;
-      case 'weekend':
-        const startOfWeekend = new Date(today);
-        const endOfWeekend = new Date();
-        // set start of weekend to Friday
-        if (dayOfWeek == 0) { // if Sunday
-          startOfWeekend.setDate(startOfWeekend.getDate() - 2);
-        }
-        else {
-          startOfWeekend.setDate(today.getDate() + (5 - dayOfWeek));
-        }
-        endOfWeekend.setDate(startOfWeekend.getDate() + 2);
-        minDate = startOfWeekend.toISOString().split('T')[0];
-        maxDate = endOfWeekend.toISOString().split('T')[0];
-        total =  await queryTotalSongsBetween(minDate, maxDate);
-        break;
-      case 'week':
-        const startOfWeek = new Date(today);
-        const endOfWeek = new Date();
-        // set start of week to Monday
-        if (dayOfWeek == 0) { // if Sunday
-          startOfWeek.setDate(today.getDate() - 6);
-        }
-        else {
-          startOfWeek.setDate(today.getDate() + (1 - dayOfWeek))
-        }
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        minDate = startOfWeek.toISOString().split('T')[0];
-        maxDate = endOfWeek.toISOString().split('T')[0];
-        total =  await queryTotalSongsBetween(minDate, maxDate);
-        break;
-      case 'month':
-        minDate = `${year}-${month}-01`;
-        maxDate = `${year}-${month + 1}-01`;
-        total =  await queryTotalSongsBetween(minDate, maxDate);
-        break;
-      case 'year':
-        minDate = `${year}-01-01`;
-        maxDate = `${year + 1}-01-01`;
-        total =  await queryTotalSongsBetween(minDate, maxDate);
-        break;
-      default:
-        total =  await queryTotalSongs();
-    }
-    res.send(total);
-  }
-  catch (err) {
-    console.error(`Error fetching total songs for landing page `, err);
-    next(err)
-  }
-});
-
-songsRouter.get('/total_events', async (req, res, next) => {
-  try{
-    const time = req.query.time;
-    let total = null;
-    const today = new Date();
-    const dayOfWeek = today.getDate();
-    const month = today.getMonth() + 1; // adding one, zero-based month indexing (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth)
-    const year = today.getFullYear();
-    let minDate = '', maxDate = '';
-    switch(time){
-      case 'today':
-        // format date to string "YYYY-MM-DD"
-        const formattedDate = today.toISOString().split('T')[0];
-        total =  await queryTotalEventsBetween(formattedDate, formattedDate);
-        break;
-      case 'weekend':
-        const startOfWeekend = new Date(today);
-        const endOfWeekend = new Date();
-        // set start of weekend to Friday
-        if (dayOfWeek == 0) { // if Sunday
-          startOfWeekend.setDate(startOfWeekend.getDate() - 2);
-        }
-        else {
-          startOfWeekend.setDate(today.getDate() + (5 - dayOfWeek));
-        }
-        endOfWeekend.setDate(startOfWeekend.getDate() + 2);
-        minDate = startOfWeekend.toISOString().split('T')[0];
-        maxDate = endOfWeekend.toISOString().split('T')[0];
-        total =  await queryTotalEventsBetween(minDate, maxDate);
-        break;
-      case 'week':
-        const startOfWeek = new Date(today);
-        const endOfWeek = new Date();
-        // set start of week to Monday
-        if (dayOfWeek == 0) { // if Sunday
-          startOfWeek.setDate(today.getDate() - 6);
-        }
-        else {
-          startOfWeek.setDate(today.getDate() + (1 - dayOfWeek))
-        }
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        minDate = startOfWeek.toISOString().split('T')[0];
-        maxDate = endOfWeek.toISOString().split('T')[0];
-        total =  await queryTotalEventsBetween(minDate, maxDate);
-        break;
-      case 'month':
-        minDate = `${year}-${month}-01`;
-        maxDate = `${year}-${month + 1}-01`;
-        total =  await queryTotalEventsBetween(minDate, maxDate);
-        break;
-      case 'year':
-        minDate = `${year}-01-01`;
-        maxDate = `${year + 1}-01-01`;
-        total =  await queryTotalEventsBetween(minDate, maxDate);
-        break;
-      default:
-        total =  await queryTotalEvents();
-    }
-    res.send(total);
-  }
-  catch (err) {
-    console.error(`Error fetching total events for landing page `, err);
-    next(err)
-  }
-});
-
-songsRouter.get('/total_artists', async (req, res, next) => {
-  try{
-    const time = req.query.time;
-    let total = null;
-    const today = new Date();
-    const dayOfWeek = today.getDate();
-    const month = today.getMonth() + 1; // adding one, zero-based month indexing (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMonth)
-    const year = today.getFullYear();
-    let minDate = '', maxDate = '';
-    switch(time){
-      case 'today':
-        // format date to string "YYYY-MM-DD"
-        const formattedDate = today.toISOString().split('T')[0];
-        total =  await queryTotalArtistsBetween(formattedDate, formattedDate);
-        break;
-      case 'weekend':
-        const startOfWeekend = new Date(today);
-        const endOfWeekend = new Date();
-        // set start of weekend to Friday
-        if (dayOfWeek == 0) { // if Sunday
-          startOfWeekend.setDate(startOfWeekend.getDate() - 2);
-        }
-        else {
-          startOfWeekend.setDate(today.getDate() + (5 - dayOfWeek));
-        }
-        endOfWeekend.setDate(startOfWeekend.getDate() + 2);
-        minDate = startOfWeekend.toISOString().split('T')[0];
-        maxDate = endOfWeekend.toISOString().split('T')[0];
-        total =  await queryTotalArtistsBetween(minDate, maxDate);
-        break;
-      case 'week':
-        const startOfWeek = new Date(today);
-        const endOfWeek = new Date();
-        // set start of week to Monday
-        if (dayOfWeek == 0) { // if Sunday
-          startOfWeek.setDate(today.getDate() - 6);
-        }
-        else {
-          startOfWeek.setDate(today.getDate() + (1 - dayOfWeek))
-        }
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        minDate = startOfWeek.toISOString().split('T')[0];
-        maxDate = endOfWeek.toISOString().split('T')[0];
-        total =  await queryTotalArtistsBetween(minDate, maxDate);
-        break;
-      case 'month':
-        minDate = `${year}-${month}-01`;
-        maxDate = `${year}-${month + 1}-01`;
-        total =  await queryTotalArtistsBetween(minDate, maxDate);
-        break;
-      case 'year':
-        minDate = `${year}-01-01`;
-        maxDate = `${year + 1}-01-01`;
-        total =  await queryTotalArtistsBetween(minDate, maxDate);
-        break;
-      default:
-        total =  await queryTotalArtists();
-    }
-    res.send(total);
-  }
-  catch (err) {
-    console.error(`Error fetching total artists for landing page `, err);
-    next(err)
   }
 });
 

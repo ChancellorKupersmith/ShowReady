@@ -125,29 +125,6 @@ spotifyApiRouter.get('/login', (req, res, next) => {
 
 spotifyApiRouter.get('/login_callback', getAccessToken, getUserMeta, async (req, res, next) => {
     try {
-        // const opts = {
-        //     headers: { 'Authorization': 'Bearer ' + req.accessToken }
-        // }
-        // const response = await fetch('https://api.spotify.com/v1/me', opts);
-        // if(!response.ok) {
-        //     message = await response.text()
-        //     console.error('Failed to fetch spotify user data, ' + message)
-        //     throw new Error();
-        // }
-        // const data = await response.json();
-        // const imgs = data['images'];
-        // const userData = {
-        //     username: data['display_name'],
-        //     id: data['id'],
-        //     spUrl: data['external_urls']['spotify'],
-        //     profileImg: imgs.length > 0 ? imgs[0] : null,
-        //     accessToken: req.accessToken,
-        //     refreshToken: req.refreshToken,
-        //     expiration: req.expiration
-        // };
-        // res.json(userData);
-        
-        // res.cookie('user_meta');
         res.redirect('http://localhost:5173');
     } catch(err) {
         next(err);
