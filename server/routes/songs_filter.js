@@ -178,6 +178,15 @@ const albumWhereConditionBuilder = async (req, res, next) => {
   }
 };
 
+/* SQL Query Notes
+  - reason for spliting into 2 separate queries:
+    1. Reduce amount of compute over songs data
+      - songs is largest data set so perform as much compution before joins in order to minimize
+      - joining on songs.artistID doesnt take advantage of partition pruning
+      because artists and songs sub queries happen in parallel and then join
+      which still means alot of compute over songs data set.
+
+*/
 const fetchAllData = async (eventWhereConditional, venueWhereConditional, artistWhereConditional, genreWhereConditional, songWhereConditional, albumWhereConditional, pageSize, pageNum, orderBy, orderByDesc, fromEachGenre, fromEachArtist, fromEachAlbum) => {
   const client = await pool.connect();
   const filterEventsQuery = `
@@ -213,6 +222,7 @@ const fetchAllData = async (eventWhereConditional, venueWhereConditional, artist
       ) AS g ON ag.GenreID = g.ID
     ) AS a ON ea.ArtistID = a.ID
   `;
+  console.log(filterEventsQuery);
   const filterEventsResult = await client.query(filterEventsQuery);
   
   const filteredArtistIDs = filterEventsResult.rows.map(row => row.artistid);
@@ -233,7 +243,7 @@ const fetchAllData = async (eventWhereConditional, venueWhereConditional, artist
     LEFT JOIN Albums AS al on s.AlbumID = al.ID
     ${albumWhereConditional}
   `;
-  // console.log(filterSongsQuery);
+  console.log(filterSongsQuery);
   const filterSongsResult = await client.query(filterSongsQuery);
 
   // prepare data for client side
@@ -276,6 +286,7 @@ const fetchAllData = async (eventWhereConditional, venueWhereConditional, artist
       'albums': {},
       'genres': {}
     };
+
     const fromEachSongs = {}; // using map to avoid duplicate songs when combining fromEach filters
 
     const handleFromEachs = (category) => {
@@ -359,6 +370,7 @@ const fetchAllData = async (eventWhereConditional, venueWhereConditional, artist
 
   return [songsList, songsListTotal];
 };
+
 const queryVenues = async () => {
   const client = await pool.connect();
   const query = `
@@ -372,6 +384,7 @@ const queryVenues = async () => {
   client.release();
   return result.rows;
 };
+
 const queryUpcomingEvents = async (minDate, maxDate) => {
   const client = await pool.connect();
   let whereConditional = '';
@@ -492,7 +505,7 @@ songsRouter.post('/upcoming_events', async (req, res, next) => {
       const rows = await queryUpcomingEvents(filters.dateGThan, filters.dateLThan);
       const events = rows.reduce((acc, row) => {
         if(!acc[row.venuename]){
-          acc[row.venuename] = []
+          acc[row.venuename] = [];
         }
         acc[row.venuename].push(row)
         return acc;

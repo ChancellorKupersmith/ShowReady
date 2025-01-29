@@ -28,7 +28,7 @@ button {
     padding: 8px;
     border: none;
     border-radius: 5px;
-    background-color: light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-secondary-color));
     color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
 }
 

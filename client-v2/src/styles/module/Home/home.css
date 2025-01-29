@@ -10,3 +10,7 @@ button.open-map-view {
         min-height: 60px;
     }
 }
+.open-map-view {
+    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-secondary-color));
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+}

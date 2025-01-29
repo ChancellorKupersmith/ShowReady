@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import SongsListItem from './SongsListItem';
 import AllBtn from './Source/All';
 import { useSpotifyData, SpotifyBtn } from './Source/Spotify'
-import { YouTubeBtn } from './Source/Youtube';
+import { useYouTubeData, YouTubeBtn } from './Source/Youtube';
 import { OrderByBtn, useSongsFilter } from '../Filter/FilterContext';
 import SongsDarkSvg from '../../../assets/song-list(1).svg';
 import NextDarkSvg from '../../../assets/next-dark.svg';
@@ -67,6 +67,7 @@ const SongsModal = () => {
 
     // Check for cookies on each load
     const { updateSpotifyData } = useSpotifyData();
+    const { updateYTData } = useYouTubeData();
     useEffect(() => {
         const getCookie = (name) => {
             const value = `; ${document.cookie}`;
@@ -77,20 +78,31 @@ const SongsModal = () => {
       
         const parseSpotifyCookieData = () => {
             try{
-                const accessTokenCookie = getCookie('access_token');
-                const refreshTokenCookie = getCookie('refresh_token');
-                const userMetaCookie = getCookie('user_meta');
-                let decodeduserMetaCookie = decodeURIComponent(userMetaCookie); 
-                const userMeta = JSON.parse(decodeduserMetaCookie);
-                if(userMeta){
+                const spotifyAccessTokenCookie = getCookie('spotify_access_token');
+                const spotifyRefreshTokenCookie = getCookie('spotify_refresh_token');
+                const spotifyUserMetaCookie = getCookie('spotify_user_meta');
+                let decodedSpotifyUserMetaCookie = decodeURIComponent(spotifyUserMetaCookie); 
+                const spotifyUserMeta = JSON.parse(decodedSpotifyUserMetaCookie);
+                if(spotifyUserMeta){
                     const spotifyData = {
-                        accessToken: accessTokenCookie,
-                        refreshToken: refreshTokenCookie,
-                        username: userMeta['username'],
-                        spotifyID: userMeta['id'],
-                        profileImgURL: userMeta['profileImg'],
+                        accessToken: spotifyAccessTokenCookie,
+                        refreshToken: spotifyRefreshTokenCookie,
+                        username: spotifyUserMeta['username'],
+                        spotifyID: spotifyUserMeta['id'],
+                        profileImgURL: spotifyUserMeta['profileImg'],
                     };
+                    console.log(spotifyData.spotifyID)
                     updateSpotifyData(spotifyData);
+                }
+
+                const ytAccessTokenCookie = getCookie('google_access_token');
+                const ytRefreshTokenCookie = getCookie('google_refresh_token');
+                if(ytAccessTokenCookie){
+                    const ytData = {
+                        accessToken: ytAccessTokenCookie,
+                        refreshToken: ytRefreshTokenCookie,
+                    };
+                    updateYTData(ytData);
                 }
             } catch (err) {
                 console.error(err);
