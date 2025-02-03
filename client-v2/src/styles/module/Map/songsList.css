@@ -247,6 +247,9 @@ p.song-title {
     font-size: 11px;
     margin: 2px;
 }
+.genre-name {
+    max-width: 100%;
+}
 .overlay-events-list {
     max-height: 300px;
     height: fit-content;

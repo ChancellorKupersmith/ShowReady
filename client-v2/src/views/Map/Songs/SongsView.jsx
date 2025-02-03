@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import SongsListItem from './SongsListItem';
 import AllBtn from './Source/All';
 import { useSpotifyData, SpotifyBtn } from './Source/Spotify'
-import { YouTubeBtn } from './Source/Youtube';
+import { useYouTubeData, YouTubeBtn } from './Source/Youtube';
 import { OrderByBtn, useSongsFilter } from '../Filter/FilterContext';
 import SongsDarkSvg from '../../../assets/song-list(1).svg';
 import NextDarkSvg from '../../../assets/next-dark.svg';
@@ -18,8 +18,7 @@ const SongsModal = () => {
     const openCloseModal = () => setIsOpen(!isOpen)
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const [songs, setSongs] = useState([]);
-    const [events, setEvents] = useState({});
+    const [songsList, setSongsList] = useState([]);
     const [loading, setLoading] = useState(false); // Loading song list state
     
     const getTracksPageSize = () => {
@@ -33,10 +32,10 @@ const SongsModal = () => {
     // Fetch songs on: first load, page change, pageSize change, filter change
     const { filters } = useSongsFilter();
     useEffect(() => {
+        const pageSize = getTracksPageSize();
         const fetchSongs = async () => {
             setLoading(true);
             try{
-                const pageSize = getTracksPageSize();
                 const postData = {
                     page: page,
                     limit: pageSize,
@@ -50,24 +49,24 @@ const SongsModal = () => {
                     },
                     body: JSON.stringify(postData)
                 });
-                const data = await response.json();
-                if(data[0].length > 0)
-                    setTotalPages(Math.ceil(data[0][0].total / pageSize))
-                console.log(data)
-                setSongs([...data[0]]);
-                setEvents(data[1]);
+                const [songsList, total] = await response.json();
+                if(total > 0){
+                    setTotalPages(Math.ceil(total / pageSize));
+                    console.log(songsList)
+                    setSongsList([...songsList]);
+                }
             } catch(err) {
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchSongs();
     }, [page, filters]);
 
     // Check for cookies on each load
     const { updateSpotifyData } = useSpotifyData();
+    const { updateYTData } = useYouTubeData();
     useEffect(() => {
         const getCookie = (name) => {
             const value = `; ${document.cookie}`;
@@ -78,20 +77,31 @@ const SongsModal = () => {
       
         const parseSpotifyCookieData = () => {
             try{
-                const accessTokenCookie = getCookie('access_token');
-                const refreshTokenCookie = getCookie('refresh_token');
-                const userMetaCookie = getCookie('user_meta');
-                let decodeduserMetaCookie = decodeURIComponent(userMetaCookie); 
-                const userMeta = JSON.parse(decodeduserMetaCookie);
-                if(userMeta){
+                const spotifyAccessTokenCookie = getCookie('spotify_access_token');
+                const spotifyRefreshTokenCookie = getCookie('spotify_refresh_token');
+                const spotifyUserMetaCookie = getCookie('spotify_user_meta');
+                let decodedSpotifyUserMetaCookie = decodeURIComponent(spotifyUserMetaCookie); 
+                const spotifyUserMeta = JSON.parse(decodedSpotifyUserMetaCookie);
+                if(spotifyUserMeta){
                     const spotifyData = {
-                        accessToken: accessTokenCookie,
-                        refreshToken: refreshTokenCookie,
-                        username: userMeta['username'],
-                        spotifyID: userMeta['id'],
-                        profileImgURL: userMeta['profileImg'],
+                        accessToken: spotifyAccessTokenCookie,
+                        refreshToken: spotifyRefreshTokenCookie,
+                        username: spotifyUserMeta['username'],
+                        spotifyID: spotifyUserMeta['id'],
+                        profileImgURL: spotifyUserMeta['profileImg'],
                     };
+                    console.log(spotifyData.spotifyID)
                     updateSpotifyData(spotifyData);
+                }
+
+                const ytAccessTokenCookie = getCookie('google_access_token');
+                const ytRefreshTokenCookie = getCookie('google_refresh_token');
+                if(ytAccessTokenCookie){
+                    const ytData = {
+                        accessToken: ytAccessTokenCookie,
+                        refreshToken: ytRefreshTokenCookie,
+                    };
+                    updateYTData(ytData);
                 }
             } catch (err) {
                 console.error(err);
@@ -102,7 +112,7 @@ const SongsModal = () => {
     },[]);
 
     const handlePageChange = newPage => {
-        if(newPage != page && newPage >= 1 && newPage <= totalPages)
+        if(newPage != page && newPage >= 1)
             setPage(newPage);    
     };
     const NextBtn = () => {
@@ -117,7 +127,7 @@ const SongsModal = () => {
         );
 
         return (
-            <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} >
+            <button onClick={() => handlePageChange(page + 1)} disabled={false} >
                 <NextImg />
             </button>
         );
@@ -174,8 +184,8 @@ const SongsModal = () => {
                                 <div className="loading-animation"></div>
                             : 
                                 <ul>
-                                    { songs.length > 0 &&
-                                    songs.map((song, index) =>
+                                    { songsList.length > 0 &&
+                                    songsList.map((song, index) =>
                                         <SongsListItem
                                             key={index}
                                             songTitle={song.songtitle}
@@ -183,10 +193,10 @@ const SongsModal = () => {
                                             artistUrl={song.artistspid ? `https://open.spotify.com/artist/${song.artistspid}` : song.artistlastfmurl}
                                             albumName={song.albumtitle}
                                             albumUrl={song.albumspid ? `https://open.spotify.com/album/${song.albumspid}` : song.albumlastfmurl}
-                                            genre={song.genre}
+                                            genres={song.genres}
                                             spId={song.spid}
                                             ytUrl={song.yturl}
-                                            events={events[song.artist]}
+                                            events={song.events}
                                             spotifyImg={song.spotifyimg}
                                         />)
                                     }

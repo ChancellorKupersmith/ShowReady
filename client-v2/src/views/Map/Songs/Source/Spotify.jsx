@@ -65,29 +65,29 @@ export const SpotifyBtn = () => {
 
     const handleOnClick = () => {
         if(source == SPOTIFY_SOURCE) return;
-        if(spotifyData !== null){ // logged in
-            let newTotal = filters.total;
-            if(!filters.req.source.spotify)
-                newTotal += 1;
-            if(filters.req.source.youtube)
-                newTotal -= 1;
-            changeSource(SPOTIFY_SOURCE);
-            updateFilters({
-                ...filters,
-                total: newTotal,
-                req: {
-                    ...filters.req,
-                    source: {
-                        ...filters.req.source,
-                        spotify: true,
-                        youtube: false
-                    }
-                }
-            });
-        }
-        else{
+        if(spotifyData === null){ // logged out
             window.location.href = '/spotify/login';
+            return;
         }
+        let newTotal = filters.total;
+        if(!filters.req.source.spotify)
+            newTotal += 1;
+        if(filters.req.source.youtube)
+            newTotal -= 1;
+        changeSource(SPOTIFY_SOURCE);
+        updateFilters({
+            ...filters,
+            total: newTotal,
+            req: {
+                ...filters.req,
+                source: {
+                    ...filters.req.source,
+                    spotify: true,
+                    youtube: false
+                }
+            }
+        });
+
     }
 
     return (

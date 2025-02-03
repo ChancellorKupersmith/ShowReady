@@ -43,17 +43,17 @@ const getAccessToken = async (req, res, next) => {
         const accessToken = data['access_token'];
         req.accessToken = accessToken;
         const expiration = new Date(curTime.getTime() + data['expires_in'] * 1000);
-        res.cookie('access_token', accessToken, {
+        res.cookie('spotify_access_token', accessToken, {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
             maxAge: expiration,
         });
 
-        const refreshToken = data['refresh_token'];
+        const refreshToken = data['spotify_refresh_token'];
         req.refreshToken = refreshToken;
         const oneDayMiliseconds = 24 * 60 * 60 * 1000;
-        res.cookie('refresh_token', refreshToken, {
+        res.cookie('spotify_refresh_token', refreshToken, {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -63,7 +63,7 @@ const getAccessToken = async (req, res, next) => {
     } catch(err) {
         next(err)
     }
-}
+};
 
 const getUserMeta = async (req, res, next) => {
     try{
@@ -85,7 +85,7 @@ const getUserMeta = async (req, res, next) => {
         };
         console.log(userMeta);
         const oneDayMiliseconds = 24 * 60 * 60 * 1000;
-        res.cookie('user_meta', JSON.stringify(userMeta), {
+        res.cookie('spotify_user_meta', JSON.stringify(userMeta), {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
@@ -99,10 +99,9 @@ const getUserMeta = async (req, res, next) => {
 
 const generateRandomString = (length) => {
     return crypto
-    .randomBytes(60)
-    .toString('hex')
-    .slice(0, length);
-}
+    .randomBytes(length)
+    .toString('hex');
+};
 
 const spotifyApiRouter = express.Router();
 spotifyApiRouter.get('/login', (req, res, next) => {
@@ -125,35 +124,13 @@ spotifyApiRouter.get('/login', (req, res, next) => {
 
 spotifyApiRouter.get('/login_callback', getAccessToken, getUserMeta, async (req, res, next) => {
     try {
-        // const opts = {
-        //     headers: { 'Authorization': 'Bearer ' + req.accessToken }
-        // }
-        // const response = await fetch('https://api.spotify.com/v1/me', opts);
-        // if(!response.ok) {
-        //     message = await response.text()
-        //     console.error('Failed to fetch spotify user data, ' + message)
-        //     throw new Error();
-        // }
-        // const data = await response.json();
-        // const imgs = data['images'];
-        // const userData = {
-        //     username: data['display_name'],
-        //     id: data['id'],
-        //     spUrl: data['external_urls']['spotify'],
-        //     profileImg: imgs.length > 0 ? imgs[0] : null,
-        //     accessToken: req.accessToken,
-        //     refreshToken: req.refreshToken,
-        //     expiration: req.expiration
-        // };
-        // res.json(userData);
-        
-        // res.cookie('user_meta');
-        res.redirect('http://localhost:5173');
+        res.redirect('http://localhost:5173/map');
     } catch(err) {
         next(err);
     }
 });
 
+// TODO: hanlde with cookies for more secure and consistent handling
 spotifyApiRouter.get('/refresh_token', async (req, res, next) => {
     try {
         const refresh_token = req.query.refresh_token;

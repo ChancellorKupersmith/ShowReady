@@ -225,29 +225,33 @@ const SeattleMap = () => {
   */
   useEffect(() => {
     const initMarkers = async () => {
-      // only execute if map has loaded
-      if(mapRef.current){
-        // clear previous markers
-        mapRef.current.eachLayer(layer => {
-          if(layer instanceof L.Marker) {
-            mapRef.current.removeLayer(layer);
-          }
-        });
+      try{
+        // only execute if map has loaded
+        if(mapRef.current){
+          // clear previous markers
+          mapRef.current.eachLayer(layer => {
+            if(layer instanceof L.Marker) {
+              mapRef.current.removeLayer(layer);
+            }
+          });
 
-        let venues;
-        if(allVenues.length == 0){
-          venues = await fetchVenues();
+          let venues = [];
+          if(allVenues.length == 0){
+            venues = await fetchVenues();
+          }
+          else {
+            venues = allVenues.filter(v => !filters.ex.location.venues.includes(v.name));
+          }
+          const markers = {};
+          venues.forEach(venue => {
+            markers[venue.name] = createMarker(mapRef.current, venue)
+          });
+          // save for access to markers through context provider
+          setVenueMarkers(markers)
         }
-        else {
-          venues = allVenues.filter(v => !filters.ex.location.venues.includes(v.name));
+        } catch (err){
+          console.error(err)
         }
-        const markers = {};
-        venues.forEach(venue => {
-          markers[venue.name] = createMarker(mapRef.current, venue)
-        });
-        // save for access to markers through context provider
-        setVenueMarkers(markers)
-      }
     };
 
     initMarkers();
@@ -264,19 +268,23 @@ const SeattleMap = () => {
   // sync map markers with filters
   useEffect(() => {
     const addMissingMarkers = async () => {
-      if(mapRef.current){
-        allVenues.forEach(v => {
-          // check if out of sync (if in allVenues but not on map and not in filter exclusions)
-          let onMap = false;
-          mapRef.current.eachLayer(layer =>{
-            if(layer instanceof L.Marker && layer.options.id == `map-marker-${v.name}`){
-              onMap = true;
+      try{
+        if(mapRef.current){
+          allVenues.forEach(v => {
+            // check if out of sync (if in allVenues but not on map and not in filter exclusions)
+            let onMap = false;
+            mapRef.current.eachLayer(layer =>{
+              if(layer instanceof L.Marker && layer.options.id == `map-marker-${v.name}`){
+                onMap = true;
+              }
+            });
+            if(!filters.ex.location.venues.includes(v.name) && !onMap){
+              createMarker(mapRef.current, v);
             }
           });
-          if(!filters.ex.location.venues.includes(v.name) && !onMap){
-            createMarker(mapRef.current, v);
-          }
-        });
+        }
+      } catch(err) {
+        console.error(err);
       }
     };
 

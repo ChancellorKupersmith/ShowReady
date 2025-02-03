@@ -4,10 +4,9 @@ import { createPortal } from 'react-dom';
 const formatDate = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 export const OrderBys = Object.freeze({
     SONG_NAME: 1,
-    EVENT_DATE: 2,
-    VENUE_NAME: 3,
+    ARTIST: 2,
+    EVENT_DATE: 3,
     RANDOM: 4,
-    ARTIST: 5,
  });
 
 const SongsFilterContext = createContext();
@@ -59,6 +58,7 @@ export const FilterContextProvider = ({ children }) => {
         req: {
             genre: {
                 names: [],
+                fromEach: null,
             },
             date: {
                 dates: [],
@@ -68,7 +68,6 @@ export const FilterContextProvider = ({ children }) => {
                 venues: [],
                 hoods: [],
                 addresses: [],
-                fromEach: null,
             },
             event: {
                 names: [],
@@ -141,14 +140,11 @@ export const OrderByBtn = () => {
             case OrderBys.SONG_NAME:
                 setOrder('Song');
                 break;
-            case OrderBys.EVENT_DATE:
-                setOrder('Event Date');
-                break;
-            case OrderBys.VENUE_NAME:
-                setOrder('Venue');
-                break;
             case OrderBys.ARTIST:
                 setOrder('Artist');
+                break;
+            case OrderBys.EVENT_DATE:
+                setOrder('Event Date');
                 break;
             default:
                 setOrder('Random')
@@ -195,14 +191,14 @@ export const OrderByBtn = () => {
                         </div>
                     </div>
                     <div className='order-option'>
-                        <p>Venue</p>
+                        <p>Artist</p>
                         <div>
                             <label>
                                 <input
                                     type='radio'
                                     value='A-Z'
-                                    checked={filters.orderBy == OrderBys.VENUE_NAME && !filters.descending}
-                                    onChange={() => changeOrderBy(OrderBys.VENUE_NAME, false)}
+                                    checked={filters.orderBy == OrderBys.ARTIST && !filters.descending}
+                                    onChange={() => changeOrderBy(OrderBys.ARTIST, false)}
                                 />
                                 A-Z
                             </label>
@@ -210,8 +206,8 @@ export const OrderByBtn = () => {
                                 <input
                                     type='radio'
                                     value='Z-A'
-                                    checked={filters.orderBy == OrderBys.VENUE_NAME && filters.descending}
-                                    onChange={() => changeOrderBy(OrderBys.VENUE_NAME, true)}
+                                    checked={filters.orderBy == OrderBys.ARTIST && filters.descending}
+                                    onChange={() => changeOrderBy(OrderBys.ARTIST, true)}
                                 />
                                 Z-A
                             </label>

@@ -10,7 +10,7 @@ import { YouTubeIcon } from "./Source/Youtube";
 import { useMap } from "../SeattleMap";
 
 
-const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, albumName, albumUrl, genre, eventLocation, date, spId, ytUrl, events}) => {
+const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, albumName, albumUrl, genres, eventLocation, date, spId, ytUrl, events}) => {
     const { filters, updateFilters } = useSongsFilter();
     const [isIncluded, setIsIncluded] = useState(true);
     const toggleIsInclude = () => {
@@ -95,7 +95,7 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
 
     const SongOverlay = () => {
         const overlayStyle = {
-            'top': aboveHalfway? `${Math.ceil(elementPosition.top * 0.6)}px` : `${Math.ceil(elementPosition.top * 0.8)}px`,
+            'top': aboveHalfway? `${Math.ceil(elementPosition.top * 0.6)}px` : `${Math.ceil(elementPosition.top * 0.3)}px`,
             right: `${Math.ceil(elementPosition.right * 0.22)}px`
         }
 
@@ -131,7 +131,7 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
                         </p> 
                     }
                 </div>
-                { genre && <p className="genre-name">{genre}</p>}
+                { genres.length && <p className="genre-name">{genres.join(', ')}</p>}
                 <ul className="overlay-events-list">
                     { events.length > 0 &&
                         events.map((event, index) =>

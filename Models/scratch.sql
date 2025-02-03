@@ -1,18 +1,18 @@
-WITH weekend_dates AS (
-    -- Get the start of the current weekend (Saturday) and the end of the weekend (Sunday)
-    SELECT
-        CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INT + 5 AS friday,
-        CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INT + 7 AS sunday
-),
-performing_artists AS (
-    -- Find artists performing on the weekend (Saturday and Sunday)
-    SELECT DISTINCT ea.ArtistID
-    FROM Events e
-    JOIN EventsArtists ea ON e.ID = ea.EventID AND e.EventDate BETWEEN (SELECT friday FROM weekend_dates) AND (SELECT sunday FROM weekend_dates)
-)
--- Count the number of distinct artists
-SELECT COUNT(*) AS artist_count
-FROM performing_artists;
+-- WITH weekend_dates AS (
+--     -- Get the start of the current weekend (Saturday) and the end of the weekend (Sunday)
+--     SELECT
+--         CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INT + 5 AS friday,
+--         CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INT + 7 AS sunday
+-- ),
+-- performing_artists AS (
+--     -- Find artists performing on the weekend (Saturday and Sunday)
+--     SELECT DISTINCT ea.ArtistID
+--     FROM Events e
+--     JOIN EventsArtists ea ON e.ID = ea.EventID AND e.EventDate BETWEEN (SELECT friday FROM weekend_dates) AND (SELECT sunday FROM weekend_dates)
+-- )
+-- -- Count the number of distinct artists
+-- SELECT COUNT(*) AS artist_count
+-- FROM performing_artists;
 
 
 

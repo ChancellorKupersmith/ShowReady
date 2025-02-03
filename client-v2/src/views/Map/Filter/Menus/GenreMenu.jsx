@@ -6,8 +6,10 @@ import { ReqExFilterTab, ReqExList } from './MenuUtils';
 const GenreMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
     const [genreInput, setGenreInput] = useState('');
+    const [fromEachGenre, setFromEachGenre] = useState(tempFilters.req.genre.fromEach);
     // input funcs
     const handleGenreChange = (event) => setGenreInput(event.target.value);
+    const handleFromEachGenreChange = (event) => setFromEachGenre(Math.max(0, event.target.value));
     // reqex btn funcs
     const reqGenre = () => {
         if(!genreInput) return;
@@ -39,6 +41,22 @@ const GenreMenu = () => {
         });
         setGenreInput('')
     };
+    const reqFromEach = () => {
+        console.log(fromEachGenre)
+        if(fromEachGenre == null) return;
+        const newTotal = tempFilters.req.genre.fromEach ? tempFilters.total : tempFilters.total + 1;
+        updateTempFilters({
+            ...tempFilters,
+            total: newTotal,
+            req: {
+                ...tempFilters.req,
+                genre: {
+                    ...tempFilters.req.genre,
+                    fromEach: fromEachGenre
+                }
+            }
+        });
+    };
     // reqex filter tab funcs
     const removeReqGenre = (genre) => updateTempFilters({
         ...tempFilters,
@@ -62,6 +80,17 @@ const GenreMenu = () => {
             }
         }
     });
+    const removeReqFromEach = () => updateTempFilters({
+        ...tempFilters,
+        total: tempFilters.total - 1,
+        req: {
+            ...tempFilters.req,
+            genre: {
+                ...tempFilters.req.genre,
+                fromEach: null
+            }
+        }
+    });
     const reqGenres = tempFilters.req.genre.names.map((genre, index) =>
         <ReqExFilterTab 
             key={`reqfilter-genre${index}`}
@@ -79,7 +108,10 @@ const GenreMenu = () => {
         />
     );
 
-    const reqChildren = [...reqGenres];
+    const reqChildren = [
+        (tempFilters.req.genre.fromEach && <ReqExFilterTab key={'reqfilter-genre-fromEach'} reqex={'req'} label={'From Each:'} value={`${tempFilters.req.genre.fromEach}`} onClickFunc={removeReqFromEach}/>),
+        ...reqGenres
+    ];
     const exChildren = [...exGenres];
 
     return (
@@ -99,6 +131,20 @@ const GenreMenu = () => {
                     <div className='reqex-btn-container'>
                         <button className='reqex-btn req-btn' onClick={reqGenre}>Require</button>
                         <button className='reqex-btn ex-btn' onClick={exGenre}>Exclude</button>
+                    </div>
+                </div>
+                <div className='menu-input-container'>
+                    <div className='menu-input'>
+                        <label htmlFor='fromEachGenreInput'>#Songs From Each: </label>
+                        <input
+                            className='reqex-input-container'
+                            type='number'
+                            id='fromEachGenreInput'
+                            onChange={handleFromEachGenreChange}
+                        />
+                    </div>
+                    <div className='reqex-btn-container'>
+                        <button className='reqex-btn req-btn only' onClick={reqFromEach}>Require</button>
                     </div>
                 </div>
             </div>

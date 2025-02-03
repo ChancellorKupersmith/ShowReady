@@ -6,6 +6,7 @@
 .vscode/
 *.env
 logfile
+Notes/
 Notes.txt
 **/dist/
 **/node_modules/

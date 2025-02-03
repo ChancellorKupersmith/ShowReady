@@ -41,6 +41,7 @@ const BetaAccess = () => {
                 (response) => {
                     console.log(response)
                     toast.success('Request Sent')
+                    setBetaReqModalIsOpen(false);
                 },
                 (error) => {
                     console.error(error);
@@ -49,9 +50,13 @@ const BetaAccess = () => {
             );
         };
     
-        // useEffect(() => {
-        //     document.querySelector('.beta-request-modal').addEventListener('click', (event) => event.stopPropagation());
-        // }, [])
+        // BUGFIX: cancel btn function not working due to conflicting parnt on click listener
+        useEffect(() => {
+            document.querySelector('#beta-access-cancel-btn').addEventListener('click', (event) =>{
+                setBetaReqModalIsOpen(false);
+                event.stopPropagation();
+            });
+        }, [])
     
         
         return (
@@ -86,7 +91,7 @@ const BetaAccess = () => {
                     placeholder='anything to note.'
                     onChange={ event => setUserNote(event.target.value) }/>
                 <div>
-                <button onClick={() => setBetaReqModalIsOpen(false)}>Cancel</button>
+                <button id='beta-access-cancel-btn'>Cancel</button>
                 <button onClick={sendBetaAccessReqEmail}>Send Request</button>
                 </div>
             </div>
@@ -96,8 +101,8 @@ const BetaAccess = () => {
     
     return (
         <div className='beta-access-container' onClick={() => setBetaReqModalIsOpen(true)}>
-            <p> Playlist generation for Spotify is still in beta, request access here 24/25 spots left. </p>
-            {betaReqModalIsOpen && createPortal(<BetaAccessModal setBetaReqModalIsOpen={ setBetaReqModalIsOpen }/>, document.body)}
+            <p> Playlist generation for Spotify and YouTube still in beta, click here to request access to feature 24/25 spots left. </p>
+            {betaReqModalIsOpen && createPortal(<BetaAccessModal />, document.body)}
         </div>
     );
 };
