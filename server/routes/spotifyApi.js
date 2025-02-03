@@ -53,7 +53,7 @@ const getAccessToken = async (req, res, next) => {
         const refreshToken = data['spotify_refresh_token'];
         req.refreshToken = refreshToken;
         const oneDayMiliseconds = 24 * 60 * 60 * 1000;
-        res.cookie('refresh_token', refreshToken, {
+        res.cookie('spotify_refresh_token', refreshToken, {
             httpOnly: false,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',

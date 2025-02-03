@@ -32,10 +32,10 @@ const SongsModal = () => {
     // Fetch songs on: first load, page change, pageSize change, filter change
     const { filters } = useSongsFilter();
     useEffect(() => {
+        const pageSize = getTracksPageSize();
         const fetchSongs = async () => {
             setLoading(true);
             try{
-                const pageSize = getTracksPageSize();
                 const postData = {
                     page: page,
                     limit: pageSize,
@@ -49,19 +49,18 @@ const SongsModal = () => {
                     },
                     body: JSON.stringify(postData)
                 });
-                const data = await response.json();
-                if(data[1])
-                    setTotalPages(Math.ceil(data[1] / pageSize))
-                console.log(data[0])
-                
-                setSongsList([...data[0]]);
+                const [songsList, total] = await response.json();
+                if(total > 0){
+                    setTotalPages(Math.ceil(total / pageSize));
+                    console.log(songsList)
+                    setSongsList([...songsList]);
+                }
             } catch(err) {
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
-
         fetchSongs();
     }, [page, filters]);
 
@@ -113,7 +112,7 @@ const SongsModal = () => {
     },[]);
 
     const handlePageChange = newPage => {
-        if(newPage != page && newPage >= 1 && newPage <= totalPages)
+        if(newPage != page && newPage >= 1)
             setPage(newPage);    
     };
     const NextBtn = () => {
@@ -128,7 +127,7 @@ const SongsModal = () => {
         );
 
         return (
-            <button onClick={() => handlePageChange(page + 1)} disabled={page === totalPages} >
+            <button onClick={() => handlePageChange(page + 1)} disabled={false} >
                 <NextImg />
             </button>
         );

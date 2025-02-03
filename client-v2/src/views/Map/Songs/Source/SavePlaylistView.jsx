@@ -24,8 +24,8 @@ const saveYouTubePlaylist = async (client, filters, playlistName, isPrivate, toa
                 },
                 body: JSON.stringify(postData)
             });
-            const data = await response.json();
-            return data['total'];
+            const total = await response.json();
+            return total;
         }catch(err){
             console.error(err)
         }
@@ -146,8 +146,8 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                 },
                 body: JSON.stringify(postData)
             });
-            const data = await response.json();
-            return data['total'];
+            const total = await response.json();
+            return total;
         }catch(err){
             console.error(err)
         }
