@@ -21,7 +21,7 @@
     overflow-y: visible;
     border: 1.5px solid light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
     border-radius: 7px;
-    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-primary-color));
     
 }
 /* Header */
@@ -35,6 +35,11 @@
     align-self: end;
     margin-bottom: 1px;
 }
+#order-by-btn {
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-secondary-color));
+    border: solid 1.5px light-dark(var(--light-mode-text-color), transparent);
+    color: var(--dark-mode-text-color);
+}
 .order-by-modal-container {
     position: absolute;
     top: 17%;
@@ -42,7 +47,7 @@
     z-index: 4;
     border: 1px solid #888;
     border-radius: 7px;
-    background-color: light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-secondary-color));
     height: fit-content;
     width: fit-content;
     display: flex;
@@ -82,19 +87,19 @@ button.order-random {
     flex: 1;
     width: 100%;
     margin: 0px;
-    border-bottom: solid 1.5px light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
 }
 button.source-btn {
     flex: 1;
     border-radius: 10px;
-    border: solid transparent 2px; /*to keep consistent sizing between when selected and not*/
+    border: solid 1.5px light-dark( rgba(0, 0, 0, 0.279), transparent); /*to keep consistent sizing between when selected and not*/
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
     margin-top: 4px;
+    border-bottom: solid 1.5px light-dark(rgba(0, 0, 0, 0.279), transparent);
 }
 button.source-btn.selected {
     border: solid 1.5px light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
-    border-bottom: none;
+    border-bottom: solid 1.5px light-dark(black, var(--dark-mode-accent-color));
 }
 
 /* Body */
@@ -127,6 +132,7 @@ button.source-btn.selected {
     background: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
     color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
     transition: background 0.3s, color 0.3s;
+    border: 1.5px solid light-dark(var(--light-mode-accent-color), var(--dark-mode-background-color));
 }
 .songs-list-item.dark-mode {
     background: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
@@ -198,13 +204,16 @@ p.song-title {
     width: 200px;
     height: fit-content;
     overflow: auto;
-    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
-    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
-    border: 0.5px solid light-dark(var(--light-mode-text-color), var(--dark-mode-accent-color));
+    background-color: light-dark(black, var(--dark-mode-background-color));
+    color: var(--dark-mode-text-color);
+    border: 0.5px solid light-dark(var(--light-mode-primary-color), var(--dark-mode-accent-color));
     padding: 10px;
     box-sizing: border-box;
     border-radius: 10px;
     z-index: 6;
+}
+.overlay a {
+    color:  var(--dark-mode-accent-color);
 }
 .overlay-header {
     width: 100%;
@@ -214,7 +223,7 @@ p.song-title {
 .overlay-close {
     background-color: transparent;
     padding: 0px;
-    color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    color: light-dark(var(--dark-mode-text-color), var(--dark-mode-accent-color));
 }
 .artist-img {
     overflow: hidden;
@@ -225,7 +234,7 @@ p.song-title {
     height: 160px;
     width: 160px;
     border-radius: 5px;
-    border: solid 1px light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    border: solid 1px light-dark(var(--dark-mode-text-color), var(--dark-mode-primary-color));
 }
 .artist-album-container {
     display: flex;

@@ -11,6 +11,13 @@ button.open-map-view {
     }
 }
 .open-map-view {
-    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-secondary-color));
-    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-secondary-color));
+    color: var(--dark-mode-text-color);
+}
+button.theme-toggle {
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-secondary-color));
+    color: var(--dark-mode-text-color);
+    position: absolute;
+    right: 20px;
+    top: 50px;
 }

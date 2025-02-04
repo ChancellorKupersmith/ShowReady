@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useThemeData } from './Theme';
 import '../../styles/module/Home/fmradio.css'
 // a clock to keep knob and playlist cover animations in sync
 const FMRadioClockContext = createContext();
@@ -82,6 +83,7 @@ const PlaylistLabel = ({ playlists }) => {
 
 const FMRadio = () => {
   const [radiogenPlaylists, setRadiogenPlaylists] = useState([]);
+  const { theme } = useThemeData();
   useEffect(() => {
     const fetchRadiogenPlaylists = async () => {
       try{
@@ -118,7 +120,7 @@ const FMRadio = () => {
             </div>
             <div className="dial">
               <svg width="200" height="200">
-                <circle cx="75" cy="75" r="60" stroke="grey" fill='grey' strokeWidth="5" />
+                <circle cx="75" cy="75" r="60" stroke={theme === 'dark' ? "grey" : "#333333"} fill={theme === 'dark' ? "grey" : "#333333"} strokeWidth="5" />
                 <Knob />
               </svg>
             </div>

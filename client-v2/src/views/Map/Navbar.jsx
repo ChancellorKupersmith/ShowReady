@@ -5,6 +5,7 @@ import './Songs/SongsView';
 import '../../styles/module/Map/navbar.css';
 import FilterModal from './Filter/FilterView';
 import SongsModal from './Songs/SongsView';
+import { useThemeData } from '../Home/Theme';
 
 const NavViewBtn = ({icon, route}) => {
     const navigate = useNavigate();
@@ -18,9 +19,9 @@ const NavViewBtn = ({icon, route}) => {
 }
 
 const NavBar = () => {
-    
+    const {theme} = useThemeData();
     return (
-        <div className='navbar'>
+        <div className='navbar' style={{ colorScheme: `${theme}`}}>
             <ul className='btns-list'>
                 <NavViewBtn icon={'Home'} route={'/'}/>
                 <FilterModal />
