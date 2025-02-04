@@ -7,6 +7,7 @@
 .vscode/
 *.env
 logfile
+Notes/
 **/dist/
 **/node_modules/
 **/__pycache__/
