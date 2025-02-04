@@ -1,12 +1,12 @@
 *.log
 *.cache
+*.txt
 .data/
 .idea/
 .direnv/
 .vscode/
 *.env
 logfile
-Notes.txt
 **/dist/
 **/node_modules/
 **/__pycache__/
