@@ -1,10 +1,10 @@
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-class SpotifyClient {
-    constructor(spotifyData){
-        this.accessToken = spotifyData?.accessToken;
-        this.refreshToken = spotifyData?.refreshToken;
-        this.expiration = spotifyData?.expiration;
-        this.baseURL = 'https://api.spotify.com/v1';
+class YouTubeClient {
+    constructor(ytData){
+        this.accessToken = ytData?.accessToken;
+        this.refreshToken = ytData?.refreshToken;
+        this.expiration = ytData?.expiration;
+        this.baseURL = 'https://www.googleapis.com/youtube/v3';
         this.lastRequestTime = null;
         this.rateLimit = 2000; // ms
     }
@@ -12,7 +12,7 @@ class SpotifyClient {
     async tokenRefresh(maxTries = 3){
         for(let i=0; i<maxTries; i++){
             try{
-                const response = await fetch('/spotify/refresh_token?' + new URLSearchParams({refresh_token: this.refreshToken}).toString());
+                const response = await fetch('/google_api/refresh_token?' + new URLSearchParams({refresh_token: this.refreshToken}).toString());
                 if(response.ok){
                     const data = await response.json();
                     this.accessToken = data['access_token'];
@@ -53,7 +53,7 @@ class SpotifyClient {
                     return response;
                 }
                 const msg = await response.text()
-                console.error(`Spotify Request failed trying again, ${msg}`);
+                console.error(`YouTube Request failed trying again, ${msg}`);
                 if(response.status == 401){
                     await this.tokenRefresh();
                 }
@@ -61,7 +61,7 @@ class SpotifyClient {
                 console.error(err)
             }
         }
-        console.error('Spotify Request Failed, Exceeded Max Tries');
+        console.error('YouTube Request Failed, Exceeded Max Tries');
     }
 
     async post(endpoint, payload, maxTries = 3){
@@ -90,7 +90,7 @@ class SpotifyClient {
                     return response;
                 }
                 const msg = await response.text()
-                console.error(`Spotify Request failed trying again, ${msg}`);
+                console.error(`YouTube Request failed trying again, ${msg}`);
                 if(response.status == 401){
                     await this.tokenRefresh();
                 }
@@ -98,14 +98,14 @@ class SpotifyClient {
                 console.error(err)
             }
         }
-        console.error('Spotify Request Failed, Exceeded Max Tries');
+        console.error('YouTube Request Failed, Exceeded Max Tries');
     }
 }
-// only allow one spotify client instance
-let spClient = null;
-export const getSpotifyClient = (spotifyData) => {
-    if(!spClient && spotifyData){
-        spClient = new SpotifyClient(spotifyData);
+// only allow one youtube client instance
+let ytClient = null;
+export const getYouTubeClient = (ytData) => {
+    if(!ytClient && ytData){
+        ytClient = new YouTubeClient(ytData);
     }
-    return spClient;
-}
+    return ytClient;
+};

@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS Events (
     PRIMARY KEY (ID, EventDate),
     FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
 ) PARTITION BY RANGE (EventDate);
+CREATE INDEX joins_on_VenueID_Events ON Events (VenueID);
 
 CREATE TABLE IF NOT EXISTS Artists (
     ID SERIAL PRIMARY KEY,
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS Artists (
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP
 );
+
 
 CREATE TABLE IF NOT EXISTS Albums (
     ID SERIAL PRIMARY KEY,
@@ -98,6 +100,7 @@ CREATE TABLE IF NOT EXISTS Songs (
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE,
     FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL
 ) PARTITION BY LIST (ArtistID);
+CREATE INDEX joins_on_AlbumID_Songs ON Songs (AlbumID);
 
 CREATE TABLE IF NOT EXISTS EventsArtists (
     EventID INT,
@@ -108,6 +111,8 @@ CREATE TABLE IF NOT EXISTS EventsArtists (
     FOREIGN KEY (EventID, EventDate) REFERENCES Events(ID, EventDate) ON DELETE CASCADE,
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE
 );
+CREATE INDEX joins_on_EventID_EventsArtists ON EventsArtists (EventID);
+CREATE INDEX joins_on_ArtistID_EventsArtists ON EventsArtists (ArtistID);
 
 CREATE TABLE IF NOT EXISTS ArtistsGenres (
     ArtistID INT,
@@ -117,6 +122,9 @@ CREATE TABLE IF NOT EXISTS ArtistsGenres (
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE,
     FOREIGN KEY (GenreID) REFERENCES Genres(ID) ON DELETE CASCADE
 );
+CREATE INDEX joins_on_ArtistID_ArtistsGenres ON ArtistsGenres (ArtistID);
+CREATE INDEX joins_on_GenreID_ArtistsGenres ON ArtistsGenres (GenreID);
+
 
 CREATE TABLE IF NOT EXISTS Errors (
     ID SERIAL PRIMARY KEY,

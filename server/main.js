@@ -14,10 +14,11 @@ const app = express();
 app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, '../client/dist')))
+const port = process.env.PORT || 3000;
+app.use(express.static(path.join(__dirname, '../client-v2/dist')))
    .use(cookieParser())
    .use(cors({ 
-        origin: ['http://localhost:5173','https://accounts.spotify.com', 'https://api.spotify.com', 'https://spotify.com'],
+        origin: ['http://localhost:5173',`http://localhost:${port}`,'https://showready.xyz','https://accounts.spotify.com', 'https://api.spotify.com', 'https://spotify.com', 'https://accounts.google.com', 'https://www.googleapis.com', 'https://www.youtube.com'],
         credentials: true
     }));
 
@@ -36,8 +37,8 @@ app.use('/google_api', googleApiRouter);
 app.use('/spotify', spotifyApiRouter);
 app.use('/radiogen', radiogenPlaylistRouter);
 
-const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+    const website_url = process.env.ENV == 'prod' ? 'https://showready.xyz' : `http://localhost:${port}`;
+    console.log(`Server is running on ${website_url}`);
 });
 

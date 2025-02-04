@@ -86,7 +86,7 @@ def get_existing_artists_fromDB():
     finally:
         return existing_artists
 
-def save_artists_inDB(new_artists):
+def save_artists_inDB(new_artists_batch):
     def get_existing_spotify_artists_fromDB():
         existing_artists = []
         select_query = "SELECT spotifyexternalid FROM Artists WHERE spotifyexternalid IS NOT NULL"
@@ -365,7 +365,8 @@ async def main():
         # new_artists = await find_artists(events)
         artist_name_ids = save_artists_inDB(new_artists)
         # Match events to artists for event-artist join table in db
-        existing_artists.update(artist_name_ids)
+        if artist_name_ids is not None:
+            existing_artists.update(artist_name_ids)
         events_artists_list = []
         artist_not_found_events = []
         for event in events:

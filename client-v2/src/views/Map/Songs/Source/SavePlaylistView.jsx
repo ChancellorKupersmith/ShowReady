@@ -8,7 +8,130 @@ import { useSpotifyData } from './Spotify';
 import { getSpotifyClient } from './utils/spotifyClient';
 import { displayDate } from '../../Filter/Menus/DateMenu';
 import '../../../../styles/module/Map/savePlaylist.css';
+import { useYouTubeData } from './Youtube';
+import { getYouTubeClient } from './utils/youtubeClient';
 
+const saveYouTubePlaylist = async (client, filters, playlistName, isPrivate, toastID) => {
+    const fetchTotalResults = async () => {
+        try{
+            const postData = {
+                filters: filters
+            };
+            const response = await fetch('/songs_list/total_results', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData)
+            });
+            const total = await response.json();
+            return total;
+        }catch(err){
+            console.error(err)
+        }
+    };
+
+    const createYouTubePlaylist = async () => {
+        try{
+            const postData = {
+                playlistName: playlistName,
+                isPrivate: isPrivate
+            };
+            const response = await fetch('google_api/new_playlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData)
+            });
+            const newPlaylist = await response.json();
+            return newPlaylist;
+        } catch(err) {
+            console.error(err);
+        }
+    };
+
+    const fetchYouTubeTracksVideoIds = async (playlistSize) => {
+        try{
+            const postData = {
+                page: 0,
+                limit: playlistSize,
+                filters: filters
+            };
+            const response = await fetch('/songs_list', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData)
+            });
+            const data = await response.json();
+            // console.log(data)
+            const videoIdRegex = /v=([^&]*)/;
+            return data[0].map( track => track.yturl.match(videoIdRegex)[1] )
+        } catch(err){
+            console.error(err)
+            return []
+        }
+    };
+
+    const deleteYouTubePlaylist = async (playlistId) => {
+        try {
+            const endpoint = `/youtube.playlists.delete?id=${playlistId}`;
+            await client.delete(endpoint);
+        } catch(err) {
+            console.error(err);
+        }
+    };
+
+    try{
+        const newPlaylist = await createYouTubePlaylist();
+        if(!newPlaylist?.id) throw new Error('failed to create new youtube playlist.');
+        // total youtube playlist size limit  = 5000 (https://webapps.stackexchange.com/questions/77790/what-is-the-maximum-youtube-playlist-length)
+        // Beta google api quota limits 10000 daily, -50 (create playlist), -50x (inserting individual videos) = 199 videos per playlist
+        const maxPlaylistSize = 199;
+        const playlistSize = Math.min(await fetchTotalResults(), maxPlaylistSize);
+        const videoIds = await fetchYouTubeTracksVideoIds(playlistSize);
+        if(toastID.current === null){
+            toastID.current = toast(`Saving ${playlistName}`, {progress: 1})
+        }
+        let failed_tracks = [];
+        videoIds.forEach(async (videoId, index) => {
+            try{
+                const postData = {
+                    playlistId: newPlaylist.id,
+                    videoId: videoId
+
+                };
+                const response = await fetch('/google_api/add_playlist_track', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(postData)
+                });
+                if(!response.status !== 200) failed_tracks.push(`https://www.youtube.com/watch?v=${videoId}`);
+                if(index == 0){
+                    newPlaylist.url = `https://www.youtube.com/watch?v=${videoId}&list=${newPlaylist.id}`;
+                    console.log(`new playlist: ${newPlaylist?.url}`)
+                }
+                // update notification progress
+                toast.update(toastID.current, { progress: (index + 1)/playlistSize })                
+            } catch(err) {
+                console.error(err);
+                toast.error('Error Creating Playlist, Removing...')
+                await deleteYouTubePlaylist(newPlaylist.id);
+            }
+        });
+        toast.done(toastID.current);
+        if(failed_tracks.length > 0){
+            console.error(failed_tracks);
+            toast.error(`Failed adding ${failed_tracks}`);
+        }
+    } catch(err) {
+        console.error(err);
+    }
+};
 
 const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, isPrivate, toastID) => {
     const fetchTotalResults = async () => {
@@ -23,8 +146,8 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                 },
                 body: JSON.stringify(postData)
             });
-            const data = await response.json();
-            return data['total'];
+            const total = await response.json();
+            return total;
         }catch(err){
             console.error(err)
         }
@@ -32,7 +155,7 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
     
     const createSpotifyPlaylist = async (playlistNum) => {
         try{
-            const endpoint = `/users/${spotifyData?.id}/playlists`;
+            const endpoint = `/users/${spotifyData?.spotifyID}/playlists`;
             const name = playlistNum > 0 ? `${playlistName}(${playlistNum})` : playlistName;
             const payload = {
                 name: name,
@@ -54,7 +177,7 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
         }catch(err){
             console.error(err);
         }
-    }
+    };
 
     const fetchSpotifyTrackURIs = async (page) => {
         try{
@@ -72,9 +195,9 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
             });
             const data = await response.json();
             // console.log(data)
-            if(data.length > 0){
+            if(data[1]){
                 return [
-                    data[0][0].total,
+                    data[1],
                     data[0].map(track => `spotify:track:${track.spid}`)
                 ];
             }
@@ -94,7 +217,7 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
         }catch(err){
             console.error(err);
         }
-    }
+    };
 
     try{
         const playlistSize = await fetchTotalResults() || 100;
@@ -140,6 +263,7 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
 }
 // keeping out side hook for persisting between rerenders, ensuring robust rate limiter
 let spotifyClient;
+let ytClient;
 export const SavePlaylistView = () => {
     const [playlistName, setPlaylistName] = useState('');
     const handleNameChange = event => setPlaylistName(event.target.value)
@@ -154,10 +278,11 @@ export const SavePlaylistView = () => {
     const { source, ALL_SOURCE, SPOTIFY_SOURCE, YOUTUBE_SOURCE } = useSourceData();
     // whenever spotify data changes update spotify client
     const { spotifyData } = useSpotifyData();
+    const { ytData } = useYouTubeData();
     useEffect(() => {
-        if(spotifyData)
-            spotifyClient = getSpotifyClient(spotifyData)   
-    }, [spotifyData]);
+        if(spotifyData) spotifyClient = getSpotifyClient(spotifyData);
+        if(ytData) ytClient = getYouTubeClient(ytData);
+    }, [spotifyData, ytData]);
 
     const toastID = useRef(null);
     const { filters } = useSongsFilter();
@@ -169,6 +294,10 @@ export const SavePlaylistView = () => {
                 if(spotifyClient && spotifyData)
                     await saveSpotifyPlaylist(spotifyClient, spotifyData, filters, name, isPrivate, toastID);
                 break;
+            case YOUTUBE_SOURCE:
+                if(ytClient && ytData)
+                    await saveYouTubePlaylist(ytClient, filters, name, isPrivate, toastID);
+                break;
             default:
                 console.log('source:' + source)
                 break;
@@ -179,7 +308,7 @@ export const SavePlaylistView = () => {
     return (
         <div className='save-playlist-view-container'>
             {/* generate playist feature only for spotify atm */}
-            {source == SPOTIFY_SOURCE && <button onClick={openCloseModal}>Generate Playlist</button> }
+            {(source == SPOTIFY_SOURCE || source == YOUTUBE_SOURCE) && <button onClick={openCloseModal}>Generate Playlist</button> }
             { modalIsOpen && createPortal(
                 <GenPlaylistModal 
                     closeModal={openCloseModal}
