@@ -6,6 +6,8 @@
 .vscode/
 *.env
 logfile
+
+client/
 Notes/
 Notes.txt
 **/dist/
