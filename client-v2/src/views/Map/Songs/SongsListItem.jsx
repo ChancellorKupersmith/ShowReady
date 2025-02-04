@@ -8,11 +8,13 @@ import { displayDate } from "../Filter/Menus/DateMenu";
 import { SpotifyIcon } from "./Source/Spotify";
 import { YouTubeIcon } from "./Source/Youtube";
 import { useMap } from "../SeattleMap";
+import { useThemeData } from "../../Home/Theme";
 
 
 const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, albumName, albumUrl, genres, eventLocation, date, spId, ytUrl, events}) => {
     const { filters, updateFilters } = useSongsFilter();
     const [isIncluded, setIsIncluded] = useState(true);
+    const { theme } = useThemeData()
     const toggleIsInclude = () => {
         // TODO: soft remove song to allow for undoing
         // updateFilters({
@@ -60,7 +62,7 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
         <div className="svg-container">
             <img
                 loading="lazy"
-                src={AddDarkSvg}
+                src={ theme === 'dark' ? AddDarkSvg : AddLightSvg }
                 alt='Add'
             />
         </div>
@@ -69,7 +71,7 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
         <div className="svg-container">
             <img
                 loading="lazy"
-                src={SubDarkSvg}
+                src={theme === 'dark' ? SubDarkSvg : SubLightSvg }
                 alt='Remove'
             />
         </div>

@@ -1,6 +1,8 @@
 /* Save Playlist Style */
 .save-playlist-view-container button {
     margin: 0px;
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-secondary-color));
+    color: var(--dark-mode-text-color);
 }
 .save-playlist-modal-container {
     position: absolute;

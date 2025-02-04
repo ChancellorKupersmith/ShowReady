@@ -6,12 +6,14 @@ import { useSpotifyData, SpotifyBtn } from './Source/Spotify'
 import { useYouTubeData, YouTubeBtn } from './Source/Youtube';
 import { OrderByBtn, useSongsFilter } from '../Filter/FilterContext';
 import SongsDarkSvg from '../../../assets/song-list(1).svg';
+import SongsLightSvg from '../../../assets/song-list-light.svg';
 import NextDarkSvg from '../../../assets/next-dark.svg';
-import NextDLightSvg from '../../../assets/next-light.svg';
+import NextLightSvg from '../../../assets/next-light.svg';
 import PrevDarkSvg from '../../../assets/prev-dark.svg';
 import PrevLightSvg from '../../../assets/prev-light.svg';
 import { SavePlaylistView } from "./Source/SavePlaylistView";
 import '../../../styles/module/Map/songsList.css';
+import { useThemeData } from '../../Home/Theme';
 
 const SongsModal = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -20,6 +22,7 @@ const SongsModal = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [songsList, setSongsList] = useState([]);
     const [loading, setLoading] = useState(false); // Loading song list state
+    const {theme} = useThemeData();
     
     const getTracksPageSize = () => {
         let pageSize = 6; // TODO: make dynamic to grow when generate playlist button not present
@@ -120,7 +123,7 @@ const SongsModal = () => {
             <div className="svg-container">
                 <img
                     loading="lazy"
-                    src={NextDarkSvg}
+                    src={theme === 'dark' ? NextDarkSvg : NextLightSvg}
                     alt='Next Page'
                 />
             </div>
@@ -137,7 +140,7 @@ const SongsModal = () => {
             <div className="svg-container">
                 <img
                     loading="lazy"
-                    src={PrevDarkSvg}
+                    src={ theme === 'dark' ? PrevDarkSvg : PrevLightSvg }
                     alt='Previous Page'
                 />
             </div>
@@ -166,7 +169,7 @@ const SongsModal = () => {
     };
 
     return (
-        <li className='nav-btn'>
+        <li className='nav-btn' style={{ colorScheme: `${theme}`}}>
             <SongsBtn />
             {isOpen && createPortal(
                 <div className='songs-view-container'>

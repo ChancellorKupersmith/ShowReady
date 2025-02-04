@@ -2,6 +2,7 @@
     margin: 0;
     padding: 0px;
     box-sizing: border-box; /*  makes sure that padding and borders are included in the element's total width and height */
+    color-scheme: inherit;
 }
 body, html {
     width: 100%;

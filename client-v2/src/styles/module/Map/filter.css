@@ -10,7 +10,7 @@
     flex-direction: column;
     border: 1.5px solid light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));;
     border-radius: 7px;
-    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-primary-color));
 }
 
 
@@ -19,7 +19,7 @@
     flex: 1;
     margin-bottom: 0px;
     border-radius: 5px;
-    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-primary-color));
     border-bottom: solid 1.5px light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
 }
 .filter-title .header {
@@ -56,14 +56,14 @@
     max-height: 450px !important;
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));    max-height: fit-content;
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-primary-color));    max-height: fit-content;
 }
 .filter-menu-label-container {
     text-align: center;
     z-index: 3;
     border-radius: 5px;
     border-bottom: solid 1.5px light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
-    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-primary-color));
 }
 .filter-menu-label-container > p {
     cursor: pointer;
@@ -75,7 +75,7 @@
     height: 100%;
     width: 100%;
     border-radius: 5px;
-    background-color: light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
+    background-color: light-dark(var(--dark-mode-primary-color), var(--dark-mode-secondary-color));
 }
 .menu-input-container {
     flex: 1;
@@ -84,7 +84,7 @@
     width: 100%;
     align-items: center;
     justify-content: space-between;
-    border-bottom: solid 0.5px light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    border-bottom: solid 0.5px light-dark(white, var(--dark-mode-primary-color));
     border-radius: 5px;
 }
 .menu-input-container > * {
@@ -100,6 +100,7 @@
 }
 .menu-input > label {
     text-wrap: nowrap;
+    color: var(--dark-mode-text-color);
 }
 .reqex-btn-container {
     flex: 1;
@@ -109,7 +110,7 @@
     width: 50%;
     /* padding: 7px 10px; */
     color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
-    background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-primary-color));
 }
 .reqex-btn.only {
     width: 100%;
@@ -131,8 +132,9 @@
 }
 .reqex-list-label {
     padding-bottom: 8px;
-    border-bottom: solid 1px light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
+    border-bottom: solid 1px light-dark(white, var(--dark-mode-primary-color));
     font-weight: bold;
+    color: var(--dark-mode-text-color);
 }
 .filter-tab {
     border: 1px solid;
@@ -159,6 +161,7 @@
     background-color: transparent;
     text-align: end;
     font-size: 14px;
+    color: var(--dark-mode-text-color);
 }
 .reqex-input-container {
     margin: 0px auto;
@@ -174,6 +177,7 @@ label.toggle {
     font-size: 16px;
     font-weight: 400;
     margin-right: 10px;
+    color: var(--dark-mode-text-color);
 }
 .toggle span {
     position: relative;
@@ -183,7 +187,7 @@ label.toggle {
     width: 45px;
     height: 20px;
     border-radius: 30px;
-    background: #2c3e50;
+    background: light-dark(var(--light-mode-primary-color), var(--dark-mode-primary-color));
     cursor: pointer;
     transition: 0.3s;
 }
@@ -194,12 +198,12 @@ label.toggle {
     width: 15px;
     left: 3px;
     bottom: 2.6px;
-    background-color: #fff;
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-text-color));
     border-radius: 50%;
     transition: 0.3s;
 }
 .toggle input:checked + span {
-    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
+    background-color: var(--dark-mode-accent-color);
 }
 .toggle input:checked + span::before {
     transform: translateX(25px);
@@ -218,6 +222,8 @@ label.toggle {
 }
 .filter-footer button {
     margin: 4px 2px;
+    background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-secondary-color));
+    color: var(--dark-mode-text-color);
 }
 .loading-container {
     display: flex;

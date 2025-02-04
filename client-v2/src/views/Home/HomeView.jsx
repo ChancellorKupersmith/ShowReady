@@ -4,15 +4,18 @@ import FMRadio from './FMRadio';
 import BetaAccess from './BetaAccess';
 import '../../styles/layout/Home/home.css';
 import '../../styles/module/Home/home.css';
+import { useThemeData } from './Theme';
 
 
 const HomeView = () => {
+  const { theme, toggleTheme } = useThemeData();
   const navigate = useNavigate();
   const handleViewChange = (route) => navigate(route);
 
   return (
-    <div id='l-view-container-home'>
+    <div id='l-view-container-home'  style={{ colorScheme: `${theme}`}}>
       <BetaAccess />
+      <button className='theme-toggle' onClick={toggleTheme}>{ theme } theme</button>
       <div id='l-home-body'>
         <header id='l-home-header'>
           <h2 className='title'>Show Ready</h2>

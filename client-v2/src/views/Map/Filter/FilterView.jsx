@@ -8,11 +8,12 @@ import FilterFooter from "./FilterFooter";
 import FilterMenu from './FilterMenu';
 
 import { TempFilterContextProvider } from './FilterContext';
+import { useThemeData } from '../../Home/Theme';
 
 const FilterModal = () => {
     const [isOpen, setIsOpen] = useState(false);
     const closeModal = () => setIsOpen(!isOpen);
-
+    const {theme} = useThemeData();
     const FilterBtn = () => {
         const FilterImg = () => (
             <div className="svg-container">
