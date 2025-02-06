@@ -5,8 +5,11 @@ import querystring from 'querystring';
 import dotenv from 'dotenv'
 dotenv.config();
 
-const LOGIN_REDIRECT_URI = 'http://localhost:3000/spotify/login_callback';
+const LOGIN_REDIRECT_URI = 'https://showready.xyz/spotify/login_callback';
 const STATE_KEY = 'spotify_auth_state';
+const PROD_CLIENT_REDIRECT_URI = 'https://showready.xyz/map';
+// const PROD_CLIENT_REDIRECT_URI = 'http://localhost:3000/map';
+// const LOGIN_REDIRECT_URI = 'http://localhost:3000/spotify/login_callback';
 
 const getAccessToken = async (req, res, next) => {
     // prevent cross-site request forgery attacks by storing and comparing state
@@ -124,7 +127,7 @@ spotifyApiRouter.get('/login', (req, res, next) => {
 
 spotifyApiRouter.get('/login_callback', getAccessToken, getUserMeta, async (req, res, next) => {
     try {
-        res.redirect('http://localhost:5173/map');
+        res.redirect(process.env.ENV === 'prod' ? PROD_CLIENT_REDIRECT_URI : 'http://localhost:5173/map');
     } catch(err) {
         next(err);
     }

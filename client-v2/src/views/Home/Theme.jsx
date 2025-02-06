@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import MoonSvg from '../../assets/moon.svg';
+import SunSvg from '../../assets/sun.svg';
 
 const ThemeContext = createContext();
 export const useThemeData = () => useContext(ThemeContext);
@@ -36,3 +38,44 @@ export const ThemeContextProvider = ({children}) => {
         </ThemeContext.Provider>
     );
 }
+
+export const ThemeToggle = () => {
+    const { theme, toggleTheme } = useThemeData();
+  
+    const handleThemeToggle = () => {
+      toggleTheme();
+      document.documentElement.classList.toggle('dark');
+    };
+  
+    const styles = {
+      moon: {
+        transform: `rotate(${theme == 'dark' ? '0deg' : '-90deg'})`,
+        opacity: theme == 'dark' ? 1 : 0,
+      },
+      sun: {
+        transform: `rotate(${theme == 'dark' ? '90deg' : '0deg'})`,
+        opacity: theme == 'dark' ? 0 : 1,
+      },
+    };
+  
+    return (
+      <button className='theme-toggle' onClick={handleThemeToggle}>
+        <div className='theme-icon-container'>
+          <div className='theme-icon-wrapper' style={styles.moon}>
+            <img
+              loading="lazy"
+              src={MoonSvg}
+              alt='dark theme'
+            />
+          </div>
+          <div style={styles.sun}>
+            <img
+              loading="lazy"
+              src={SunSvg}
+              alt='light theme'
+            />
+          </div>
+        </div>
+      </button>
+    );
+};

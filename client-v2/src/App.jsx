@@ -19,8 +19,8 @@ function App() {
       <Suspense>
       <SpotifyContextProvider>
       <YouTubeContextProvider>
-      <ToastContainer />
       <ThemeContextProvider>
+      <ToastContainer />
         <Routes>
           <Route path="/" element={<HomeView />} />
           <Route path="/map" element={<MapView />} />
