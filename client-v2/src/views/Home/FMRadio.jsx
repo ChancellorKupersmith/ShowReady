@@ -6,7 +6,7 @@ const FMRadioClockContext = createContext();
 export const useFMRadioClock = () => useContext(FMRadioClockContext);
 export const FMRadioClockContextProvider = ({ children }) => {
   const [clockIndex, updateIndex] = useState(0);
-  const totalSteps = 10;
+  const totalSteps = 4;
   const intervalDuration = 3000;
 
   useEffect(() => {

@@ -1,5 +1,6 @@
 #l-view-container-home {
-    height: 120%;
+    /* height: 120%; */
+    height: 100%;
     width: 100%;
     margin: 0 auto;
     overflow-y: auto;
@@ -26,6 +27,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 }
 @media screen and (min-width: 750px) {
     #l-home-body-grabber {

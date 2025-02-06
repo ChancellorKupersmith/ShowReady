@@ -14,10 +14,28 @@ button.open-map-view {
     background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-secondary-color));
     color: var(--dark-mode-text-color);
 }
+.theme-toggle-container { 
+    width: 100%;
+    /* border: solid blue; */
+    display: flex;
+    justify-content: end;
+}
 button.theme-toggle {
     background-color: light-dark(var(--light-mode-accent-color), var(--dark-mode-secondary-color));
-    color: var(--dark-mode-text-color);
+    color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
+    padding: '8px';
+    border: none;
+    cursor: pointer;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+}
+.theme-icon-container {
+    position: relative;
+    width: 24px;
+    height: 24px;
+}
+.theme-icon-wrapper {
     position: absolute;
-    right: 20px;
-    top: 50px;
+    inset: 0;
+    transition: transform 0.5s ease, opacity 0.5s ease;   
 }

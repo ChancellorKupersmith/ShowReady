@@ -249,7 +249,7 @@ const fetchEventsArtistsData = async (eventWhereConditional, venueWhereCondition
             ${artistWhereConditional}
         ) AS a
         LEFT JOIN ArtistsGenres AS ag ON a.ID = ag.ArtistID
-        JOIN (
+        LEFT JOIN (
           SELECT g.ID, g.Name
           FROM Genres g
           ${genreWhereConditional}

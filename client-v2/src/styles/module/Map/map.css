@@ -76,6 +76,7 @@
     width: 100%;
     text-align: center !important;
     padding: 8px;
+    color: var(--dark-mode-text-color);
 }
 
 /* Body */
@@ -115,7 +116,7 @@
     flex-direction: column;
     justify-content: space-around;
     width: 100%;
-    color: white;
+    color: light-dark(var(--light-mode-text-color),white);
 
 }
 .venue-popup-event-info {
@@ -134,4 +135,6 @@
 .venue-popup-event-name {
     font-weight: bold;
     text-align: center;
+    color: light-dark(var(--light-mode-text-color),white);
+
 }

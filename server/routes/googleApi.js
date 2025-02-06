@@ -7,7 +7,10 @@ import { type } from 'os';
 import { time } from 'console';
 dotenv.config();
 
-const LOGIN_REDIRECT_URI = 'http://localhost:3000/google_api/login_callback';
+const LOGIN_REDIRECT_URI = 'https://showready.xyz/google_api/login_callback';
+const PROD_CLIENT_REDIRECT_URI = 'https://showready.xyz/map';
+// const LOGIN_REDIRECT_URI = 'http://localhost:3000/google_api/login_callback';
+// const PROD_CLIENT_REDIRECT_URI = 'http://localhost:3000/map';
 const STATE_KEY = 'google_auth_state';
 const generateRandomString = (length) => {
     return crypto
@@ -95,7 +98,7 @@ googleApiRouter.get('/login', (req, res, next) => {
 
 googleApiRouter.get('/login_callback', getAccessToken, async (req, res, next) => {
     try {
-        res.redirect('http://localhost:5173/map');
+        res.redirect(process.env.ENV == 'prod' ? PROD_CLIENT_REDIRECT_URI : 'http://localhost:5173/map');
     } catch(err) {
         next(err);
     }
@@ -139,12 +142,12 @@ googleApiRouter.get('/refresh_token', async (req, res, next) => {
 // proxy requests for client side 
 googleApiRouter.post('/new_playlist', async (req, res, next) => {
     // MOCK TESTING
-    res.json({
-        id: 'PLwkM5ADxvzz_i495V-G-Kk8feFo0dbbiW',
-        type: 'youtube',
-        name: 'test'
-    });
-    return;
+    // res.json({
+    //     id: 'PLwkM5ADxvzz_i495V-G-Kk8feFo0dbbiW',
+    //     type: 'youtube',
+    //     name: 'test'
+    // });
+    // return;
     try{
         const { playlistName, isPrivate } = req.body;
         const accessToken = req.cookies.google_access_token;
@@ -196,9 +199,9 @@ function sleep(ms) {
   
 googleApiRouter.post('/add_playlist_track', async (req, res, next) => {
     // MOCK TESTING
-    await sleep(200);
-    res.status(200).send();
-    return;
+    // await sleep(200);
+    // res.status(200).send();
+    // return;
     
     try {
         const { playlistId, videoId } = req.body;
