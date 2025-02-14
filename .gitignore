@@ -6,8 +6,10 @@
 .direnv/
 .vscode/
 *.env
+*.dump
 logfile
 
+vm/
 client/
 Notes/
 **/dist/
