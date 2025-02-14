@@ -5,6 +5,7 @@
 .direnv/
 .vscode/
 *.env
+*.dump
 logfile
 
 vm/
