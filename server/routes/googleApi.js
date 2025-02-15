@@ -8,7 +8,7 @@ import { time } from 'console';
 dotenv.config();
 
 const LOGIN_REDIRECT_URI = 'https://showready.xyz/google_api/login_callback';
-const PROD_CLIENT_REDIRECT_URI = 'https://showready.xyz/map';
+const PROD_CLIENT_REDIRECT_URI = 'https://showready.xyz';
 // const LOGIN_REDIRECT_URI = 'http://localhost:3000/google_api/login_callback';
 // const PROD_CLIENT_REDIRECT_URI = 'http://localhost:3000/map';
 const STATE_KEY = 'google_auth_state';
