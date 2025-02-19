@@ -6,6 +6,7 @@ import base64
 import asyncio
 import psycopg2
 import functools
+import psycopg2.pool
 from pprint import pformat
 from dotenv import load_dotenv
 from psycopg2.extras import execute_values
@@ -31,6 +32,16 @@ def timer_decorator(func):
             return result
     return wrapper
 
+db_config = {
+    'dbname': os.getenv("PG_DB_NAME"),
+    'host': os.getenv("PG_HOST"),
+    'user': os.getenv("PG_USER"),
+    'password': os.getenv("PG_PASSWORD")
+}
+pg_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, **db_config)
+def closeConnectionPool():
+    pg_pool.closeall()
+
 class PostgresClient:
     def __init__(self, log=None):
         self.connection = None
@@ -38,11 +49,7 @@ class PostgresClient:
         self.log=log
     
     def __enter__(self):
-        self.connection = psycopg2.connect(
-            host=os.getenv("PG_HOST"),
-            dbname=os.getenv("PG_DB_NAME"),
-            user=os.getenv("PG_USER")
-        )
+        self.connection = pg_pool.getconn()
         self.cursor = self.connection.cursor()
         return self
     
@@ -50,24 +57,29 @@ class PostgresClient:
         if self.cursor:
             self.cursor.close()
         if self.connection:
-            self.connection.commit()
-            self.connection.close()
+            pg_pool.putconn(self.connection)
     
     def query(self, query, executemany=None, data=None, params=None, fetchall=False, fetchone=False):
         try:
             if executemany:
                 self.cursor.executemany(query, data)
+                self.connection.commit()
             elif data:
                 execute_values(self.cursor, query, data)
+                self.connection.commit()
             elif params:
                 self.cursor.execute(query, (params,))
+                self.connection.commit()
             else:
                 self.cursor.execute(query)
+                self.connection.commit()
             if fetchall:
                 return self.cursor.fetchall()
             if fetchone:
                 return self.cursor.fetchone()
         except Exception as e:
+            if self.connection:
+                self.connection.rollback()
             self.log(1, f"Database error: {e}")
             raise
 

@@ -5,7 +5,27 @@ import BetaAccess from './BetaAccess';
 import '../../styles/layout/Home/home.css';
 import '../../styles/module/Home/home.css';
 import { ThemeToggle, useThemeData } from './Theme';
+import GitHubLightSvg from '../../assets/github-light.svg';
+import GitHubDarkSvg from '../../assets/github-dark.svg';
 
+const GitHubBtn = ({ theme = 'light' }) => {
+  return (
+    <a
+      className='github-link'
+      href='https://github.com/ChancellorKupersmith/ShowReady'
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <div className='svg-container'>
+        <img
+          loading='lazy'
+          src={ theme === 'dark' ? GitHubDarkSvg : GitHubLightSvg }
+          alt='github repo'
+        />
+      </div>
+    </a>
+  );
+}
 
 const HomeView = () => {
   const { theme } = useThemeData();
@@ -16,6 +36,7 @@ const HomeView = () => {
     <div id='l-view-container-home'  style={{ colorScheme: `${theme}`}}>
       <BetaAccess />
       <div className='theme-toggle-container'>
+        <GitHubBtn theme={theme} />
         <ThemeToggle />
       </div>
       <div id='l-home-body'>
