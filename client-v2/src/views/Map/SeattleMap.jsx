@@ -266,32 +266,6 @@ const SeattleMap = () => {
       mapRef.current.setView([center.lat, center.lng], zoom)
     }
   }, [center, zoom])
-  // sync map markers with filters
-  // useEffect(() => {
-  //   const addMissingMarkers = async () => {
-  //     try{
-  //       if(mapRef.current){
-  //         allVenues.forEach(v => {
-  //           // check if out of sync (if in allVenues but not on map and not in filter exclusions)
-  //           let onMap = false;
-  //           mapRef.current.eachLayer(layer =>{
-  //             if(layer instanceof L.Marker && layer.options.id == `map-marker-${v.name}`){
-  //               onMap = true;
-  //             }
-  //           });
-  //           if(!filters.ex.location.venues.includes(v.name) && !onMap){
-  //             createMarker(mapRef.current, v);
-  //           }
-  //         });
-  //       }
-  //     } catch(err) {
-  //       console.error(err);
-  //     }
-  //   };
-
-  //   addMissingMarkers();
-  // }, [filters]);
-
 
   return (
     <div className='map-container'>

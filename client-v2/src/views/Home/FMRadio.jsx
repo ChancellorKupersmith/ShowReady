@@ -100,11 +100,19 @@ const Dial = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState(null);
 
-  // The center of the dial (matching the circle's cx and cy)
+  // Center of the dial (matches the circle's cx and cy)
   const centerX = 75;
   const centerY = 75;
 
-  // Calculate angle from dial center and update clockIndex based on discrete steps.
+  // Helper function to extract client coordinates from mouse or touch events.
+  const getEventCoords = (e) => {
+    if (e.touches && e.touches.length > 0) {
+      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    }
+    return { clientX: e.clientX, clientY: e.clientY };
+  };
+
+  // Update the dial's angle based on the pointer position.
   const updateAngle = (clientX, clientY, svgRect) => {
     const x = clientX - svgRect.left;
     const y = clientY - svgRect.top;
@@ -116,27 +124,28 @@ const Dial = () => {
     setClockIndex(step);
   };
 
-  const handleMouseDown = (e) => {
+  const handleStart = (e) => {
+    e.preventDefault(); // Prevents default scrolling on touch devices
     setIsManual(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
+    const { clientX, clientY } = getEventCoords(e);
+    setDragStart({ x: clientX, y: clientY });
     setIsDragging(false);
   };
 
-  const handleMouseMove = (e) => {
+  const handleMove = (e) => {
     if (!dragStart) return;
-    // Calculate movement distance to determine if dragging is occurring.
+    const { clientX, clientY } = getEventCoords(e);
     const distance = Math.sqrt(
-      (e.clientX - dragStart.x) ** 2 + (e.clientY - dragStart.y) ** 2
+      (clientX - dragStart.x) ** 2 + (clientY - dragStart.y) ** 2
     );
-    // If movement exceeds a threshold, consider it a drag.
     if (distance > 5) {
       setIsDragging(true);
       const svgRect = e.currentTarget.getBoundingClientRect();
-      updateAngle(e.clientX, e.clientY, svgRect);
+      updateAngle(clientX, clientY, svgRect);
     }
   };
 
-  const handleMouseUp = (e) => {
+  const handleEnd = (e) => {
     if (!isDragging) setClockIndex(prev => (prev + 1) % totalSteps);
     setIsDragging(false);
     setDragStart(null);
@@ -145,20 +154,27 @@ const Dial = () => {
 
   useEffect(() => {
     if (dragStart) {
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mouseup', handleEnd);
+      window.addEventListener('touchend', handleEnd);
     } else {
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchend', handleEnd);
     }
-    return () => window.removeEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchend', handleEnd);
+    }
   }, [dragStart, isDragging]);
 
   return (
     <svg
       width="200"
       height="200"
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      style={{ cursor: 'pointer' }}
+      onMouseDown={handleStart}
+      onTouchStart={handleStart}
+      onMouseMove={handleMove}
+      onTouchMove={handleMove}
+      style={{ cursor: 'pointer', touchAction: 'none' }}
     >
       <circle
         cx="75"
@@ -172,6 +188,7 @@ const Dial = () => {
     </svg>
   );
 };
+
 
 const FMRadio = () => {
   const [radiogenPlaylists, setRadiogenPlaylists] = useState([]);
