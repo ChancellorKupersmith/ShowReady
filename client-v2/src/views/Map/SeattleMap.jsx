@@ -43,6 +43,7 @@ export const MapContextProvider = ({children}) => {
               body: JSON.stringify(postData)
           });
           const data = await response.json();
+          console.log('upcoming events: ')
           console.log(data);
           setUpcomingEvents(data);
       } catch(err) {
@@ -124,7 +125,7 @@ const SeattleMap = () => {
     return (
       <div className='venue-marker-popup'>
         <div className='venue-marker-popup-title-container'>
-          <a className='venue-marker-popup-title' href={venue.venueurl} target='_blank'>{venue.name}</a>
+          <a style={{zIndex: '10'}} className='venue-marker-popup-title' href={venue.venueurl} target='_blank'>{venue.name}</a>
           <div className='venue-marker-popup-title-reqex-btn-container'>
               <button data-venue={venue.name} className='venue-marker-popup-title-reqex-btn req-btn'>
                 <p>+</p>
@@ -139,7 +140,7 @@ const SeattleMap = () => {
               events.map((event, index) => {
                 const imgSrc = event.eoimg ? (event.eoimg != venue.name ? event.eoimg : event.tmimg) : event.tmimg;
                 return (
-                  <a className='venue-marker-popup-event' key={`event-info${index}`} href={ event.ticketslink ? event.ticketslink : event.url } target='_blank'>
+                  <a style={{zIndex: '10'}} className='venue-marker-popup-event' key={`event-info${index}`} href={ event.ticketslink ? event.ticketslink : event.url } target='_blank'>
                     { imgSrc && 
                       <img 
                         className='venue-marker-popup-event-img'
@@ -240,7 +241,7 @@ const SeattleMap = () => {
             venues = await fetchVenues();
           }
           else {
-            venues = allVenues.filter(v => !filters.ex.location.venues.includes(v.name));
+            venues = allVenues.filter(v => !filters.ex.location.venues.includes(v.name) && upcomingEvents[v.name]);
           }
           const markers = {};
           venues.forEach(venue => {
@@ -266,30 +267,30 @@ const SeattleMap = () => {
     }
   }, [center, zoom])
   // sync map markers with filters
-  useEffect(() => {
-    const addMissingMarkers = async () => {
-      try{
-        if(mapRef.current){
-          allVenues.forEach(v => {
-            // check if out of sync (if in allVenues but not on map and not in filter exclusions)
-            let onMap = false;
-            mapRef.current.eachLayer(layer =>{
-              if(layer instanceof L.Marker && layer.options.id == `map-marker-${v.name}`){
-                onMap = true;
-              }
-            });
-            if(!filters.ex.location.venues.includes(v.name) && !onMap){
-              createMarker(mapRef.current, v);
-            }
-          });
-        }
-      } catch(err) {
-        console.error(err);
-      }
-    };
+  // useEffect(() => {
+  //   const addMissingMarkers = async () => {
+  //     try{
+  //       if(mapRef.current){
+  //         allVenues.forEach(v => {
+  //           // check if out of sync (if in allVenues but not on map and not in filter exclusions)
+  //           let onMap = false;
+  //           mapRef.current.eachLayer(layer =>{
+  //             if(layer instanceof L.Marker && layer.options.id == `map-marker-${v.name}`){
+  //               onMap = true;
+  //             }
+  //           });
+  //           if(!filters.ex.location.venues.includes(v.name) && !onMap){
+  //             createMarker(mapRef.current, v);
+  //           }
+  //         });
+  //       }
+  //     } catch(err) {
+  //       console.error(err);
+  //     }
+  //   };
 
-    addMissingMarkers();
-  }, [filters]);
+  //   addMissingMarkers();
+  // }, [filters]);
 
 
   return (
