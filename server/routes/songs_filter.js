@@ -249,14 +249,14 @@ const fetchEventsArtistsData = async (eventWhereConditional, venueWhereCondition
           FROM Artists a
             ${artistWhereConditional}
         ) AS a
-        LEFT JOIN ArtistsGenres AS ag ON a.ID = ag.ArtistID
-        LEFT JOIN (
+        JOIN ArtistsGenres AS ag ON a.ID = ag.ArtistID
+        JOIN (
           SELECT g.ID, g.Name
           FROM Genres g
           ${genreWhereConditional}
         ) AS g ON ag.GenreID = g.ID
       ) AS a ON ea.ArtistID = a.ID
-      `;
+    `;
       // ${ 
       //   !(fromEachArtist && (orderBy == OrderBys.ARTIST || orderBy == OrderBys.EVENT_DATE)) ?
       //   '' :
@@ -533,27 +533,51 @@ const queryVenues = async () => {
   return result.rows;
 };
 
-const queryUpcomingEvents = async (minDate, maxDate) => {
-  const client = await pool.connect();
-  let whereConditional = '';
-  if(minDate || maxDate){
-    whereConditional += `WHERE `;
-    if(minDate) whereConditional += `e.EventDate >= '${(new Date(minDate)).toUTCString()}' AND `;
-    whereConditional = maxDate ? whereConditional + `e.EventDate <= '${(new Date(maxDate)).toUTCString()}'` : whereConditional.substring(0, whereConditional.length - 4);
-  }
-  let query = `
-    SELECT 
+const fetchVenueEventsData = async (eventWhereConditional, venueWhereConditional, artistWhereConditional, genreWhereConditional) => {
+  const filterEventsQuery = `
+    SELECT
+      DISTINCT ON (e.Name, e.EventDate)
       e.Name as EventName, e.EventDate, e.EventTime, e.Url, e.Price, e.EOImg, e.TMImg, e.TicketsLink,
       v.Name AS VenueName
-    FROM Events as e
-    JOIN Venues as v ON v.ID = e.VenueID
-    ${whereConditional}
-    ORDER BY e.EventDate --client should lists events in asc order
+    FROM (
+      SELECT e.ID, e.Name, e.EventDate, e.EventTime, e.URL, e.Price, e.EOImg, e.TMImg, e.TicketsLink, e.Summary, e.AgeRestrictions,
+      e.VenueID FROM Events e
+      ${eventWhereConditional}
+    ) AS e
+    JOIN (
+      SELECT v.Name, v.Hood, v.VenueAddress,
+      v.ID FROM Venues v
+      ${venueWhereConditional}
+    ) AS v ON e.VenueID = v.ID
+    JOIN EventsArtists AS ea ON e.ID = ea.EventID AND e.EventDate = ea.EventDate
+    JOIN (
+      SELECT a.ID, a.Name, a.LastFmUrl, a.SpotifyExternalId, a.SpotifyImg,
+      g.Name AS Genre
+      FROM (
+        SELECT a.ID, a.Name, a.LastFmUrl, a.SpotifyExternalId, a.SpotifyImg
+        FROM Artists a
+          ${artistWhereConditional}
+      ) AS a
+      JOIN ArtistsGenres AS ag ON a.ID = ag.ArtistID
+      JOIN (
+        SELECT g.ID, g.Name
+        FROM Genres g
+        ${genreWhereConditional}
+      ) AS g ON ag.GenreID = g.ID
+    ) AS a ON ea.ArtistID = a.ID
   `;
-  const result = await client.query(query);
+
+  const client = await pool.connect();
+  const filterEventsResult = await client.query(filterEventsQuery);
   client.release();
-  return result.rows;
-};
+  return filterEventsResult.rows.reduce((acc, row) => {
+    if(!acc[row.venuename]){
+      acc[row.venuename] = []
+    }
+    acc[row.venuename].push(row);
+    return acc;
+  }, {});
+}
 
 // ROUTES
 const songsRouter = express.Router();
@@ -643,22 +667,29 @@ songsRouter.get('/venue_markers', async (req, res, next) => {
   }
 });
 
-songsRouter.post('/upcoming_events', async (req, res, next) => {
-  try{
-      const { filters } = req.body;
-      const rows = await queryUpcomingEvents(filters.dateGThan, filters.dateLThan);
-      const events = rows.reduce((acc, row) => {
-        if(!acc[row.venuename]){
-          acc[row.venuename] = [];
-        }
-        acc[row.venuename].push(row)
-        return acc;
-      }, {});
-      res.json(events);
-  } catch (err) {
-      console.error(`Error fetching upcoming events, `, err);
-      next(err)
+songsRouter.post('/upcoming_events',
+  reqQueryParamsCleaner,
+  eventWhereConditionBuilder, venueWhereConditionBuilder, artistWhereConditionBuilder,
+  genreWhereConditionBuilder,
+  async (req, res, next) => {
+    try{
+        const { filters } = req.body;
+        // const rows = await queryUpcomingEvents(filters.dateGThan, filters.dateLThan);
+        // const events = rows.reduce((acc, row) => {
+        //   if(!acc[row.venuename]){
+        //     acc[row.venuename] = [];
+        //   }
+        //   acc[row.venuename].push(row)
+        //   return acc;
+        // }, {});
+        const events = await fetchVenueEventsData(req.eventWhereConditional, req.venueWhereConditional, req.artistWhereConditional, req.genreWhereConditional);
+
+        res.json(events);
+    } catch (err) {
+        console.error(`Error fetching upcoming events, `, err);
+        next(err)
+    }
   }
-});
+);
 
 export default songsRouter;
