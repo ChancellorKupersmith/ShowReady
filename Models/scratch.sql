@@ -61,7 +61,7 @@
 
 -- DO $$
 -- DECLARE
---     StartDate DATE := '2024-08-26';
+--     StartDate DATE := '2025-01-01';
 --     EndDate DATE := '2029-01-01';
 --     CurDate DATE := StartDate;
 -- BEGIN
