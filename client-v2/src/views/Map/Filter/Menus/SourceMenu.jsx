@@ -1,15 +1,14 @@
 import React from 'react';
-import { useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
 import { Toggle } from './MenuUtils';
 
 
 const SourceMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
+    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
     const handleChangeReqSpotify = () => {
-        const newTotal = tempFilters.req.source.spotify ? tempFilters.total - 1 : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
-            total: newTotal,
             req: {
                 ...tempFilters.req,
                 source: {
@@ -18,12 +17,12 @@ const SourceMenu = () => {
                 }
             }
         });
-    }
+        const newTotal = tempFilters.req.source.spotify ? filtersTotal - 1 : filtersTotal + 1;
+        updateFiltersTotal(newTotal);
+    };
     const handleChangeExSpotify = () => {
-        const newTotal = tempFilters.ex.source.spotify ? tempFilters.total - 1 : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
-            total: newTotal,
             ex: {
                 ...tempFilters.ex,
                 source: {
@@ -32,12 +31,12 @@ const SourceMenu = () => {
                 }
             }
         });
-    }
+        const newTotal = tempFilters.ex.source.spotify ? filtersTotal - 1 : filtersTotal + 1;
+        updateFiltersTotal(newTotal);
+    };
     const handleChangeReqYoutube = () => {
-        const newTotal = tempFilters.req.source.spotify ? tempFilters.total - 1 : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
-            total: newTotal,
             req: {
                 ...tempFilters.req,
                 source: {
@@ -46,12 +45,12 @@ const SourceMenu = () => {
                 }
             }
         });
-    }
+        const newTotal = tempFilters.req.source.youtube ? filtersTotal - 1 : filtersTotal + 1;
+        updateFiltersTotal(newTotal);
+    };
     const handleChangeExYoutube = () => {
-        const newTotal = tempFilters.ex.source.youtube ? tempFilters.total - 1 : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
-            total: newTotal,
             ex: {
                 ...tempFilters.ex,
                 source: {
@@ -60,7 +59,9 @@ const SourceMenu = () => {
                 }
             }
         });
-    }
+        const newTotal = tempFilters.ex.source.youtube ? filtersTotal - 1 : filtersTotal + 1;
+        updateFiltersTotal(newTotal);
+    };
 
     return (
         <div className='filter-menu-x'>

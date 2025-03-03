@@ -153,6 +153,9 @@ const SeattleMap = () => {
                     >
                       <div className='venue-popup-event-info'>
                         <div className='venue-popup-event-time'>
+                          {/* <p>{event.venueid}</p> */}
+                          <p>{event.venuelat}</p>
+                          <p>{event.venuelng}</p>
                           <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
                           <p className='time'>{event.eventtime}</p>
                         </div>

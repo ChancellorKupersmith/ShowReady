@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-// import './FilterView.css';
-import FilterLightSvg from '../../../assets/filter-light.svg';
+import './FilterView.css';
 import FilterDarkSvg from '../../../assets/filter-dark.svg';
 import FilterTitle from './FilterTitle';
 import FilterFooter from "./FilterFooter";
 import FilterMenu from './FilterMenu';
 
-import { TempFilterContextProvider } from './FilterContext';
-import { useThemeData } from '../../Home/Theme';
+import { TempFilterContextProvider, useSongsFilter } from './FilterContext';
 
 const FilterModal = () => {
     const [isOpen, setIsOpen] = useState(false);
     const closeModal = () => setIsOpen(!isOpen);
-    const {theme} = useThemeData();
+
+    const { filtersTotal } = useSongsFilter();
     const FilterBtn = () => {
         const FilterImg = () => (
             <div className="svg-container">
@@ -22,6 +21,10 @@ const FilterModal = () => {
                     src={FilterDarkSvg}
                     alt='Filter'
                 />
+                { 
+                    filtersTotal > 0 &&
+                    <span className='total-badge' >{filtersTotal}</span>
+                }
             </div>
         );
         return (

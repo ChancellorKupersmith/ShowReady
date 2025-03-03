@@ -56,6 +56,8 @@ ul.btns-list > * {
 }
 .svg-container {
     /* border: solid red; */
+    position: relative;
+    display: inline-block;
     margin-top: 0px;
     height: 100%;
     width: 100%;

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const SongMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
+    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
     const [songInput, setSongInput] = useState('');
     // input funcs
     const handleSongChange = (event) => setSongInput(event.target.value);
@@ -13,7 +14,6 @@ const SongMenu = () => {
         if(!songInput) return;
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total + 1, 
             req: {
                 ...tempFilters.req,
                 song: {
@@ -22,13 +22,13 @@ const SongMenu = () => {
                 }
             }
         });
+        updateFiltersTotal(filtersTotal + 1);
         setSongInput('')
     }
     const exSong = () => {
         if(!songInput) return;
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 song: {
@@ -37,31 +37,36 @@ const SongMenu = () => {
                 }
             }
         });
+        updateFiltersTotal(filtersTotal + 1);
         setSongInput('')
     }
     // reqex filter tab funcs
-    const removeReqSong = (song) => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total - 1,
-        req: {
-            ...tempFilters.req,
-            song: {
-                ...tempFilters.req.song,
-                names: tempFilters.req.song.names.filter(v => v != song)
+    const removeReqSong = (song) => {
+        updateTempFilters({
+            ...tempFilters,
+            req: {
+                ...tempFilters.req,
+                song: {
+                    ...tempFilters.req.song,
+                    names: tempFilters.req.song.names.filter(v => v != song)
+                }
             }
-        }
-    });
-    const removeExSong = (song) => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total - 1,
-        ex: {
-            ...tempFilters.ex,
-            song: {
-                ...tempFilters.ex.song,
-                names: tempFilters.ex.song.names.filter(v => v != song)
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
+    const removeExSong = (song) => {
+        updateTempFilters({
+            ...tempFilters,
+            ex: {
+                ...tempFilters.ex,
+                song: {
+                    ...tempFilters.ex.song,
+                    names: tempFilters.ex.song.names.filter(v => v != song)
+                }
             }
-        }
-    });
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
     const reqSongs = tempFilters.req.song.names.map((song, index) =>
         <ReqExFilterTab 
             key={`reqfilter-song${index}`}

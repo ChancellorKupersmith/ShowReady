@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const EventMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
+    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
     const [eventInput, setEventInput] = useState('');
     const [gPriceInput, setGPriceInput] = useState('');
     const [lPriceInput, setLPriceInput] = useState('');
@@ -24,7 +25,6 @@ const EventMenu = () => {
         if(!eventInput) return;
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total + 1,
             req: {
                 ...tempFilters.req,
                 event: {
@@ -33,13 +33,13 @@ const EventMenu = () => {
                 }
             }
         });
+        updateFiltersTotal(filtersTotal + 1);
         setEventInput('')
     }
     const exEvent = () => {
         if(!eventInput) return;
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 event: {
@@ -48,65 +48,70 @@ const EventMenu = () => {
                 }
             }
         });
+        updateFiltersTotal(filtersTotal + 1);
         setEventInput('')
     }
     const reqGPrice = () => {
         if(!gPriceInput) return;
-        const newTotal = tempFilters.priceGThan ? tempFilters.total : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
-            total: newTotal,
             priceGThan: gPriceInput
         });
+        const newTotal = tempFilters.priceGThan ? filtersTotal : filtersTotal + 1;
+        updateFiltersTotal(newTotal);
         setGPriceInput('')
     }
     const reqLPrice = () => {
         if(!lPriceInput) return;
-        const newTotal = tempFilters.priceLThan ? tempFilters.total : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
-            total: newTotal,
             priceLThan: lPriceInput
         });
+        const newTotal = tempFilters.priceLThan ? filtersTotal : filtersTotal + 1;
+        updateFiltersTotal(newTotal);
         setLPriceInput('')
     }
     // reqex filter tab funcs
-    const removeReqEvent = (event) => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total - 1, 
-        req: {
-            ...tempFilters.req,
-            event: {
-                ...tempFilters.req.event,
-                names: tempFilters.req.event.names.filter(v => v != event)
+    const removeReqEvent = (event) => {
+        updateTempFilters({
+            ...tempFilters,
+            req: {
+                ...tempFilters.req,
+                event: {
+                    ...tempFilters.req.event,
+                    names: tempFilters.req.event.names.filter(v => v != event)
+                }
             }
-        }
-    });
-    const removeExEvent = (event) => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total - 1,
-        ex: {
-            ...tempFilters.ex,
-            event: {
-                ...tempFilters.ex.event,
-                names: tempFilters.ex.event.names.filter(v => v != event)
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
+    const removeExEvent = (event) => {
+        updateTempFilters({
+            ...tempFilters,
+            ex: {
+                ...tempFilters.ex,
+                event: {
+                    ...tempFilters.ex.event,
+                    names: tempFilters.ex.event.names.filter(v => v != event)
+                }
             }
-        }
-    });
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
     const removeReqGPrice = () => {
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total - 1,
             priceGThan: ''
         });
-    }
+        updateFiltersTotal(filtersTotal - 1);
+    };
     const removeReqLPrice = () => {
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total - 1,
             priceLThan: ''
         });
-    }
+        updateFiltersTotal(filtersTotal - 1);
+    };
     const reqEvents = tempFilters.req.event.names.map((event, index) =>
         <ReqExFilterTab 
             key={`reqfilter-event${index}`}

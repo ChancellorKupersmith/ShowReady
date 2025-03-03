@@ -12,6 +12,18 @@
     border-radius: 7px;
     background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-primary-color));
 }
+.total-badge {
+position: absolute;
+  bottom: 0;
+  right: 0;
+  transform: translate(75%, 50%);
+  background-color: light-dark(var(--light-mode-primary-color), var(--dark-mode-accent-color));
+  color: var(--dark-mode-text-color);
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
 
 
 /* Header */
@@ -31,7 +43,7 @@
     font-weight: 540;
     margin-bottom: 5px;
     margin-left: 5px;
-    color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));;
+    color: light-dark(var(--light-mode-accent-color), var(--dark-mode-accent-color));
 }
 .filter-title p {
     font-size: 11px;
@@ -41,7 +53,7 @@
     margin-bottom: 5px;
     color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));;
 }
-.filter-title button {
+button.close-filter-modal {
     margin-right: 2px;
     font-size: 18px;
     border: none;

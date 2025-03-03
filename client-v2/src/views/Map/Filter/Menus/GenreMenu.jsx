@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const GenreMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
+    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
     const [genreInput, setGenreInput] = useState('');
     const [fromEachGenre, setFromEachGenre] = useState(tempFilters.req.genre.fromEach);
     // input funcs
@@ -15,7 +16,6 @@ const GenreMenu = () => {
         if(!genreInput) return;
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total + 1,
             req: {
                 ...tempFilters.req,
                 genre: {
@@ -24,13 +24,13 @@ const GenreMenu = () => {
                 }
             }
         });
+        updateFiltersTotal(filtersTotal + 1);
         setGenreInput('')
     };
     const exGenre = () => {
         if(!genreInput) return;
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 genre: {
@@ -39,15 +39,14 @@ const GenreMenu = () => {
                 }
             }
         });
+        updateFiltersTotal(filtersTotal + 1);
         setGenreInput('')
     };
     const reqFromEach = () => {
         console.log(fromEachGenre)
         if(fromEachGenre == null) return;
-        const newTotal = tempFilters.req.genre.fromEach ? tempFilters.total : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
-            total: newTotal,
             req: {
                 ...tempFilters.req,
                 genre: {
@@ -56,41 +55,49 @@ const GenreMenu = () => {
                 }
             }
         });
+        const newTotal = tempFilters.req.genre.fromEach ? filtersTotal : filtersTotal + 1;
+        updateFiltersTotal(newTotal);
     };
     // reqex filter tab funcs
-    const removeReqGenre = (genre) => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total - 1,
-        req: {
-            ...tempFilters.req,
-            genre: {
-                ...tempFilters.req.genre,
-                names: tempFilters.req.genre.names.filter(v => v != genre)
+    const removeReqGenre = (genre) => {
+        updateTempFilters({
+            ...tempFilters,
+            req: {
+                ...tempFilters.req,
+                genre: {
+                    ...tempFilters.req.genre,
+                    names: tempFilters.req.genre.names.filter(v => v != genre)
+                }
             }
-        }
-    });
-    const removeExGenre = (genre) => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total + 1,
-        ex: {
-            ...tempFilters.ex,
-            genre: {
-                ...tempFilters.ex.genre,
-                names: tempFilters.ex.genre.names.filter(v => v != genre)
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
+    const removeExGenre = (genre) => {
+        updateTempFilters({
+            ...tempFilters,
+            ex: {
+                ...tempFilters.ex,
+                genre: {
+                    ...tempFilters.ex.genre,
+                    names: tempFilters.ex.genre.names.filter(v => v != genre)
+                }
             }
-        }
-    });
-    const removeReqFromEach = () => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total - 1,
-        req: {
-            ...tempFilters.req,
-            genre: {
-                ...tempFilters.req.genre,
-                fromEach: null
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
+    const removeReqFromEach = () => {
+        updateTempFilters({
+            ...tempFilters,
+            req: {
+                ...tempFilters.req,
+                genre: {
+                    ...tempFilters.req.genre,
+                    fromEach: null
+                }
             }
-        }
-    });
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
     const reqGenres = tempFilters.req.genre.names.map((genre, index) =>
         <ReqExFilterTab 
             key={`reqfilter-genre${index}`}
