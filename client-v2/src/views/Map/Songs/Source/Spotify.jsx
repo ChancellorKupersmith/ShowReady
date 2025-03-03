@@ -58,26 +58,22 @@ export const SpotifyIcon = ({url}) => {
         - adds filters for only spotify songs
 */
 export const SpotifyBtn = () => {
-    const { spotifyData, updateSpotifyData } = useSpotifyData();
+    const { spotifyData, updateSpotifyData, filtersTotal, updateFiltersTotal } = useSpotifyData();
     const { source, changeSource, SPOTIFY_SOURCE, SPOTIFY_COLOR } = useSourceData();
     const { filters, updateFilters } = useSongsFilter();
     const btn_id = 'spotify-btn';
 
     const handleOnClick = () => {
         if(source == SPOTIFY_SOURCE) return;
+
         if(spotifyData === null){ // logged out
             window.location.href = '/spotify/login';
             return;
         }
-        let newTotal = filters.total;
-        if(!filters.req.source.spotify)
-            newTotal += 1;
-        if(filters.req.source.youtube)
-            newTotal -= 1;
+
         changeSource(SPOTIFY_SOURCE);
         updateFilters({
             ...filters,
-            total: newTotal,
             req: {
                 ...filters.req,
                 source: {
@@ -87,7 +83,12 @@ export const SpotifyBtn = () => {
                 }
             }
         });
-
+        let newTotal = filtersTotal;
+        if(!filters.req.source.spotify)
+            newTotal += 1;
+        if(filters.req.source.youtube)
+            newTotal -= 1;
+        updateFiltersTotal(newTotal);
     }
 
     return (

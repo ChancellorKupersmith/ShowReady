@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const AlbumMenu = () => {
     const { tempFilters, updateTempFilters } = useTempSongsFilter();
+    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
     const [albumInput, setAlbumInput] = useState('');
     const [fromEachAlbum, setFromEachAlbum] = useState(tempFilters.req.album.fromEach);
     // input funcs
@@ -15,7 +16,6 @@ const AlbumMenu = () => {
         if(!albumInput) return;
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total + 1,
             req: {
                 ...tempFilters.req,
                 album: {
@@ -24,13 +24,13 @@ const AlbumMenu = () => {
                 }
             }
         });
+        updateFiltersTotal(filtersTotal + 1);
         setAlbumInput('')
     };
     const exAlbum = () => {
         if(!albumInput) return;
         updateTempFilters({
             ...tempFilters,
-            total: tempFilters.total + 1,
             ex: {
                 ...tempFilters.ex,
                 album: {
@@ -39,14 +39,13 @@ const AlbumMenu = () => {
                 }
             }
         });
+        updateFiltersTotal(filtersTotal + 1);
         setAlbumInput('')
     };
     const reqFromEach = () => {
         if(fromEachAlbum == null) return;
-        const newTotal = tempFilters.req.album.fromEach ? tempFilters.total : tempFilters.total + 1;
         updateTempFilters({
             ...tempFilters,
-            total: newTotal,
             req: {
                 ...tempFilters.req,
                 album: {
@@ -55,41 +54,49 @@ const AlbumMenu = () => {
                 }
             }
         });
+        const newTotal = tempFilters.req.album.fromEach ? filtersTotal : filtersTotal + 1;
+        updateFiltersTotal(newTotal);
     };
     // reqex filter tab funcs
-    const removeReqAlbum = (album) => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total - 1,
-        req: {
-            ...tempFilters.req,
-            album: {
-                ...tempFilters.req.album,
-                names: tempFilters.req.album.names.filter(v => v != album)
+    const removeReqAlbum = (album) => {
+        updateTempFilters({
+            ...tempFilters,
+            req: {
+                ...tempFilters.req,
+                album: {
+                    ...tempFilters.req.album,
+                    names: tempFilters.req.album.names.filter(v => v != album)
+                }
             }
-        }
-    });
-    const removeExAlbum = (album) => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total + 1,
-        ex: {
-            ...tempFilters.ex,
-            album: {
-                ...tempFilters.ex.album,
-                names: tempFilters.ex.album.names.filter(v => v != album)
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
+    const removeExAlbum = (album) => {
+        updateTempFilters({
+            ...tempFilters,
+            ex: {
+                ...tempFilters.ex,
+                album: {
+                    ...tempFilters.ex.album,
+                    names: tempFilters.ex.album.names.filter(v => v != album)
+                }
             }
-        }
-    });
-    const removeReqFromEach = () => updateTempFilters({
-        ...tempFilters,
-        total: tempFilters.total - 1,
-        req: {
-            ...tempFilters.req,
-            album: {
-                ...tempFilters.req.album,
-                fromEach: null
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
+    const removeReqFromEach = () => {
+        updateTempFilters({
+            ...tempFilters,
+            req: {
+                ...tempFilters.req,
+                album: {
+                    ...tempFilters.req.album,
+                    fromEach: null
+                }
             }
-        }
-    });
+        });
+        updateFiltersTotal(filtersTotal - 1);
+    };
     const reqAlbums = tempFilters.req.album.names.map((album, index) =>
         <ReqExFilterTab 
             key={`reqfilter-album${index}`}

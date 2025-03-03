@@ -4,11 +4,14 @@ import time
 import httpx
 import base64
 import asyncio
+import logging
 import psycopg2
 import functools
+import psycopg2.pool
 from pprint import pformat
 from dotenv import load_dotenv
 from psycopg2.extras import execute_values
+from logging.handlers import RotatingFileHandler
 
 load_dotenv()
 
@@ -30,6 +33,45 @@ def timer_decorator(func):
             print(f"{func.__name__} took {end_time - start_time:.4f} seconds")
             return result
     return wrapper
+
+class Logger:
+    def __init__(self, name=None, log_file=None, lvl=logging.DEBUG):
+        self.log_file = log_file
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(lvl)
+
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        for handler in self.logger.handlers:
+            handler.setFormatter(formatter)
+        
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(lvl)
+        self.logger.addHandler(console_handler)
+
+        if log_file:
+            file_handler = RotatingFileHandler(log_file, maxBytes=1000000, backupCount=1)
+            file_handler.setLevel(lvl)
+            self.logger.addHandler(file_handler)
+
+    def debug(self, message):
+        self.logger.debug(message)
+
+    def info(self, message):
+        self.logger.info(message)
+
+    def warning(self, message):
+        self.logger.warning(message)
+
+    def error(self, message):
+        self.logger.error(message)
+
+    def critical(self, message):
+        self.logger.critical(message)
+
+    def log(lvl, msg):
+        if lvl == 0: logging.info(msg=msg)
+        elif lvl == 1: logging.error(msg=msg)
+        else: logging.warning(msg=msg)
 
 db_config = {
     'dbname': os.getenv("PG_DB_NAME"),
@@ -79,7 +121,7 @@ class PostgresClient:
         except Exception as e:
             if self.connection:
                 self.connection.rollback()
-            self.log(1, f"Database error: {e}")
+            self.logger.error(f"Database error: {e}")
             raise
 
 
@@ -88,7 +130,7 @@ class GoogleClient:
         self.last_req_time = None
         self.base_url = "https://maps.googleapis.com/maps/api"
         self.apikey = os.getenv("GOOGLE_MAPS_API_KEY")
-        self.log = log
+        self.logger = log
         self.rate_limit = rate_limit
     
     async def get(self, endpoint, params, max_retries=3):
@@ -103,13 +145,13 @@ class GoogleClient:
                     if elapsed < self.rate_limit:
                         time.sleep(self.rate_limit - elapsed)
                 async with httpx.AsyncClient() as client:
-                    self.log(0, f"Google API Request: {url}")
+                    self.logger.info(f"Google API Request: {url}")
                     response = await client.get(url)
                     self.last_req_time = time.time()
                     if response.status_code == 200:
                         return response
             except Exception as e:
-                self.log(1, f"ERROR: Failed to send google api request: {e}")
+                self.logger.error(f"ERROR: Failed to send google api request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
                 time.sleep(300)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
@@ -119,7 +161,7 @@ class TicketMasterClient:
         self.last_req_time = None
         self.base_url = "https://app.ticketmaster.com/discovery/v2"
         self.apikey = os.getenv("TICKET_MASTER_API_KEY")
-        self.log = log
+        self.logger = log
         self.rate_limit = rate_limit
     
     async def get(self, endpoint, params, max_retries=3):
@@ -134,7 +176,7 @@ class TicketMasterClient:
                     if elapsed < self.rate_limit:
                         time.sleep(self.rate_limit - elapsed)
                 async with httpx.AsyncClient() as client:
-                    self.log(0, f"TicketMaster Request: {url}")
+                    self.logger.info(f"TicketMaster Request: {url}")
                     response = await client.get(url)
                     self.last_req_time = time.time()
                     if response.status_code == 200:
@@ -143,10 +185,10 @@ class TicketMasterClient:
                     if response.status_code == 429:
                         retry_after = response.headers.get("Rate-Limit-Reset")
                         if retry_after:
-                            self.log(1, f"Rate limit exceeded. Retry after {retry_after}")
+                            self.logger.error(f"Rate limit exceeded. Retry after {retry_after}")
                             raise Exception("RATE LIMIT EXCEEDED")
             except Exception as e:
-                self.log(1, f"ERROR: Failed to send ticketmaster request: {e}")
+                self.logger.error(f"ERROR: Failed to send ticketmaster request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
                 time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
@@ -157,14 +199,14 @@ class LastFmClient:
         self.base_url = "http://ws.audioscrobbler.com/2.0/"
         self.api_resp_format = "&format=json"
         self.apikey = os.getenv("LASTFM_API_KEY")
-        self.log = log
+        self.logger = log
 
     async def get(self, endpoint, params, max_retries=3):
         url_req = self.base_url + "?method=" + endpoint
         for p in params:
             url_req += f"&{p}"
         url_req += f"&{self.api_resp_format}&api_key={self.apikey}"
-        self.log(0, f"LastFM Request: {url_req}")
+        self.logger.info(f"LastFM Request: {url_req}")
         for attempt in range(max_retries):
             try:
                 if self.last_req_time is not None:
@@ -178,17 +220,17 @@ class LastFmClient:
                         return response
                     # Handle rate limiter
                     if response.status_code == 429:
-                        self.log(2, f"Rate limit exceeded, headers: {pformat(dict(response.headers))}")
+                        self.logger.warning(f"Rate limit exceeded, headers: {pformat(dict(response.headers))}")
                         retry_after = response.headers.get("retry-after")
                         if retry_after:
                             wait_time = int(retry_after) / 1000
-                            self.log(2, f"Rate limit exceeded. Retrying after {wait_time} secs...")
+                            self.logger.warning(f"Rate limit exceeded. Retrying after {wait_time} secs...")
                             await asyncio.sleep(wait_time)
                         else:
-                            self.log(1, f"Rate limit exceeded. but retry-after header not found.")
+                            self.logger.error(f"Rate limit exceeded. but retry-after header not found.")
                             raise Exception("RATE LIMIT EXCEEDED")
             except Exception as e:
-                self.log(1, f"ERROR: Failed to send lastfm request: {e}")
+                self.logger.error(f"ERROR: Failed to send lastfm request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
                 time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
@@ -198,7 +240,7 @@ class SpotifyClient:
         self.last_req_time = None
         self.access_token = None
         self.base_url = "https://api.spotify.com/v1"
-        self.log = log
+        self.logger = log
 
     async def init_access_token(self):
         spotify_client_id = os.getenv("SPOTIFY_CLIENT_ID")
@@ -217,7 +259,7 @@ class SpotifyClient:
         if response.status_code == 200:
             self.access_token = response.json()['access_token']
         else:
-            self.log(1, f'Error fetching access token, Status code {response.status_code}: {response.text}')
+            self.logger.error(f'Error fetching access token, Status code {response.status_code}: {response.text}')
 
     async def get(self, endpoint, params=None, max_retries=3):
         url = self.base_url + endpoint
@@ -234,7 +276,7 @@ class SpotifyClient:
                     if elapsed < 3:
                         time.sleep(3 - elapsed)
                 async with httpx.AsyncClient() as client:
-                    self.log(0, f"Spotify Request: {url}")
+                    self.logger.info(f"Spotify Request: {url}")
                     response = await client.get(url, headers=headers)
                     self.last_req_time = time.time()
                     if response.status_code == 200:
@@ -244,16 +286,16 @@ class SpotifyClient:
                         retry_after = response.headers.get("retry-after")
                         if retry_after:
                             wait_time = int(retry_after)
-                            self.log(2, f"Rate limit exceeded. Retrying after {wait_time} secs...")
+                            self.logger.warning(f"Rate limit exceeded. Retrying after {wait_time} secs...")
                             await asyncio.sleep(wait_time)
                         else:
-                            self.log(1, f"Rate limit exceeded. but retry-after header not found.")
+                            self.logger.error(f"Rate limit exceeded. but retry-after header not found.")
                             raise Exception("RATE LIMIT EXCEEDED")
                     # Handle expired access token
                     elif response.status_code == 401:
                         await self.init_access_token()
             except Exception as e:
-                self.log(1, f"ERROR: Failed to send spotify request: {e}")
+                self.logger.error(f"ERROR: Failed to send spotify request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
                 time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")

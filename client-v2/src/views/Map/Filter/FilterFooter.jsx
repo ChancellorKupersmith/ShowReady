@@ -1,8 +1,9 @@
 import React, {useState, useEffect} from 'react';
-import { useTempSongsFilter } from "./FilterContext";
+import { useSongsFilter, useTempSongsFilter } from "./FilterContext";
 
 const FilterFooter = ({closeModal}) => {
-    const { tempFilters, revertTempFilters, saveTempFilters } = useTempSongsFilter();
+    const { updateFiltersTotal } = useSongsFilter()
+    const { tempFilters, clearFilters, saveTempFilters } = useTempSongsFilter();
     const [totalResults, setTotalResults] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -32,14 +33,16 @@ const FilterFooter = ({closeModal}) => {
         fetchTotalResults();
     }, [tempFilters]);
 
-    const handleCancel = () => {
-        revertTempFilters();
-        closeModal();
-    }
+    const handleClearFilters = () => {
+        clearFilters();
+        updateFiltersTotal(0);
+    };
+
+
     const handleSave = () => {
         saveTempFilters();
         closeModal();
-    }
+    };
 
     return (
         <div className='filter-footer'>
@@ -51,13 +54,13 @@ const FilterFooter = ({closeModal}) => {
             : 
                 `Found: ${totalResults} Songs`
             }
-            <div>
-                <button onClick={handleCancel}>Cancel</button>
+            <div style={{display: 'flex', alignItems: 'center'}}>
+                <button onClick={handleClearFilters}>Clear all</button>
                 <button onClick={handleSave}>Apply</button>
             </div>
         </div>
     )
-}
+};
 
 
 

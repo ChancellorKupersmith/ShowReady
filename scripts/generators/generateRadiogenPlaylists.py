@@ -2,7 +2,6 @@ import os
 import re
 import json
 import asyncio
-import logging
 import spotipy
 import datetime
 from spotipy import SpotifyOAuth
@@ -34,16 +33,7 @@ load_dotenv()
 current_path = os.getcwd()
 log_filename = datetime.datetime.now().strftime('generateRadiogenPlaylists_%Y%m%d_%H%M%S.log')
 log_filename = str(current_path) + '/scrapingLogs/' + log_filename
-logging.basicConfig(
-    filename=log_filename,
-    filemode='w',
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.DEBUG
-)
-def log(lvl, msg):
-    if lvl == 0: logging.info(msg=msg)
-    elif lvl == 1: logging.error(msg=msg)
-    else: logging.warning(msg=msg)
+logger = Logger('generateRadiogenPlaylists', log_file=log_filename)
 
 @timer_decorator
 def get_date_ranges():
@@ -77,11 +67,11 @@ async def get_existing_playlists_fromDB(period):
     """
     playlists = {}
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(log=logger) as db:
             rows = db.query(query=select_query_playlists, fetchall=True)
             playlists = { row[1]: SpotifyPlaylist(id=row[0], name=row[1], spotifyexternalid=row[2]) for row in rows }
     except Exception as e:
-        log(1, f"Error fetching existing playlists from db returning empty array, {e}")
+        logger.error(f"Error fetching existing playlists from db returning empty array, {e}")
     finally:
         return playlists
 
@@ -95,18 +85,18 @@ async def get_mode_genres_fromDB(min_date, max_date):
     """
     genres = []
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(log=logger) as db:
             rows = db.query(query=select_query_genres, fetchall=True)
             genres = [ Genre(name=row[0]) for row in rows ]
-            log(0, f'Genres: {genres}')
+            logger.info(f'Genres: {genres}')
     except Exception as e:
-        log(1, f"Error fetching genres for events between {min_date} and {max_date} from db returning empty array, {e}")
+        logger.error(f"Error fetching genres for events between {min_date} and {max_date} from db returning empty array, {e}")
     finally:
         return genres
 
 @timer_decorator
 async def get_genre_playlist_tracklist(min_date, max_date, genre_name, songs_per_artist):
-    log(0, f'SELECTING SONGS FOR GENRE: {genre_name}')
+    logger.info(f'SELECTING SONGS FOR GENRE: {genre_name}')
     SPOTIFY_PLAYLIST_SIZE_LIMIT = 10000
     select_query_songs = f"""
         WITH FromEachRankedSongs AS (
@@ -127,14 +117,14 @@ async def get_genre_playlist_tracklist(min_date, max_date, genre_name, songs_per
         )
         SELECT SpotifyExternalId FROM FromEachRankedSongs WHERE rn_artist <= {songs_per_artist}
     """
-    log(0, f'TRACKLIST QUERY: {select_query_songs}')
+    logger.info(f'TRACKLIST QUERY: {select_query_songs}')
     tracklist = []
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(log=logger) as db:
             rows = db.query(query=select_query_songs, fetchall=True)
             tracklist = [ row[0] for row in rows ]
     except Exception as e:
-        log(1, f'Error fetching tracklist uris for playlist {genre_name} between {min_date} and {max_date}, {e}')
+        logger.error(f'Error fetching tracklist uris for playlist {genre_name} between {min_date} and {max_date}, {e}')
     finally:
         return tracklist
 
@@ -152,11 +142,11 @@ async def get_tis_playlist_tracklist(min_date, max_date):
     """
     tracklist = []
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(log=logger) as db:
             rows = db.query(query=select_query_genres, fetchall=True)
             tracklist = [ row[0] for row in rows ]
     except Exception as e:
-        log(1, f'Error fetching tracklist uris for playlist \'This is Seattle\' between {min_date} and {max_date}, {e}')
+        logger.error(f'Error fetching tracklist uris for playlist \'This is Seattle\' between {min_date} and {max_date}, {e}')
     finally:
         return tracklist
 
@@ -166,17 +156,17 @@ async def get_playlist_image(client, playlist):
         resp = await client.get(f"/playlists/{playlist.spotify_id}/images")
         if resp.status_code == 200:
             all_imgs = resp.json()
-            log(0, f'Imgs: {all_imgs}')
+            logger.info(f'Imgs: {all_imgs}')
             if len(all_imgs) > 0:
                 img_data = all_imgs[0]
                 playlist.img = img_data.get('url')
                 playlist.img_height = img_data.get('height')
                 playlist.img_width = img_data.get('width')
             return playlist
-        log(2, f"Failed to fetch spotify playlist: {playlist.name}'s image. Status code: {resp.status_code}, Response: {resp.text}")
+        logger.warning(f"Failed to fetch spotify playlist: {playlist.name}'s image. Status code: {resp.status_code}, Response: {resp.text}")
         return None
     except Exception as e:
-        log(1, f"Error fetching spotify playlist image, {e}")
+        logger.error(f"Error fetching spotify playlist image, {e}")
 
 @timer_decorator
 def save_spotify_playlists_inDB(playlists_to_save):
@@ -192,11 +182,11 @@ def save_spotify_playlists_inDB(playlists_to_save):
     """
     try:
         playlist_tuples = [ (p.name, p.spotify_id, p.img, p.img_height, p.img_width) for p in playlists_to_save ]
-        with PostgresClient(log=log) as db:
+        with PostgresClient(log=logger) as db:
             db.query(query=insert_query, data=playlist_tuples)
-            log(0, f'Saved playlist { playlists_to_save[0].name }')
+            logger.info(f'Saved playlist { playlists_to_save[0].name }')
     except Exception as e:
-        log(1, f"Error saving spotify playlists in db: {e}")
+        logger.error(f"Error saving spotify playlists in db: {e}")
 
 def extract_genre(playlist_name):
     match = re.search(r'Seattle\s+(.*?)\s+(This|Next)', playlist_name)
@@ -206,7 +196,7 @@ def extract_genre(playlist_name):
 
 async def main():
     print('Started radiogen playlists')
-    client = SpotifyClient(log=log)
+    client = SpotifyClient(log=logger)
     client.init_access_token()
     spotipy_client = spotipy.Spotify(auth_manager=SpotifyOAuth(
         client_id=os.getenv('SPOTIFY_CLIENT_ID'),
@@ -218,7 +208,7 @@ async def main():
     # Get most frequent genres for given timelines
     date_ranges = get_date_ranges()
     for period in date_ranges.keys():
-        log(0, f'Creating playlists for {period}')
+        logger.info(f'Creating playlists for {period}')
         min_date, max_date = date_ranges[period]
         existing_playlists = await get_existing_playlists_fromDB(period)
         # update genre playlists
@@ -240,7 +230,7 @@ async def main():
                     spotifyexternalid=response['id'],
                 )
             except Exception as e:
-                log(1, f'Error creating {playlist_name} playlist, {e}')
+                logger.error(f'Error creating {playlist_name} playlist, {e}')
         # for each playlist update tracklist
         for playlist in existing_playlists.values():
             try:
@@ -257,9 +247,9 @@ async def main():
                     for i in range(0, len(tracklist), 100):
                         chunk = tracklist[i:i + 100]
                         spotipy_client.playlist_add_items(playlist.spotify_id, chunk)
-                        log(0, f'Adding to {playlist.name}: {chunk}')
+                        logger.info(f'Adding to {playlist.name}: {chunk}')
                 else:
-                    log(2, f'FAILED TO FIND TRACKLIST FOR {playlist.name}')
+                    logger.warning(f'FAILED TO FIND TRACKLIST FOR {playlist.name}')
                 """
                     update playlist cover images
                     save playlist
@@ -268,7 +258,7 @@ async def main():
 
                 save_spotify_playlists_inDB([ playlist_to_save ])
             except Exception as e:
-                log(1, f'Failed to update and save tracklist for {playlist.name}, {e}')
+                logger.error(f'Failed to update and save tracklist for {playlist.name}, {e}')
         # update this is seattle playlist
     #     playlist_name = f'This is Seattle {period}'
     #     playlist = existing_playlists.get(playlist_name)
@@ -285,7 +275,7 @@ async def main():
     #                 spotifyexternalid=response['id'],
     #             )
     #         except Exception as e:
-    #             log(1, f'Error creating {playlist_name} playlist, {e}')
+    #             logger.error(f'Error creating {playlist_name} playlist, {e}')
     #     tracklist = await get_tis_playlist_tracklist(min_date, max_date)
     #     spotipy_client.playlist_replace_items(playlist.spotify_id, tracklist)
         
@@ -299,6 +289,6 @@ async def main():
     #     # get playlist img after tracks uploaded (inorder to get auto gen img from spotify)
     #     playlists_to_save.append(await get_playlist_image(client, p))
     # save_spotify_playlists_inDB(playlists_to_save)
-    log(0, 'SUCCESSFULLY CREATED RADIOGEN PLAYLISTS!')
+    logger.info('SUCCESSFULLY CREATED RADIOGEN PLAYLISTS!')
     print(f'Completed radiogen playlists, logs: {log_filename}')
 asyncio.run(main())

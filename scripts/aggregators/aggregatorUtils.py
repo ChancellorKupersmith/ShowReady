@@ -1,36 +1,80 @@
 import os
+import sys
 import json
 import time
 import httpx
 import base64
 import asyncio
+import logging
 import psycopg2
 import functools
 import psycopg2.pool
 from pprint import pformat
 from dotenv import load_dotenv
 from psycopg2.extras import execute_values
+from logging.handlers import RotatingFileHandler
 
 load_dotenv()
+def timer_decorator(logger):
+    def actual_decorator(func):
+        if asyncio.iscoroutinefunction(func):
+            @functools.wraps(func)
+            async def wrapper(*args, **kwargs):
+                start_time = time.time()
+                result = await func(*args, **kwargs)
+                end_time = time.time()
+                logger.debug(f"{func.__name__} took {end_time - start_time:.4f} seconds")
+                return result
+        else:
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                start_time = time.time()
+                result = func(*args, **kwargs)
+                end_time = time.time()
+                logger.debug(f"{func.__name__} took {end_time - start_time:.4f} seconds")
+                return result
+        return wrapper
 
-def timer_decorator(func):
-    if asyncio.iscoroutinefunction(func):
-        @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
-            start_time = time.time()
-            result = await func(*args, **kwargs)
-            end_time = time.time()
-            print(f"{func.__name__} took {end_time - start_time:.4f} seconds")
-            return result
-    else:
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            start_time = time.time()
-            result = func(*args, **kwargs)
-            end_time = time.time()
-            print(f"{func.__name__} took {end_time - start_time:.4f} seconds")
-            return result
-    return wrapper
+class Logger:
+    def __init__(self, name=None, log_file=None, lvl=logging.DEBUG):
+        self.log_file = log_file
+        self.logger = logging.getLogger(name)
+        self.logger.setLevel(lvl)
+
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        for handler in self.logger.handlers:
+            handler.setFormatter(formatter)
+        
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(lvl)
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
+
+        if log_file:
+            file_handler = RotatingFileHandler(log_file, maxBytes=1000000, backupCount=1)
+            file_handler.setLevel(lvl)
+            file_handler.setFormatter(formatter)
+            self.logger.addHandler(file_handler)
+
+    def debug(self, message):
+        self.logger.debug(message)
+
+    def info(self, message):
+        self.logger.info(message)
+
+    def warning(self, message):
+        self.logger.warning(message)
+
+    def error(self, message):
+        self.logger.error(message)
+
+    def critical(self, message):
+        self.logger.critical(message)
+
+    def log(lvl, msg):
+        if lvl == 0: logging.info(msg=msg)
+        elif lvl == 1: logging.error(msg=msg)
+        else: logging.warning(msg=msg)
 
 db_config = {
     'dbname': os.getenv("PG_DB_NAME"),

@@ -18,7 +18,6 @@ export const FilterContextProvider = ({ children }) => {
     const defaultFilters = {
         orderBy: OrderBys.RANDOM,
         descending: false,
-        total: 3,
         dateGThan: formatDate(today),
         dateLThan: formatDate(monthFromToday),
         priceGThan: '',
@@ -89,21 +88,27 @@ export const FilterContextProvider = ({ children }) => {
             },
         },
     };
-    
     const [filters, setFilters] = useState(() => {
         const savedFilters = sessionStorage.getItem('filters');
         return savedFilters ? JSON.parse(savedFilters) : defaultFilters;
     });
-    useEffect(() => {
-        sessionStorage.setItem('filters', JSON.stringify(filters));
-    }, [filters]);
+    useEffect(() => sessionStorage.setItem('filters', JSON.stringify(filters)), [filters]);
     const updateFilters = (newFiltersObj) => {
         if(!newFiltersObj) return;
         setFilters(newFiltersObj);
     }
 
+    const [filtersTotal, setFiltersTotal] = useState(() => {
+        const savedFiltersTotal = parseInt(sessionStorage.getItem('filtersTotal'));
+        return savedFiltersTotal ? savedFiltersTotal : 3; // 3 filters in default filters
+    });
+    useEffect(() => sessionStorage.setItem('filtersTotal', filtersTotal), [filtersTotal]);
+    const updateFiltersTotal = (newFiltersTotal) => {
+        setFiltersTotal(newFiltersTotal);
+    };
+
     return (
-        <SongsFilterContext.Provider value={{ filters, updateFilters }}>
+        <SongsFilterContext.Provider value={{ filters, updateFilters, filtersTotal, updateFiltersTotal }}>
             { children }
         </SongsFilterContext.Provider>
     );
@@ -114,8 +119,83 @@ export const useTempSongsFilter = () => useContext(TempSongsFilterContext);
 export const TempFilterContextProvider = ({ children }) => {
     const { filters, updateFilters } = useSongsFilter();
     const [tempFilters, setTempFilters] = useState(filters);
+    const clearedFilters = {
+        orderBy: filters.orderBy,
+        descending: filters.descending,
+        dateGThan: '',
+        dateLThan: '',
+        priceGThan: '',
+        priceLThan: '',
+        randomSeed: filters.randomSeed,
+        ex: {
+            genre: {
+                names: [],
+            },
+            date: {
+                dates: [],
+                eventTimes: [],
+            },
+            location: {
+                venues: [],
+                hoods: [],
+            },
+            event: {
+                names: [],
+            },
+            artist: {
+                names: [],
+
+            },
+            album: {
+                names: [],
+            },
+            song: {
+                names: [],
+                ids: [],
+            },
+            source: {
+                spotify: false,
+                youtube: false,
+            },
+        },
+        req: {
+            genre: {
+                names: [],
+                fromEach: null,
+            },
+            date: {
+                dates: [],
+                eventTimes: [],
+            },
+            location: {
+                venues: [],
+                hoods: [],
+                addresses: [],
+            },
+            event: {
+                names: [],
+            },
+            artist: {
+                names: [],
+                fromEach: null,
+            },
+            album: {
+                names: [],
+                fromEach: null,
+            },
+            song: {
+                names: [],
+            },
+            source: {
+                spotify: false,
+                youtube: false,
+            },
+        },
+    };
+
 
     const revertTempFilters = () => setTempFilters(filters);
+    const clearFilters = () => setTempFilters(clearedFilters);
     const saveTempFilters = () => updateFilters(tempFilters);
     const updateTempFilters = (newFiltersObj) => {
         console.log(newFiltersObj)
@@ -123,7 +203,7 @@ export const TempFilterContextProvider = ({ children }) => {
     }
 
     return (
-        <TempSongsFilterContext.Provider value={{ tempFilters, updateTempFilters, revertTempFilters, saveTempFilters }}>
+        <TempSongsFilterContext.Provider value={{ tempFilters, updateTempFilters, clearFilters, saveTempFilters, revertTempFilters, }}>
             { children }
         </TempSongsFilterContext.Provider>
     );
