@@ -18,7 +18,6 @@ export const FilterContextProvider = ({ children }) => {
     const defaultFilters = {
         orderBy: OrderBys.RANDOM,
         descending: false,
-        total: 3,
         dateGThan: formatDate(today),
         dateLThan: formatDate(monthFromToday),
         priceGThan: '',
@@ -123,7 +122,6 @@ export const TempFilterContextProvider = ({ children }) => {
     const clearedFilters = {
         orderBy: filters.orderBy,
         descending: filters.descending,
-        total: 0,
         dateGThan: '',
         dateLThan: '',
         priceGThan: '',

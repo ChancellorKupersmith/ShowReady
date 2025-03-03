@@ -64,7 +64,7 @@ export const MapContextProvider = ({children}) => {
 
 const SeattleMap = () => {
   const { center, zoom, setVenueMarkers, allVenues, setAllVenues, upcomingEvents } = useMap();
-  const { filters, updateFilters } = useSongsFilter();
+  const { filters, updateFilters, filtersTotal, updateFiltersTotal } = useSongsFilter();
   const mapRef = useRef(null);
 
   // HELPER FUNCS
@@ -86,7 +86,6 @@ const SeattleMap = () => {
       if(!filters.req.location.venues.includes(venueName)){
         updateFilters((prevState) => ({
           ...prevState,
-          total: prevState.total + 1,
           req: {
               ...prevState.req,
               location: {
@@ -95,6 +94,7 @@ const SeattleMap = () => {
               }
           }
         }));
+        updateFiltersTotal(filtersTotal + 1);
       }
     }
 
@@ -103,7 +103,6 @@ const SeattleMap = () => {
       if(!filters.ex.location.venues.includes(venueName)){
         updateFilters((prevState) => ({
             ...prevState,
-            total: prevState.total + 1,
             ex: {
                 ...prevState.ex,
                 location: {
@@ -112,6 +111,7 @@ const SeattleMap = () => {
                 }
             }
         }));
+        updateFiltersTotal(filtersTotal + 1);
       };
       mapRef.current.eachLayer(layer => {
         if(layer.options.id == `map-marker-${venueName}`) {

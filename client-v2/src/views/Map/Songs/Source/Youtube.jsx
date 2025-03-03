@@ -46,24 +46,20 @@ export const YouTubeIcon = ({url}) => {
 export const YouTubeBtn = () => {
     const { ytData, updateYTData } = useYouTubeData();
     const { source, changeSource, YOUTUBE_SOURCE, YOUTUBE_COLOR } = useSourceData();
-    const { filters, updateFilters } = useSongsFilter();
+    const { filters, updateFilters, filtersTotal, updateFiltersTotal } = useSongsFilter();
     
     
     const handleOnClick = async () => {
         if(source == YOUTUBE_SOURCE) return;
+        
         if(ytData === null){ // logged out
             window.location.href = '/google_api/login';
             return;
         }
-        let newTotal = filters.total;
-        
-        if(!filters.req.source.youtube)
-            newTotal += 1;
-        if(filters.req.source.spotify)
-            newTotal -= 1;
+
+        changeSource(YOUTUBE_SOURCE);
         updateFilters({
             ...filters,
-            total: newTotal,
             req: {
                 ...filters.req,
                 source: {
@@ -73,7 +69,12 @@ export const YouTubeBtn = () => {
                 }
             }
         });
-        changeSource(YOUTUBE_SOURCE);
+        let newTotal = filters.total;
+        if(!filters.req.source.youtube)
+            newTotal += 1;
+        if(filters.req.source.spotify)
+            newTotal -= 1;
+        updateFiltersTotal(newTotal);
     }
 
     return (
