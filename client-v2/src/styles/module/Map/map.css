@@ -61,6 +61,7 @@
 }
 .venue-marker-popup-title-reqex-btn {
     flex: 1;
+    z-index: 15 !important;
     display: flex;
     max-height: 30px;
     width: 40%;

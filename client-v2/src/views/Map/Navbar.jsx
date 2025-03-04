@@ -23,7 +23,6 @@ const PlaceHolderBtn = ({icon, route}) => {
     const navigate = useNavigate();
     const handleViewChange = () => navigate(route);
     const handleOnClickAbout = () => {
-        console.log(icon);  
         toast.warn('feature coming soon!', {
             autoClose: true
         });

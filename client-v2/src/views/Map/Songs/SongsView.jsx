@@ -93,7 +93,7 @@ const SongsModal = () => {
                         spotifyID: spotifyUserMeta['id'],
                         profileImgURL: spotifyUserMeta['profileImg'],
                     };
-                    console.log(spotifyData.spotifyID)
+                    // console.log(spotifyData.spotifyID)
                     updateSpotifyData(spotifyData);
                 }
 

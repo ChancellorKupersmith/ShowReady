@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import ReactDOMServer from 'react-dom/server';
+import { createRoot } from 'react-dom/client';
 import { displayDate } from "./Filter/Menus/DateMenu";
 import '../../styles/module/Map/map.css';
 import { useSongsFilter } from './Filter/FilterContext';
@@ -18,7 +18,6 @@ export const MapContextProvider = ({children}) => {
   const findVenue = async (venueName) => {
     allVenues.forEach(v => {
       if(v.name == venueName) {
-        console.log(v)
         setZoom(16);
         setCenter({ lat: v.lat, lng: v.lng });
         venueMarkers[v.name].openPopup();
@@ -43,7 +42,6 @@ export const MapContextProvider = ({children}) => {
               body: JSON.stringify(postData)
           });
           const data = await response.json();
-          console.log('upcoming events: ')
           console.log(data);
           setUpcomingEvents(data);
       } catch(err) {
@@ -78,59 +76,61 @@ const SeattleMap = () => {
     } catch(err) {
         console.error(err)
     }
-  }; 
-  // writing one click handler to avoid performance issues with dealing with many individual event listeners
-  const handleReqExVenueClick = (event) => {
-    if(event.target.closest('.req-btn')){
-      const venueName = event.target.closest('.req-btn').dataset.venue;
-      if(!filters.req.location.venues.includes(venueName)){
-        updateFilters((prevState) => ({
+  };
+
+  const handleReqVenueOnClick = (venueName) => {
+    if(!filters.req.location.venues.includes(venueName)){
+      updateFilters((prevState) => ({
+        ...prevState,
+        req: {
+            ...prevState.req,
+            location: {
+                ...prevState.req.location,
+                venues: [...prevState.req.location.venues, venueName]
+            }
+        }
+      }));
+      updateFiltersTotal(filtersTotal + 1);
+    }
+  };
+  const handleExVenueOnClick = (venueName) => {
+    if(!filters.ex.location.venues.includes(venueName)){
+      updateFilters((prevState) => ({
           ...prevState,
-          req: {
-              ...prevState.req,
+          ex: {
+              ...prevState.ex,
               location: {
-                  ...prevState.req.location,
-                  venues: [...prevState.req.location.venues, venueName]
+                  ...prevState.ex.location,
+                  venues: [...prevState.ex.location.venues, venueName]
               }
           }
-        }));
-        updateFiltersTotal(filtersTotal + 1);
+      }));
+      updateFiltersTotal(filtersTotal + 1);
+    };
+    mapRef.current.eachLayer(layer => {
+      if(layer.options.id == `map-marker-${venueName}`) {
+        mapRef.current.removeLayer(layer);
       }
-    }
-
-    if(event.target.closest('.ex-btn')){
-      const venueName = event.target.closest('.ex-btn').dataset.venue;
-      if(!filters.ex.location.venues.includes(venueName)){
-        updateFilters((prevState) => ({
-            ...prevState,
-            ex: {
-                ...prevState.ex,
-                location: {
-                    ...prevState.ex.location,
-                    venues: [...prevState.ex.location.venues, venueName]
-                }
-            }
-        }));
-        updateFiltersTotal(filtersTotal + 1);
-      };
-      mapRef.current.eachLayer(layer => {
-        if(layer.options.id == `map-marker-${venueName}`) {
-          mapRef.current.removeLayer(layer);
-        }
-      });
-    }
-  }
-
+    });
+  };
   const MarkerPopup = ({venue, events}) => {
     return (
       <div className='venue-marker-popup'>
         <div className='venue-marker-popup-title-container'>
           <a style={{zIndex: '10'}} className='venue-marker-popup-title' href={venue.venueurl} target='_blank'>{venue.name}</a>
           <div className='venue-marker-popup-title-reqex-btn-container'>
-              <button data-venue={venue.name} className='venue-marker-popup-title-reqex-btn req-btn'>
+              <button 
+                data-venue={venue.name}
+                className='venue-marker-popup-title-reqex-btn req-btn'
+                onClick={() => handleReqVenueOnClick(venue.name)}
+              >
                 <p>+</p>
               </button>
-              <button data-venue={venue.name} className='venue-marker-popup-title-reqex-btn ex-btn'>
+              <button
+                data-venue={venue.name}
+                className='venue-marker-popup-title-reqex-btn ex-btn'
+                onClick={() => handleExVenueOnClick(venue.name)}
+              >
                 <p>-</p>
               </button>
           </div>
@@ -152,14 +152,15 @@ const SeattleMap = () => {
                     onClick={e => { e.preventDefault(); console.log(e.target.parentNode); e.target.parentNode.click(); }}
                     >
                       <div className='venue-popup-event-info'>
-                        <div className='venue-popup-event-time'>
-                          {/* <p>{event.venueid}</p> */}
+                        {/* <div className='venue-popup-event-time'>
+                          <p>{event.venueid}</p>
                           <p>{event.venuelat}</p>
                           <p>{event.venuelng}</p>
-                          <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
                           <p className='time'>{event.eventtime}</p>
-                        </div>
-                        <p className='price'>{event.price}</p>
+                        </div> */}
+                        <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
+                        { event.eventtime && <p className='time'>{event.eventtime}</p> }
+                        { event.price && <p className='price'>{event.price}</p>}
                       </div>
                       <p className='venue-popup-event-name'>{event.eventname}</p>
                     </div>
@@ -179,10 +180,15 @@ const SeattleMap = () => {
     marker.bindPopup('Loading...');
     const venueEvents = upcomingEvents[venue.name];
     marker.on('popupopen', ()=>{
-      const popupContent = ReactDOMServer.renderToString(
+      // Enable onClick event handling of leafletJS marker Popups by
+      // 1st rendering an empty element
+      const container = document.createElement('div');
+      marker.getPopup().setContent(container);
+      // 2nd mounting MarkerPopup into container and adding to DOM
+      const root = createRoot(container);
+      root.render(
         <MarkerPopup venue={venue} events={venueEvents ? venueEvents : []}/>
       );
-      marker.getPopup().setContent(popupContent);
     });
 
     return marker;
@@ -214,10 +220,10 @@ const SeattleMap = () => {
     };
 
     initMap();
-    document.addEventListener('click', handleReqExVenueClick);
-    return () => {
-      document.removeEventListener('click', handleReqExVenueClick);
-    }
+    // document.addEventListener('click', handleReqExVenueClick);
+    // return () => {
+    //   document.removeEventListener('click', handleReqExVenueClick);
+    // }
 
   }, []);
   

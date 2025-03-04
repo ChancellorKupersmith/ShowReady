@@ -1,6 +1,7 @@
 import React from 'react';
 
 const FilterTitle = ({closeModal}) => {
+    
     return (
         <div className="filter-title">
             <div className='header'>
@@ -9,7 +10,7 @@ const FilterTitle = ({closeModal}) => {
             </div>
             <p>Customize playlist based on the filters you select here.</p>
         </div>
-    )
+    );
 }
 
 

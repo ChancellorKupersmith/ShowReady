@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 export const displayDate = (date) => {
@@ -15,8 +15,7 @@ export const displayDate = (date) => {
 }
 
 const DateMenu = () => {
-    const { tempFilters, updateTempFilters } = useTempSongsFilter();
-    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
+    const { tempFilters, updateTempFilters, tempFiltersTotal, updateTempFiltersTotal } = useSongsFilter();
     const [dateInput, setDateInput] = useState('');
     const [gThanDateInput, setGThanDateInput] = useState('');
     const [lThanDateInput, setLThanDateInput] = useState('');
@@ -39,7 +38,7 @@ const DateMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setDateInput('')
     }
     const exDate = () => {
@@ -54,7 +53,7 @@ const DateMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setDateInput('')
     }
     const reqGThanDate = () => {
@@ -63,8 +62,8 @@ const DateMenu = () => {
             ...tempFilters,
             dateGThan: gThanDateInput
         });
-        const newTotal = tempFilters.dateGThan ? filtersTotal : filtersTotal + 1;
-        updateFiltersTotal(newTotal);
+        const newTotal = tempFilters.dateGThan ? tempFiltersTotal : tempFiltersTotal + 1;
+        updateTempFiltersTotal(newTotal);
         setGThanDateInput('')
     }
     const reqLThanDate = () => {
@@ -73,8 +72,8 @@ const DateMenu = () => {
             ...tempFilters,
             dateLThan: lThanDateInput
         });
-        const newTotal = tempFilters.dateLThan ? filtersTotal : filtersTotal + 1;
-        updateFiltersTotal(newTotal);
+        const newTotal = tempFilters.dateLThan ? tempFiltersTotal : tempFiltersTotal + 1;
+        updateTempFiltersTotal(newTotal);
         setLThanDateInput('')
     }
     const reqTime = () => {
@@ -89,7 +88,7 @@ const DateMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setTimeInput('')
     }
     const exTime = () => {
@@ -104,7 +103,7 @@ const DateMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setTimeInput('')
     }
     // reqex filter tab funcs
@@ -113,14 +112,14 @@ const DateMenu = () => {
             ...tempFilters,
             dateGThan: ''
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     }
     const removeLThanDate = () => {
         updateTempFilters({
             ...tempFilters,
             dateLThan: ''
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
 
     }
     const removeReqDate = date => {
@@ -134,7 +133,7 @@ const DateMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeExDate = date => {
         updateTempFilters({
@@ -147,7 +146,7 @@ const DateMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeReqTime = time => {
         updateTempFilters({
@@ -160,7 +159,7 @@ const DateMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeExTime = time => {
         updateTempFilters({
@@ -173,7 +172,7 @@ const DateMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const reqDates = tempFilters.req.date.dates.map((date, index) => 
         <ReqExFilterTab 

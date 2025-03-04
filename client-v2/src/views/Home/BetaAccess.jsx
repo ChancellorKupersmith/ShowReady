@@ -39,7 +39,7 @@ const BetaAccess = () => {
             }
             emailjs.send(SERVICE_ID, TEMPLATE_ID, template_params).then(
                 (response) => {
-                    console.log(response)
+                    // console.log(response)
                     toast.success('Request Sent')
                     setBetaReqModalIsOpen(false);
                 },

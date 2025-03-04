@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const EventMenu = () => {
-    const { tempFilters, updateTempFilters } = useTempSongsFilter();
-    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
+    const { tempFilters, updateTempFilters, tempFiltersTotal, updateTempFiltersTotal } = useSongsFilter();
     const [eventInput, setEventInput] = useState('');
     const [gPriceInput, setGPriceInput] = useState('');
     const [lPriceInput, setLPriceInput] = useState('');
@@ -33,7 +32,7 @@ const EventMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setEventInput('')
     }
     const exEvent = () => {
@@ -48,7 +47,7 @@ const EventMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setEventInput('')
     }
     const reqGPrice = () => {
@@ -57,8 +56,8 @@ const EventMenu = () => {
             ...tempFilters,
             priceGThan: gPriceInput
         });
-        const newTotal = tempFilters.priceGThan ? filtersTotal : filtersTotal + 1;
-        updateFiltersTotal(newTotal);
+        const newTotal = tempFilters.priceGThan ? tempFiltersTotal : tempFiltersTotal + 1;
+        updateTempFiltersTotal(newTotal);
         setGPriceInput('')
     }
     const reqLPrice = () => {
@@ -67,8 +66,8 @@ const EventMenu = () => {
             ...tempFilters,
             priceLThan: lPriceInput
         });
-        const newTotal = tempFilters.priceLThan ? filtersTotal : filtersTotal + 1;
-        updateFiltersTotal(newTotal);
+        const newTotal = tempFilters.priceLThan ? tempFiltersTotal : tempFiltersTotal + 1;
+        updateTempFiltersTotal(newTotal);
         setLPriceInput('')
     }
     // reqex filter tab funcs
@@ -83,7 +82,7 @@ const EventMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeExEvent = (event) => {
         updateTempFilters({
@@ -96,21 +95,21 @@ const EventMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeReqGPrice = () => {
         updateTempFilters({
             ...tempFilters,
             priceGThan: ''
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeReqLPrice = () => {
         updateTempFilters({
             ...tempFilters,
             priceLThan: ''
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const reqEvents = tempFilters.req.event.names.map((event, index) =>
         <ReqExFilterTab 

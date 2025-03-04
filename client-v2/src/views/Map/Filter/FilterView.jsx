@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './FilterView.css';
 import FilterDarkSvg from '../../../assets/filter-dark.svg';
@@ -6,13 +6,16 @@ import FilterTitle from './FilterTitle';
 import FilterFooter from "./FilterFooter";
 import FilterMenu from './FilterMenu';
 
-import { TempFilterContextProvider, useSongsFilter } from './FilterContext';
+import { useSongsFilter} from './FilterContext';
 
 const FilterModal = () => {
     const [isOpen, setIsOpen] = useState(false);
     const closeModal = () => setIsOpen(!isOpen);
-
-    const { filtersTotal } = useSongsFilter();
+    const { filters, filtersTotal, tempFilters, tempFiltersTotal } = useSongsFilter();
+    const [filtersTotalDisplay, setFiltersTotalDisplay ] = useState(filtersTotal);
+    useEffect(() => {
+        setFiltersTotalDisplay(isOpen ? tempFiltersTotal : filtersTotal);
+    }, [isOpen, filtersTotal, tempFiltersTotal])
     const FilterBtn = () => {
         const FilterImg = () => (
             <div className="svg-container">
@@ -22,8 +25,8 @@ const FilterModal = () => {
                     alt='Filter'
                 />
                 { 
-                    filtersTotal > 0 &&
-                    <span className='total-badge' >{filtersTotal}</span>
+                    filtersTotalDisplay > 0 &&
+                    <span className='total-badge' >{filtersTotalDisplay}</span>
                 }
             </div>
         );
@@ -36,13 +39,11 @@ const FilterModal = () => {
         <div>
             <FilterBtn onClick={() => closeModal()}/>
             {isOpen && createPortal(
-                <TempFilterContextProvider>
-                    <div className='filter-modal-container'>
-                        <FilterTitle closeModal={closeModal} />
-                        <FilterMenu />
-                        <FilterFooter closeModal={closeModal} />
-                    </div>
-                </TempFilterContextProvider>,
+                <div className='filter-modal-container'>
+                    <FilterTitle closeModal={closeModal} />
+                    <FilterMenu />
+                    <FilterFooter closeModal={closeModal} />
+                </div>,
                 document.body
             )}
         </div>

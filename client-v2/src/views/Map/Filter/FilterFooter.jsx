@@ -1,9 +1,9 @@
 import React, {useState, useEffect} from 'react';
-import { useSongsFilter, useTempSongsFilter } from "./FilterContext";
+import { useSongsFilter } from "./FilterContext";
 
 const FilterFooter = ({closeModal}) => {
-    const { updateFiltersTotal } = useSongsFilter()
-    const { tempFilters, clearFilters, saveTempFilters } = useTempSongsFilter();
+    const { updateTempFiltersTotal } = useSongsFilter();
+    const { tempFilters, clearFilters, saveTempFilters } = useSongsFilter();
     const [totalResults, setTotalResults] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -35,7 +35,7 @@ const FilterFooter = ({closeModal}) => {
 
     const handleClearFilters = () => {
         clearFilters();
-        updateFiltersTotal(0);
+        updateTempFiltersTotal(0);
     };
 
 
