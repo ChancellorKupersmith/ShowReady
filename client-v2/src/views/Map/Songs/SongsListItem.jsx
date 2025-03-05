@@ -16,8 +16,8 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
     const [isIncluded, setIsIncluded] = useState(true);
     const { theme } = useThemeData()
     const toggleIsInclude = () => {
-        // TODO: soft remove song to allow for undoing
-        const newExcludedSongIDs = isIncluded ? excludedSongIDs.filter(id => id != songId) : [songId, ...excludedSongIDs];
+        const newExcludedSongIDs = isIncluded ? [songId, ...excludedSongIDs] : excludedSongIDs.filter(id => id != songId);
+        console.log(newExcludedSongIDs)
         updateExcludedSongIDs(newExcludedSongIDs);
         const newFiltersTotal = isIncluded ? filtersTotal + 1 : filtersTotal - 1;
         updateFiltersTotal(newFiltersTotal);

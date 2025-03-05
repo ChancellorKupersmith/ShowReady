@@ -100,7 +100,7 @@ const BetaAccess = () => {
     
     return (
         <div className='beta-access-container' onClick={() => setBetaReqModalIsOpen(true)}>
-            <p> Playlist generation for Spotify and YouTube still in beta, click here to request access to feature 24/25 spots left. </p>
+            <p> Playlist generation for Spotify and YouTube still in beta, click here to request access to feature, 24 spots left. </p>
             {betaReqModalIsOpen && createPortal(<BetaAccessModal />, document.body)}
         </div>
     );
