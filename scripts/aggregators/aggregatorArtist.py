@@ -18,7 +18,7 @@ def get_total_events_fromDB():
         WHERE created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             total += db.query(query=select_query, fetchone=True)[0]
     except Exception as e:
         logger.error(f"Error fetching total events from Events table returning 0, {e}")
@@ -51,7 +51,7 @@ def get_events_fromDB(page_size, offset):
         OFFSET {offset} LIMIT {page_size}
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=eo_select_query, fetchall=True)
             all_new_events = {row[1]: Event(name=row[0], id=row[1], event_date=row[2]) for row in rows }
             rows = db.query(query=tm_select_query, fetchall=True)
@@ -68,7 +68,7 @@ def get_existing_artists_fromDB():
     existing_artists = {}
     select_query = "SELECT name, id FROM Artists WHERE spotifyexternalid IS NOT NULL AND lastfmurl IS NOT NULL"
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             existing_artists = {row[0]: row[1] for row in rows}
     except Exception as e:
@@ -82,7 +82,7 @@ def save_artists_inDB(new_artists_batch):
         existing_artists = []
         select_query = "SELECT spotifyexternalid FROM Artists WHERE spotifyexternalid IS NOT NULL"
         try:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 rows = db.query(query=select_query, fetchall=True)
                 existing_artists = [row[0] for row in rows]
         except Exception as e:
@@ -95,7 +95,7 @@ def save_artists_inDB(new_artists_batch):
         existing_artists = []
         select_query = "SELECT name FROM Artists WHERE lastfmurl IS NOT NULL"
         try:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 rows = db.query(query=select_query, fetchall=True)
                 existing_artists = [row[0].lower() for row in rows]
         except Exception as e:
@@ -151,7 +151,7 @@ def save_artists_inDB(new_artists_batch):
             new_lastfm_artists_tuples = [(a.name, a.lastfm_url) for a in new_lastfm_artists]
             logger.info( 'NEW LASTFM ARTISTS:')
             logger.info( new_lastfm_artists_tuples)
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 if len(new_spotify_artists_tuples) > 0:
                     rows = db.query(query=insert_spotify_query, data=new_spotify_artists_tuples, fetchall=True)
                     logger.warning('hit 1')
@@ -179,7 +179,7 @@ def save_eventsartists_inDB(events_artists_to_store):
         ON CONFLICT (artistid, eventid) DO NOTHING
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             db.query(query=insert_query, data=events_artists_to_store)
     except Exception as e:
         logger.error(f"Error saving events-artists to db, {e}")
@@ -190,7 +190,7 @@ def save_errors_inDB(artist_not_found_events):
         VALUES %s
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             db.query(query=insert_query, data=artist_not_found_events)
     except Exception as e:
         logger.error(f"Error saving errors to db, {e}")
@@ -273,9 +273,9 @@ async def find_artists(events):
     
     artists = {}
     try:
-        spotify_client = SpotifyClient(log=log)
+        spotify_client = SpotifyClient(logger=logger)
         await spotify_client.init_access_token()
-        lastfm_client = LastFmClient(log=log)
+        lastfm_client = LastFmClient(logger=logger)
         num_new_events = 0
         for event in events:
             artists_not_found = {}
