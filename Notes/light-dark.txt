@@ -1,0 +1,50 @@
+import React, { useState, useEffect } from 'react';
+
+function App() {
+  // State to track the current theme
+  const [theme, setTheme] = useState(null);
+
+  // Function to apply theme to the body
+  const applyTheme = (theme) => {
+    if (theme) {
+      document.body.setAttribute('data-theme', theme);
+    }
+  };
+
+  // Effect to detect system theme and set it initially
+  useEffect(() => {
+    // Check the system's preferred color scheme (light or dark)
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    
+    // Try to read from localStorage (if theme was previously set)
+    const savedTheme = localStorage.getItem('theme');
+
+    // Set theme based on saved or system preference
+    const initialTheme = savedTheme || systemTheme;
+    setTheme(initialTheme);
+    applyTheme(initialTheme);
+  }, []);
+
+  // Effect to update theme when state changes
+  useEffect(() => {
+    if (theme) {
+      // Save theme to localStorage
+      localStorage.setItem('theme', theme);
+      applyTheme(theme);
+    }
+  }, [theme]);
+
+  // Toggle theme function
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
+
+  return (
+    <div>
+      <h1>Hello, React App!</h1>
+      <button onClick={toggleTheme}>Toggle Theme</button>
+    </div>
+  );
+}
+
+export default App;

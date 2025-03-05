@@ -1,5 +1,6 @@
 *.log
 *.cache
+*.txt
 .data/
 .idea/
 .direnv/
@@ -11,7 +12,6 @@ logfile
 vm/
 client/
 Notes/
-Notes.txt
 **/dist/
 **/node_modules/
 **/__pycache__/

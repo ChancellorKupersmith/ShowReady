@@ -134,8 +134,8 @@ async def scrapeVenueCoordinates():
             logger.info("No new venues need addresses.")
             return
         venues_to_update = await get_venue_coordinates(venues)
-        if len(venues_to_update)
-        save_venues_inDB(venues_to_update)
+        if len(venues_to_update):
+            save_venues_inDB(venues_to_update)
     except Exception as ex:
         logger.error(f"PARENT ERROR: {ex}")
 
