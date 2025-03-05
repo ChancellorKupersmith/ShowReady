@@ -19,7 +19,7 @@ def get_venues_fromDB():
         WHERE lat IS NULL AND venueaddress IS NOT NULL
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             venues = [ Venue(name=row[0], id=row[1], venueaddress=row[2]) for row in rows ]
             return venues
@@ -35,7 +35,7 @@ def get_venue_coordinates_fromDB():
         AND tmid IS NULL
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             venues = [ Venue(name=row[0], id=row[1], lat=row[2], lng=row[3]) for row in rows ]
             return venues
@@ -46,7 +46,7 @@ def get_venue_coordinates_fromDB():
 @timer_decorator(logger)
 async def get_venue_coordinates(venues):
     try:
-        client = GoogleClient(log=log)
+        client = GoogleClient(logger=logger)
         venues_to_update = []
         for venue in venues:
             params =[ f"input={urllib.parse.quote(venue.venue_address)}", 
@@ -70,7 +70,7 @@ async def get_venue_coordinates(venues):
 @timer_decorator(logger)
 async def get_ticketmaster_venueIDs(venues):
     try:
-        client = TicketMasterClient(log=log)
+        client = TicketMasterClient(logger=logger)
         venues_to_update = []
         for venue in venues:
             # geo_hash = geohash.encode(venue.lat, venue.lng, precision=11)
@@ -106,7 +106,7 @@ def save_venues_inDB(venues):
             lng = EXCLUDED.lng
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             db.query(query=insert_query, data=venues)
     except Exception as e:
         logger.error(f"ERROR saving venues in db. {e}")
@@ -121,7 +121,7 @@ def save_venueIDs_inDB(venues):
             tmid = EXCLUDED.tmid
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             db.query(query=insert_query, data=venues)
     except Exception as e:
         logger.error(f"ERROR saving venues in db. {e}")

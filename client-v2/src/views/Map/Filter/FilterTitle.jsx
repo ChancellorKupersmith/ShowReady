@@ -9,7 +9,7 @@ const FilterTitle = ({closeModal}) => {
             </div>
             <p>Customize playlist based on the filters you select here.</p>
         </div>
-    )
+    );
 }
 
 

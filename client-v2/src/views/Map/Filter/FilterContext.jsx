@@ -97,28 +97,27 @@ export const FilterContextProvider = ({ children }) => {
         if(!newFiltersObj) return;
         setFilters(newFiltersObj);
     }
+    
+    // for soft removing songs when filtering by songid (allows user to easily undo with toggle)
+    const [excludedSongIDs, updateExcludedSongIDs] = useState([]);
 
     const [filtersTotal, setFiltersTotal] = useState(() => {
         const savedFiltersTotal = parseInt(sessionStorage.getItem('filtersTotal'));
         return savedFiltersTotal ? savedFiltersTotal : 3; // 3 filters in default filters
     });
-    useEffect(() => sessionStorage.setItem('filtersTotal', filtersTotal), [filtersTotal]);
+    useEffect(() => {
+        sessionStorage.setItem('filtersTotal', filtersTotal)
+    }, [filtersTotal]);
     const updateFiltersTotal = (newFiltersTotal) => {
         setFiltersTotal(newFiltersTotal);
     };
 
-    return (
-        <SongsFilterContext.Provider value={{ filters, updateFilters, filtersTotal, updateFiltersTotal }}>
-            { children }
-        </SongsFilterContext.Provider>
-    );
-};
-
-const TempSongsFilterContext = createContext();
-export const useTempSongsFilter = () => useContext(TempSongsFilterContext);
-export const TempFilterContextProvider = ({ children }) => {
-    const { filters, updateFilters } = useSongsFilter();
+    // TEMP FILTERS
     const [tempFilters, setTempFilters] = useState(filters);
+    const [tempFiltersTotal, setTempFiltersTotal] = useState(filtersTotal);
+    const updateTempFiltersTotal = (newFiltersTotal) => {
+        setTempFiltersTotal(newFiltersTotal);
+    };
     const clearedFilters = {
         orderBy: filters.orderBy,
         descending: filters.descending,
@@ -194,20 +193,26 @@ export const TempFilterContextProvider = ({ children }) => {
     };
 
 
-    const revertTempFilters = () => setTempFilters(filters);
+    const revertTempFilters = () => {
+        setTempFilters(filters);
+        setTempFiltersTotal(filtersTotal);
+    };
     const clearFilters = () => setTempFilters(clearedFilters);
-    const saveTempFilters = () => updateFilters(tempFilters);
+    const saveTempFilters = () => {
+        updateFilters(tempFilters);
+        updateFiltersTotal(tempFiltersTotal);
+    };
     const updateTempFilters = (newFiltersObj) => {
-        console.log(newFiltersObj)
         setTempFilters(newFiltersObj);
     }
 
+
     return (
-        <TempSongsFilterContext.Provider value={{ tempFilters, updateTempFilters, clearFilters, saveTempFilters, revertTempFilters, }}>
+        <SongsFilterContext.Provider value={{ filters, updateFilters, excludedSongIDs, updateExcludedSongIDs, filtersTotal, updateFiltersTotal, tempFilters, updateTempFilters, tempFiltersTotal, updateTempFiltersTotal, clearFilters, saveTempFilters, revertTempFilters }}>
             { children }
-        </TempSongsFilterContext.Provider>
+        </SongsFilterContext.Provider>
     );
-}
+};
 
 export const OrderByBtn = () => {
     const { filters, updateFilters } = useSongsFilter();

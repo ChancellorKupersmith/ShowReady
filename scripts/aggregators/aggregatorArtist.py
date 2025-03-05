@@ -18,7 +18,7 @@ def get_total_events_fromDB():
         WHERE created >= NOW() - INTERVAL '1 week' OR Events.updated >= NOW() - INTERVAL '1 week'
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             total += db.query(query=select_query, fetchone=True)[0]
     except Exception as e:
         logger.error(f"Error fetching total events from Events table returning 0, {e}")
@@ -51,7 +51,7 @@ def get_events_fromDB(page_size, offset):
         OFFSET {offset} LIMIT {page_size}
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=eo_select_query, fetchall=True)
             all_new_events = {row[1]: Event(name=row[0], id=row[1], event_date=row[2]) for row in rows }
             rows = db.query(query=tm_select_query, fetchall=True)
@@ -68,7 +68,7 @@ def get_existing_artists_fromDB():
     existing_artists = {}
     select_query = "SELECT name, id FROM Artists WHERE spotifyexternalid IS NOT NULL AND lastfmurl IS NOT NULL"
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             existing_artists = {row[0]: row[1] for row in rows}
     except Exception as e:
@@ -82,7 +82,7 @@ def save_artists_inDB(new_artists_batch):
         existing_artists = []
         select_query = "SELECT spotifyexternalid FROM Artists WHERE spotifyexternalid IS NOT NULL"
         try:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 rows = db.query(query=select_query, fetchall=True)
                 existing_artists = [row[0] for row in rows]
         except Exception as e:
@@ -95,7 +95,7 @@ def save_artists_inDB(new_artists_batch):
         existing_artists = []
         select_query = "SELECT name FROM Artists WHERE lastfmurl IS NOT NULL"
         try:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 rows = db.query(query=select_query, fetchall=True)
                 existing_artists = [row[0].lower() for row in rows]
         except Exception as e:
@@ -132,37 +132,45 @@ def save_artists_inDB(new_artists_batch):
         RETURNING name, id
     """
     artist_name_ids = {}
-    try:
-        # Insert/Update found artists
-        existing_spotify_artists = get_existing_spotify_artists_fromDB()
-        existing_lastfm_artists = get_existing_lastfm_artists_fromDB()
-        new_spotify_artists = list(filter(lambda artist: artist.spotify_id not in existing_spotify_artists, new_artists.values()))
-        new_spotify_artists_tuples = [(a.name, a.spotify_id, a.spotify_popular, a.spotify_img) for a in new_spotify_artists]
-        log(0, 'NEW SPOTIFY ARTISTS:')
-        log(0, new_spotify_artists_tuples)
-        update_spotify_artists = list(filter(lambda artist: artist.spotify_id in existing_spotify_artists, new_artists.values()))
-        update_spotify_artists_tuples = [(a.name, a.spotify_popular, a.spotify_img) for a in update_spotify_artists]
-        log(0, 'UPDATE SPOTIFY ARTISTS:')
-        log(0, update_spotify_artists_tuples)
-        new_lastfm_artists = list(filter(lambda artist: artist.name.lower() not in existing_lastfm_artists, new_artists.values()))
-        new_lastfm_artists_tuples = [(a.name, a.lastfm_url) for a in new_lastfm_artists]
-        log(0, 'NEW LASTFM ARTISTS:')
-        log(0, new_lastfm_artists_tuples)
-        with PostgresClient(log=log) as db:
-            if len(new_spotify_artists_tuples) > 0:
-                rows = db.query(query=insert_spotify_query, data=new_spotify_artists_tuples, fetchall=True)
-                artist_name_ids.update({row[0]: row[1] for row in rows})
-            if len(update_spotify_artists_tuples) > 0:
-                rows = db.query(query=update_spotify_query, data=update_spotify_artists_tuples, fetchall=True)
-                artist_name_ids.update({row[0]: row[1] for row in rows})
-            if len(new_lastfm_artists_tuples) > 0:
-                rows = db.query(query=insert_lastfm_query, data=new_lastfm_artists_tuples, fetchall=True)
-                artist_name_ids.update({row[0]: row[1] for row in rows})
-    except Exception as e:
-        log(1, f"Error saving artist to db returning empty list, {e}")
-        # artist_name_ids.clear()
-    finally:
-        return artist_name_ids
+    for na in new_artists_batch.values():
+        new_artists = { 'debugging': na }
+        logger.info( f"artist: {na.name}, spID: {na.spotify_id}, spPop: {na.spotify_popular}, spImg: {na.spotify_img}, lfm: {na.lastfm_url}")
+        try:
+            # Insert/Update found artists
+            existing_spotify_artists = get_existing_spotify_artists_fromDB()
+            existing_lastfm_artists = get_existing_lastfm_artists_fromDB()
+            new_spotify_artists = list(filter(lambda artist: artist.spotify_id not in existing_spotify_artists, new_artists.values()))
+            new_spotify_artists_tuples = [(a.name, a.spotify_id, a.spotify_popular, a.spotify_img) for a in new_spotify_artists]
+            logger.info( 'NEW SPOTIFY ARTISTS:')
+            logger.info( new_spotify_artists_tuples)
+            update_spotify_artists = list(filter(lambda artist: artist.spotify_id in existing_spotify_artists, new_artists.values()))
+            update_spotify_artists_tuples = [(a.name, a.spotify_popular, a.spotify_img) for a in update_spotify_artists]
+            logger.info( 'UPDATE SPOTIFY ARTISTS:')
+            logger.info( update_spotify_artists_tuples)
+            new_lastfm_artists = list(filter(lambda artist: artist.name.lower() not in existing_lastfm_artists, new_artists.values()))
+            new_lastfm_artists_tuples = [(a.name, a.lastfm_url) for a in new_lastfm_artists]
+            logger.info( 'NEW LASTFM ARTISTS:')
+            logger.info( new_lastfm_artists_tuples)
+            with PostgresClient(logger=logger) as db:
+                if len(new_spotify_artists_tuples) > 0:
+                    rows = db.query(query=insert_spotify_query, data=new_spotify_artists_tuples, fetchall=True)
+                    logger.warning('hit 1')
+                    artist_name_ids.update({row[0]: row[1] for row in rows})
+                if len(update_spotify_artists_tuples) > 0:
+                    rows = db.query(query=update_spotify_query, data=update_spotify_artists_tuples, fetchall=True)
+                    logger.warning('hit 2')
+                    artist_name_ids.update({row[0]: row[1] for row in rows})
+                if len(new_lastfm_artists_tuples) > 0:
+                    rows = db.query(query=insert_lastfm_query, data=new_lastfm_artists_tuples, fetchall=True)
+                    logger.warning('hit 3')
+                    artist_name_ids.update({row[0]: row[1] for row in rows})
+        except Exception as e:
+            logger.error(f"Error saving artist to db, {e}")
+        #     logger.error(f"Error saving artist to db returning empty list, {e}")
+        #     artist_name_ids.clear()
+        # finally:
+        #     return artist_name_ids
+    return artist_name_ids
 
 def save_eventsartists_inDB(events_artists_to_store):
     insert_query = """
@@ -171,7 +179,7 @@ def save_eventsartists_inDB(events_artists_to_store):
         ON CONFLICT (artistid, eventid) DO NOTHING
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             db.query(query=insert_query, data=events_artists_to_store)
     except Exception as e:
         logger.error(f"Error saving events-artists to db, {e}")
@@ -182,7 +190,7 @@ def save_errors_inDB(artist_not_found_events):
         VALUES %s
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             db.query(query=insert_query, data=artist_not_found_events)
     except Exception as e:
         logger.error(f"Error saving errors to db, {e}")
@@ -265,9 +273,9 @@ async def find_artists(events):
     
     artists = {}
     try:
-        spotify_client = SpotifyClient(log=log)
+        spotify_client = SpotifyClient(logger=logger)
         await spotify_client.init_access_token()
-        lastfm_client = LastFmClient(log=log)
+        lastfm_client = LastFmClient(logger=logger)
         num_new_events = 0
         for event in events:
             artists_not_found = {}

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const ArtistMenu = () => {
-    const { tempFilters, updateTempFilters } = useTempSongsFilter();
-    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
+    const { tempFilters, updateTempFilters, tempFiltersTotal, updateTempFiltersTotal } = useSongsFilter();
     const [artistInput, setArtistInput] = useState('');
     const [fromEachArtist, setFromEachArtist] = useState(tempFilters.req.artist.fromEach);
     // input funcs
@@ -24,7 +23,7 @@ const ArtistMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setArtistInput('')
     };
     const exArtist = () => {
@@ -39,11 +38,10 @@ const ArtistMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setArtistInput('')
     };
     const reqFromEach = () => {
-        console.log(fromEachArtist)
         if(fromEachArtist == null) return;
         updateTempFilters({
             ...tempFilters,
@@ -55,8 +53,8 @@ const ArtistMenu = () => {
                 }
             }
         });
-        const newTotal = tempFilters.req.artist.fromEach ? filtersTotal : filtersTotal + 1;
-        updateFiltersTotal(newTotal);
+        const newTotal = tempFilters.req.artist.fromEach ? tempFiltersTotal : tempFiltersTotal + 1;
+        updateTempFiltersTotal(newTotal);
     };
     // reqex filter tab funcs
     const removeReqArtist = (artist) => {
@@ -70,7 +68,7 @@ const ArtistMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeExArtist = (artist) => {
         updateTempFilters({
@@ -83,7 +81,7 @@ const ArtistMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeReqFromEach = () => {
         updateTempFilters({
@@ -96,7 +94,7 @@ const ArtistMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const reqArtists = tempFilters.req.artist.names.map((artist, index) =>
         <ReqExFilterTab 

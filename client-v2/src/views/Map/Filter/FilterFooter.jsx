@@ -1,9 +1,8 @@
 import React, {useState, useEffect} from 'react';
-import { useSongsFilter, useTempSongsFilter } from "./FilterContext";
+import { useSongsFilter } from "./FilterContext";
 
 const FilterFooter = ({closeModal}) => {
-    const { updateFiltersTotal } = useSongsFilter()
-    const { tempFilters, clearFilters, saveTempFilters } = useTempSongsFilter();
+    const { tempFilters, excludedSongIDs, clearFilters, saveTempFilters, updateTempFiltersTotal } = useSongsFilter();
     const [totalResults, setTotalResults] = useState(0);
     const [loading, setLoading] = useState(false);
 
@@ -12,7 +11,8 @@ const FilterFooter = ({closeModal}) => {
             setLoading(true);
             try{
                 const postData = {
-                    filters: tempFilters
+                    filters: tempFilters,
+                    excludedSongIDs: excludedSongIDs
                 };
                 const response = await fetch('/songs_list/total_results', {
                     method: 'POST',
@@ -35,7 +35,7 @@ const FilterFooter = ({closeModal}) => {
 
     const handleClearFilters = () => {
         clearFilters();
-        updateFiltersTotal(0);
+        updateTempFiltersTotal(0);
     };
 
 

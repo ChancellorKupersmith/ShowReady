@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const LocationMenu = () => {
-    const { tempFilters, updateTempFilters } = useTempSongsFilter();
-    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
+    const { tempFilters, updateTempFilters, tempFiltersTotal, updateTempFiltersTotal } = useSongsFilter();
     const [venueInput, setVenueInput] = useState('');
     const [hoodInput, setHoodInput] = useState('');
     // input funcs
@@ -24,7 +23,7 @@ const LocationMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setVenueInput('');
     }
     const exVenue = () => {
@@ -39,7 +38,7 @@ const LocationMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setVenueInput('');
     }
     const reqHood = () => {
@@ -54,7 +53,7 @@ const LocationMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setHoodInput('')
     }
     const exHood = () => {
@@ -69,7 +68,7 @@ const LocationMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setHoodInput('')
     }
     // reqex filter tab funcs
@@ -84,7 +83,7 @@ const LocationMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeExVenue = (venue) => {
         updateTempFilters({
@@ -97,7 +96,7 @@ const LocationMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeReqHood = (hood) => {
         updateTempFilters({
@@ -110,7 +109,7 @@ const LocationMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeExHood = (hood) => {
         updateTempFilters({
@@ -123,7 +122,7 @@ const LocationMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const reqVenues = tempFilters.req.location.venues.map((venue, index) =>
         <ReqExFilterTab 

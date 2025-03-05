@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useSongsFilter, useTempSongsFilter } from '../FilterContext';
+import { useSongsFilter } from '../FilterContext';
 import { ReqExFilterTab, ReqExList } from './MenuUtils';
 
 
 const SongMenu = () => {
-    const { tempFilters, updateTempFilters } = useTempSongsFilter();
-    const { filtersTotal, updateFiltersTotal } = useSongsFilter();
+    const { tempFilters, updateTempFilters, tempFiltersTotal, updateTempFiltersTotal } = useSongsFilter();
     const [songInput, setSongInput] = useState('');
     // input funcs
     const handleSongChange = (event) => setSongInput(event.target.value);
@@ -22,7 +21,7 @@ const SongMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setSongInput('')
     }
     const exSong = () => {
@@ -37,7 +36,7 @@ const SongMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal + 1);
+        updateTempFiltersTotal(tempFiltersTotal + 1);
         setSongInput('')
     }
     // reqex filter tab funcs
@@ -52,7 +51,7 @@ const SongMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const removeExSong = (song) => {
         updateTempFilters({
@@ -65,7 +64,7 @@ const SongMenu = () => {
                 }
             }
         });
-        updateFiltersTotal(filtersTotal - 1);
+        updateTempFiltersTotal(tempFiltersTotal - 1);
     };
     const reqSongs = tempFilters.req.song.names.map((song, index) =>
         <ReqExFilterTab 
