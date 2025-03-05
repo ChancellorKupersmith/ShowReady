@@ -25,7 +25,6 @@ export const ThemeContextProvider = ({children}) => {
 
     // Effect to update theme when state changes
     useEffect(() => {
-        // console.log(theme)
         if (theme) {
             localStorage.setItem('theme', theme);
             applyTheme(theme);

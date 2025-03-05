@@ -1,7 +1,6 @@
 import React from 'react';
 
 const FilterTitle = ({closeModal}) => {
-    
     return (
         <div className="filter-title">
             <div className='header'>

@@ -42,7 +42,6 @@ const ArtistMenu = () => {
         setArtistInput('')
     };
     const reqFromEach = () => {
-        console.log(fromEachArtist)
         if(fromEachArtist == null) return;
         updateTempFilters({
             ...tempFilters,

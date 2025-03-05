@@ -6,12 +6,15 @@ import FilterTitle from './FilterTitle';
 import FilterFooter from "./FilterFooter";
 import FilterMenu from './FilterMenu';
 
-import { useSongsFilter} from './FilterContext';
+import { useSongsFilter } from './FilterContext';
 
 const FilterModal = () => {
+    const { filters, filtersTotal, tempFilters, tempFiltersTotal, revertTempFilters } = useSongsFilter();
     const [isOpen, setIsOpen] = useState(false);
-    const closeModal = () => setIsOpen(!isOpen);
-    const { filters, filtersTotal, tempFilters, tempFiltersTotal } = useSongsFilter();
+    const closeModal = () => {
+        setIsOpen(!isOpen);
+        revertTempFilters();
+    };
     const [filtersTotalDisplay, setFiltersTotalDisplay ] = useState(filtersTotal);
     useEffect(() => {
         setFiltersTotalDisplay(isOpen ? tempFiltersTotal : filtersTotal);

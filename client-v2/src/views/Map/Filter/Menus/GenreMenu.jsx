@@ -41,7 +41,6 @@ const GenreMenu = () => {
         setGenreInput('')
     };
     const reqFromEach = () => {
-        console.log(fromEachGenre)
         if(fromEachGenre == null) return;
         updateTempFilters({
             ...tempFilters,

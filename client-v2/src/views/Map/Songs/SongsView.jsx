@@ -12,8 +12,8 @@ import NextLightSvg from '../../../assets/next-light.svg';
 import PrevDarkSvg from '../../../assets/prev-dark.svg';
 import PrevLightSvg from '../../../assets/prev-light.svg';
 import { SavePlaylistView } from "./Source/SavePlaylistView";
-import '../../../styles/module/Map/songsList.css';
 import { useThemeData } from '../../Home/Theme';
+import '../../../styles/module/Map/songsList.css';
 
 const SongsModal = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -21,6 +21,7 @@ const SongsModal = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [songsList, setSongsList] = useState([]);
+    // const [songsResultTotal, setSongsResultTotal] = useState(0);
     const [loading, setLoading] = useState(false); // Loading song list state
     const {theme} = useThemeData();
     
@@ -44,7 +45,6 @@ const SongsModal = () => {
                     limit: pageSize,
                     filters: filters
                 };
-                console.log(filters)
                 const response = await fetch('/songs_list', {
                     method: 'POST',
                     headers: {
@@ -55,7 +55,6 @@ const SongsModal = () => {
                 const [songsList, total] = await response.json();
                 if(total > 0){
                     setTotalPages(Math.ceil(total / pageSize));
-                    console.log(songsList)
                     setSongsList([...songsList]);
                 }
             } catch(err) {
@@ -93,7 +92,6 @@ const SongsModal = () => {
                         spotifyID: spotifyUserMeta['id'],
                         profileImgURL: spotifyUserMeta['profileImg'],
                     };
-                    // console.log(spotifyData.spotifyID)
                     updateSpotifyData(spotifyData);
                 }
 
@@ -191,6 +189,7 @@ const SongsModal = () => {
                                     songsList.map((song, index) =>
                                         <SongsListItem
                                             key={index}
+                                            songId={song.songid}
                                             songTitle={song.songtitle}
                                             artistName={song.artist}
                                             artistUrl={song.artistspid ? `https://open.spotify.com/artist/${song.artistspid}` : song.artistlastfmurl}

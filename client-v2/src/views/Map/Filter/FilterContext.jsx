@@ -97,6 +97,9 @@ export const FilterContextProvider = ({ children }) => {
         if(!newFiltersObj) return;
         setFilters(newFiltersObj);
     }
+    
+    // for soft removing songs when filtering by songid (allows user to easily undo with toggle)
+    const [excludedSongIDs, updateExcludedSongIDs] = useState([]);
 
     const [filtersTotal, setFiltersTotal] = useState(() => {
         const savedFiltersTotal = parseInt(sessionStorage.getItem('filtersTotal'));
@@ -205,7 +208,7 @@ export const FilterContextProvider = ({ children }) => {
 
 
     return (
-        <SongsFilterContext.Provider value={{ filters, updateFilters, filtersTotal, updateFiltersTotal, tempFilters, updateTempFilters, tempFiltersTotal, updateTempFiltersTotal, clearFilters, saveTempFilters, revertTempFilters }}>
+        <SongsFilterContext.Provider value={{ filters, updateFilters, excludedSongIDs, updateExcludedSongIDs, filtersTotal, updateFiltersTotal, tempFilters, updateTempFilters, tempFiltersTotal, updateTempFiltersTotal, clearFilters, saveTempFilters, revertTempFilters }}>
             { children }
         </SongsFilterContext.Provider>
     );

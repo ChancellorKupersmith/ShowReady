@@ -27,25 +27,28 @@ export const MapContextProvider = ({children}) => {
 
   const { filters } = useSongsFilter();
   const [upcomingEvents, setUpcomingEvents] = useState({});
+  const [loading, setLoading] = useState(false);
   // Fetch all upcoming events based on filters
   useEffect(() => {
     const fetchEvents = async () => {
       try{
-          const postData = {
-              filters: filters
-          };
-          const response = await fetch('/songs_list/upcoming_events', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(postData)
-          });
-          const data = await response.json();
-          console.log(data);
-          setUpcomingEvents(data);
+        setLoading(true);
+        const postData = {
+            filters: filters
+        };
+        const response = await fetch('/songs_list/upcoming_events', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        });
+        const data = await response.json();
+        setUpcomingEvents(data);
       } catch(err) {
           console.error(err)
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -54,14 +57,14 @@ export const MapContextProvider = ({children}) => {
 
 
   return (
-    <MapContext.Provider value={{center, setCenter, findVenue, zoom, setZoom, venueMarkers, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, setUpcomingEvents}}>
+    <MapContext.Provider value={{center, setCenter, findVenue, zoom, setZoom, venueMarkers, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, setUpcomingEvents, loading}}>
       { children }
     </MapContext.Provider>
   );
 };
 
 const SeattleMap = () => {
-  const { center, zoom, setVenueMarkers, allVenues, setAllVenues, upcomingEvents } = useMap();
+  const { center, zoom, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, loading } = useMap();
   const { filters, updateFilters, filtersTotal, updateFiltersTotal } = useSongsFilter();
   const mapRef = useRef(null);
 
@@ -145,11 +148,11 @@ const SeattleMap = () => {
                       <img 
                         className='venue-marker-popup-event-img'
                         src={imgSrc}
-                        onClick={e => { e.preventDefault(); console.log(e.target.parentNode); e.target.parentNode.click(); }}
+                        onClick={e => { e.preventDefault(); e.target.parentNode.click(); }}
                       />
                     }
                     <div className='venue-popup-event-info-container'
-                    onClick={e => { e.preventDefault(); console.log(e.target.parentNode); e.target.parentNode.click(); }}
+                    onClick={e => { e.preventDefault(); e.target.parentNode.click(); }}
                     >
                       <div className='venue-popup-event-info'>
                         {/* <div className='venue-popup-event-time'>
@@ -279,6 +282,7 @@ const SeattleMap = () => {
   return (
     <div className='map-container'>
       <div id="mapUI"></div>
+      { loading && <div style={{zIndex: '20'}} className="loading-animation"></div> }
     </div>
   );
 }

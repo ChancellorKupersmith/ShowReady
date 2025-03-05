@@ -12,21 +12,15 @@ import { useThemeData } from "../../Home/Theme";
 
 
 const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, albumName, albumUrl, genres, eventLocation, date, spId, ytUrl, events}) => {
-    const { filters, updateFilters } = useSongsFilter();
+    const { excludedSongIDs, updateExcludedSongIDs, filtersTotal, updateFiltersTotal } = useSongsFilter();
     const [isIncluded, setIsIncluded] = useState(true);
     const { theme } = useThemeData()
     const toggleIsInclude = () => {
         // TODO: soft remove song to allow for undoing
-        // updateFilters({
-        //     ...filters,
-        //     ex: {
-        //         ...filters.ex,
-        //         song: {
-        //             ...filters.ex.song,
-        //             ids: isIncluded ? [...filters.ex.song.ids, songId] : filters.ex.song.ids.filter(id => id !== songId)
-        //         }
-        //     }
-        // });
+        const newExcludedSongIDs = isIncluded ? excludedSongIDs.filter(id => id != songId) : [songId, ...excludedSongIDs];
+        updateExcludedSongIDs(newExcludedSongIDs);
+        const newFiltersTotal = isIncluded ? filtersTotal + 1 : filtersTotal - 1;
+        updateFiltersTotal(newFiltersTotal);
         setIsIncluded(!isIncluded);
     };
 

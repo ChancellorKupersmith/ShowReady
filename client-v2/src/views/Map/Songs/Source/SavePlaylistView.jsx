@@ -11,11 +11,12 @@ import '../../../../styles/module/Map/savePlaylist.css';
 import { useYouTubeData } from './Youtube';
 import { getYouTubeClient } from './utils/youtubeClient';
 
-const saveYouTubePlaylist = async (client, filters, playlistName, isPrivate, toastID) => {
+const saveYouTubePlaylist = async (client, filters, excludedSongIDs, playlistName, isPrivate, toastID) => {
     const fetchTotalResults = async () => {
         try{
             const postData = {
-                filters: filters
+                filters: filters,
+                excludedSongIDs: excludedSongIDs
             };
             const response = await fetch('/songs_list/total_results', {
                 method: 'POST',
@@ -56,7 +57,8 @@ const saveYouTubePlaylist = async (client, filters, playlistName, isPrivate, toa
             const postData = {
                 page: 0,
                 limit: playlistSize,
-                filters: filters
+                filters: filters,
+                excludedSongIDs: excludedSongIDs
             };
             const response = await fetch('/songs_list', {
                 method: 'POST',
@@ -66,7 +68,6 @@ const saveYouTubePlaylist = async (client, filters, playlistName, isPrivate, toa
                 body: JSON.stringify(postData)
             });
             const data = await response.json();
-            // console.log(data)
             const videoIdRegex = /v=([^&]*)/;
             return data[0].map( track => track.yturl.match(videoIdRegex)[1] )
         } catch(err){
@@ -137,7 +138,8 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
     const fetchTotalResults = async () => {
         try{
             const postData = {
-                filters: filters
+                filters: filters,
+                excludedSongIDs: excludedSongIDs
             };
             const response = await fetch('/songs_list/total_results', {
                 method: 'POST',
@@ -184,7 +186,8 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
             const postData = {
                 page: page,
                 limit: 100,
-                filters: filters
+                filters: filters,
+                excludedSongIDs: excludedSongIDs
             };
             const response = await fetch('/songs_list', {
                 method: 'POST',
@@ -194,7 +197,6 @@ const saveSpotifyPlaylist = async (client, spotifyData, filters, playlistName, i
                 body: JSON.stringify(postData)
             });
             const data = await response.json();
-            // console.log(data)
             if(data[1]){
                 return [
                     data[1],
@@ -299,7 +301,6 @@ export const SavePlaylistView = () => {
                     await saveYouTubePlaylist(ytClient, filters, name, isPrivate, toastID);
                 break;
             default:
-                console.log('source:' + source)
                 break;
         }
         openCloseModal()
