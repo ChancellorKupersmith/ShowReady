@@ -17,7 +17,6 @@ const SongsListItem = ({songId, songTitle, artistName, artistUrl, spotifyImg, al
     const { theme } = useThemeData()
     const toggleIsInclude = () => {
         const newExcludedSongIDs = isIncluded ? [songId, ...excludedSongIDs] : excludedSongIDs.filter(id => id != songId);
-        console.log(newExcludedSongIDs)
         updateExcludedSongIDs(newExcludedSongIDs);
         const newFiltersTotal = isIncluded ? filtersTotal + 1 : filtersTotal - 1;
         updateFiltersTotal(newFiltersTotal);
