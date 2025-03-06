@@ -1,24 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import './FilterView.css';
-import FilterDarkSvg from '../../../assets/filter-dark.svg';
+import FilterMenu from './FilterMenu';
 import FilterTitle from './FilterTitle';
 import FilterFooter from "./FilterFooter";
-import FilterMenu from './FilterMenu';
-
 import { useSongsFilter } from './FilterContext';
+import FilterDarkSvg from '../../../assets/filter-dark.svg';
+import './FilterView.css';
 
-const FilterModal = () => {
-    const { filters, filtersTotal, tempFilters, tempFiltersTotal, revertTempFilters } = useSongsFilter();
-    const [isOpen, setIsOpen] = useState(false);
+const FilterModal = ({ isFilterModalOpen, setIsFilterModalOpen, isSongsModalOpen, setIsSongsModalOpen }) => {
+    const { filtersTotal, tempFiltersTotal, revertTempFilters } = useSongsFilter();
     const closeModal = () => {
-        setIsOpen(!isOpen);
+        if(isSongsModalOpen) setIsSongsModalOpen(false);
+        setIsFilterModalOpen(!isFilterModalOpen);
         revertTempFilters();
     };
     const [filtersTotalDisplay, setFiltersTotalDisplay ] = useState(filtersTotal);
     useEffect(() => {
-        setFiltersTotalDisplay(isOpen ? tempFiltersTotal : filtersTotal);
-    }, [isOpen, filtersTotal, tempFiltersTotal])
+        setFiltersTotalDisplay(isFilterModalOpen ? tempFiltersTotal : filtersTotal);
+    }, [isFilterModalOpen, filtersTotal, tempFiltersTotal])
     const FilterBtn = () => {
         const FilterImg = () => (
             <div className="svg-container">
@@ -34,14 +33,14 @@ const FilterModal = () => {
             </div>
         );
         return (
-            <button id='filter-btn' className={isOpen? 'selected' : ''} onClick={closeModal}><FilterImg /></button>
+            <button id='filter-btn' className={isFilterModalOpen? 'selected' : ''} onClick={closeModal}><FilterImg /></button>
         );
     };
 
     return (
         <div>
             <FilterBtn onClick={() => closeModal()}/>
-            {isOpen && createPortal(
+            {isFilterModalOpen && createPortal(
                 <div className='filter-modal-container'>
                     <FilterTitle closeModal={closeModal} />
                     <FilterMenu />

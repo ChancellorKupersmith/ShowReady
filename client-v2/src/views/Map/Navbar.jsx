@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './Filter/FilterView';
@@ -37,13 +37,27 @@ const PlaceHolderBtn = ({icon, route}) => {
 
 
 const NavBar = () => {
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [isSongsModalOpen, setIsSongsModalOpen] = useState(false);
+
+
     const {theme} = useThemeData();
     return (
         <div className='navbar' style={{ colorScheme: `${theme}`}}>
             <ul className='btns-list'>
                 <NavViewBtn icon={'Home'} route={'/'}/>
-                <FilterModal />
-                <SongsModal />
+                <FilterModal 
+                    isFilterModalOpen={isFilterModalOpen}
+                    setIsFilterModalOpen={setIsFilterModalOpen}
+                    isSongsModalOpen={isSongsModalOpen}
+                    setIsSongsModalOpen={setIsSongsModalOpen}
+                />
+                <SongsModal
+                    isFilterModalOpen={isFilterModalOpen}
+                    setIsFilterModalOpen={setIsFilterModalOpen}
+                    isSongsModalOpen={isSongsModalOpen}
+                    setIsSongsModalOpen={setIsSongsModalOpen}
+                />
                 <PlaceHolderBtn icon={'About'} route={'/map'}/>
             </ul>
         </div>

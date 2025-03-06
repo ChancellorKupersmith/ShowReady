@@ -15,9 +15,12 @@ import { SavePlaylistView } from "./Source/SavePlaylistView";
 import { useThemeData } from '../../Home/Theme';
 import '../../../styles/module/Map/songsList.css';
 
-const SongsModal = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const openCloseModal = () => setIsOpen(!isOpen)
+const SongsModal = ({ isFilterModalOpen, setIsFilterModalOpen, isSongsModalOpen, setIsSongsModalOpen }) => {
+    // const [isSongsModalOpen, setIsOpen] = useState(false);
+    const openCloseModal = () => {
+        if(isFilterModalOpen) setIsFilterModalOpen(false);
+        setIsSongsModalOpen(!isSongsModalOpen);
+    };
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [songsList, setSongsList] = useState([]);
@@ -162,14 +165,14 @@ const SongsModal = () => {
             </div>
         );
         return (
-            <button id='songs-btn' className={isOpen? 'selected' : ''} onClick={openCloseModal}><SongsImg /></button>
+            <button id='songs-btn' className={isSongsModalOpen? 'selected' : ''} onClick={openCloseModal}><SongsImg /></button>
         );
     };
 
     return (
         <li className='nav-btn' style={{ colorScheme: `${theme}`}}>
             <SongsBtn />
-            {isOpen && createPortal(
+            {isSongsModalOpen && createPortal(
                 <div className='songs-view-container'>
                     <div className={`songs-list-container` }>
                         <div className='songs-list-header'>
