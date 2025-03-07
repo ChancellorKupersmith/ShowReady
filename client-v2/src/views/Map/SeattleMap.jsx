@@ -1,14 +1,20 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { displayDate } from "./Filter/Menus/DateMenu";
-import '../../styles/module/Map/map.css';
+import EventDateSvg from "../../assets/event-date.svg";
+import EventTimeSvg from "../../assets/event-time.svg";
 import { useSongsFilter } from './Filter/FilterContext';
+import '../../styles/module/Map/map.css';
 
 const MapContext = createContext();
 export const useMap = () => useContext(MapContext);
 export const MapContextProvider = ({children}) => {
   // default center seattle
   const [center, setCenter] = useState({lat: 47.608013, lng: -122.3217481});
+  const updateMapCenter = (lat, lng) => {
+    const latOffset = (parseFloat(lat) + 0.00225); // lowering so entire popup is visible on small screens
+    setCenter({ lat: latOffset, lng: lng });
+  }
   const [zoom, setZoom] = useState(12);
   const [allVenues, setAllVenues] = useState([]);
   const [venueMarkers, updateVenueMarkers] = useState({});
@@ -19,7 +25,8 @@ export const MapContextProvider = ({children}) => {
     allVenues.forEach(v => {
       if(v.name == venueName) {
         setZoom(16);
-        setCenter({ lat: v.lat, lng: v.lng });
+        const latOffset = (parseFloat(v.lat) + 0.55225); // lowering so entire popup is visible on small screens
+        setCenter({ lat: latOffset, lng: v.lng });
         venueMarkers[v.name].openPopup();
       }
     });
@@ -57,14 +64,52 @@ export const MapContextProvider = ({children}) => {
 
 
   return (
-    <MapContext.Provider value={{center, setCenter, findVenue, zoom, setZoom, venueMarkers, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, setUpcomingEvents, loading}}>
+    <MapContext.Provider value={{center, updateMapCenter, findVenue, zoom, setZoom, venueMarkers, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, setUpcomingEvents, loading}}>
       { children }
     </MapContext.Provider>
   );
 };
 
+
+const EventCard = ({event, venue}) => {
+  // TODO: dirty data from scrapers where some eo images are the venue's name
+  const imgSrc = event.eoimg ? (event.eoimg != venue.name ? event.eoimg : event.tmimg) : event.tmimg;
+  const handleOnClick = () => {
+
+  };
+  return (
+    <a className='venue-marker-popup-eventcard-container' href={ event.ticketslink ? event.ticketslink : event.url } target='_blank'>
+      <div className='venue-marker-popup-eventcard'>
+        <div className='venue-marker-popup-event-backgroundimg' style={{backgroundImage: `url(${imgSrc})`}} />
+        {/* gradient overlay for better text readability */}
+        <div className='text-overlay' />
+        <div className='venue-popup-event-info-container'>        
+          <h2 className='venue-popup-event-info-name'>{event.eventname}</h2>
+            <div className='venue-popup-event-info'>
+              <img
+                loading='lazy'
+                src={EventDateSvg}
+                alt='event date'
+              />
+              <span>{displayDate(event.eventdate).slice(0,5)}</span>
+            </div>
+            <div  className='venue-popup-event-info'>
+              <img
+                loading='lazy'
+                src={EventTimeSvg}
+                alt='event time'
+              />
+              <span>{event.eventtime}</span>
+              { event.price && <div className='venue-popup-event-info-price'>{event.price}</div> }
+            </div>
+        </div>
+      </div>
+    </a>
+  );
+};
+
 const SeattleMap = () => {
-  const { center, zoom, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, loading } = useMap();
+  const { center, updateMapCenter, zoom, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, loading } = useMap();
   const { filters, updateFilters, filtersTotal, updateFiltersTotal } = useSongsFilter();
   const mapRef = useRef(null);
 
@@ -140,36 +185,7 @@ const SeattleMap = () => {
         </div>
         <ul className='venue-marker-popup-events-container'>
           { events && events.length > 0 &&
-              events.map((event, index) => {
-                const imgSrc = event.eoimg ? (event.eoimg != venue.name ? event.eoimg : event.tmimg) : event.tmimg;
-                return (
-                  <a style={{zIndex: '10'}} className='venue-marker-popup-event' key={`event-info${index}`} href={ event.ticketslink ? event.ticketslink : event.url } target='_blank'>
-                    { imgSrc && 
-                      <img 
-                        className='venue-marker-popup-event-img'
-                        src={imgSrc}
-                        onClick={e => { e.preventDefault(); e.target.parentNode.click(); }}
-                      />
-                    }
-                    <div className='venue-popup-event-info-container'
-                    onClick={e => { e.preventDefault(); e.target.parentNode.click(); }}
-                    >
-                      <div className='venue-popup-event-info'>
-                        {/* <div className='venue-popup-event-time'>
-                          <p>{event.venueid}</p>
-                          <p>{event.venuelat}</p>
-                          <p>{event.venuelng}</p>
-                          <p className='time'>{event.eventtime}</p>
-                        </div> */}
-                        <p className="date">{displayDate(event.eventdate).slice(0,5)}</p>
-                        { event.eventtime && <p className='time'>{event.eventtime}</p> }
-                        { event.price && <p className='price'>{event.price}</p>}
-                      </div>
-                      <p className='venue-popup-event-name'>{event.eventname}</p>
-                    </div>
-                  </a>
-                );
-              })
+              events.map((event, index) => <EventCard key={'event-card-' + index} event={event} venue={venue}/>)
           }
         </ul>
       </div>
@@ -183,6 +199,7 @@ const SeattleMap = () => {
     marker.bindPopup('Loading...');
     const venueEvents = upcomingEvents[venue.name];
     marker.on('popupopen', ()=>{
+      updateMapCenter(venue.lat, venue.lng);
       // Enable onClick event handling of leafletJS marker Popups by
       // 1st rendering an empty element
       const container = document.createElement('div');
