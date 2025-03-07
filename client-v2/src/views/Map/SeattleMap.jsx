@@ -12,6 +12,7 @@ export const MapContextProvider = ({children}) => {
   // default center seattle
   const [center, setCenter] = useState({lat: 47.608013, lng: -122.3217481});
   const updateMapCenter = (lat, lng) => {
+    console.log('hit')
     const latOffset = (parseFloat(lat) + 0.00225); // lowering so entire popup is visible on small screens
     setCenter({ lat: latOffset, lng: lng });
   }
@@ -25,7 +26,7 @@ export const MapContextProvider = ({children}) => {
     allVenues.forEach(v => {
       if(v.name == venueName) {
         setZoom(16);
-        const latOffset = (parseFloat(v.lat) + 0.55225); // lowering so entire popup is visible on small screens
+        const latOffset = (parseFloat(v.lat) + 0.00225); // lowering so entire popup is visible on small screens
         setCenter({ lat: latOffset, lng: v.lng });
         venueMarkers[v.name].openPopup();
       }
@@ -74,9 +75,6 @@ export const MapContextProvider = ({children}) => {
 const EventCard = ({event, venue}) => {
   // TODO: dirty data from scrapers where some eo images are the venue's name
   const imgSrc = event.eoimg ? (event.eoimg != venue.name ? event.eoimg : event.tmimg) : event.tmimg;
-  const handleOnClick = () => {
-
-  };
   return (
     <a className='venue-marker-popup-eventcard-container' href={ event.ticketslink ? event.ticketslink : event.url } target='_blank'>
       <div className='venue-marker-popup-eventcard'>
