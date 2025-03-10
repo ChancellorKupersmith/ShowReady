@@ -13,7 +13,7 @@ export const MapContextProvider = ({children}) => {
   const [center, setCenter] = useState({lat: 47.608013, lng: -122.3217481});
   const updateMapCenter = (lat, lng) => {
     console.log('hit')
-    const latOffset = (parseFloat(lat) + 0.00225); // lowering so entire popup is visible on small screens
+    const latOffset = (parseFloat(lat) + 0.00375); // lowering so entire popup is visible on small screens
     setCenter({ lat: latOffset, lng: lng });
   }
   const [zoom, setZoom] = useState(12);
@@ -26,7 +26,7 @@ export const MapContextProvider = ({children}) => {
     allVenues.forEach(v => {
       if(v.name == venueName) {
         setZoom(16);
-        const latOffset = (parseFloat(v.lat) + 0.00225); // lowering so entire popup is visible on small screens
+        const latOffset = (parseFloat(v.lat) + 0.00375); // lowering so entire popup is visible on small screens
         setCenter({ lat: latOffset, lng: v.lng });
         venueMarkers[v.name].openPopup();
       }
@@ -107,7 +107,7 @@ const EventCard = ({event, venue}) => {
 };
 
 const SeattleMap = () => {
-  const { center, updateMapCenter, zoom, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, loading } = useMap();
+  const { center, updateMapCenter, zoom, setZoom, setVenueMarkers, allVenues, setAllVenues, upcomingEvents, loading } = useMap();
   const { filters, updateFilters, filtersTotal, updateFiltersTotal } = useSongsFilter();
   const mapRef = useRef(null);
 
@@ -238,11 +238,16 @@ const SeattleMap = () => {
     };
 
     initMap();
-    // document.addEventListener('click', handleReqExVenueClick);
-    // return () => {
-    //   document.removeEventListener('click', handleReqExVenueClick);
-    // }
-
+    const manualZoomIn = () => setZoom(prevState => (prevState + 0.5));
+    const manualZoomOut = () => setZoom(prevState => (prevState - 0.5));
+    const zoomInBtn = document.querySelector('.leaflet-control-zoom-in');
+    const zoomOutBtn = document.querySelector('.leaflet-control-zoom-out');
+    zoomInBtn.addEventListener('click', manualZoomIn);
+    zoomOutBtn.addEventListener('click', manualZoomOut);
+    return () => {
+      zoomInBtn.removeEventListener('click', manualZoomIn);
+      zoomOutBtn.removeEventListener('click', manualZoomOut);
+    }
   }, []);
   
   /* INIT MARKERS
