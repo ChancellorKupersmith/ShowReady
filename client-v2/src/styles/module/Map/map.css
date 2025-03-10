@@ -13,7 +13,7 @@
     /* width: fit-content !important; */
 }
 .leaflet-popup-content {
-    height: 500px;
+    height: 480px;
     width: 240px !important;
 }
 .leaflet-popup-tip {
@@ -27,7 +27,7 @@
     /* max-width: 100%; */
     width: 100%;
     overflow-x: hidden;
-    max-height: 500px;
+    max-height: 480px;
     overflow-y: auto;
     padding: 0px;
     margin: 0px;
