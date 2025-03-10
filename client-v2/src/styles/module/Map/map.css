@@ -13,6 +13,7 @@
     /* width: fit-content !important; */
 }
 .leaflet-popup-content {
+    height: 500px;
     width: 240px !important;
 }
 .leaflet-popup-tip {
@@ -24,12 +25,17 @@
     /* align-items: center; */
     justify-content: center;
     /* max-width: 100%; */
+    width: 100%;
     overflow-x: hidden;
-    max-height: 400px;
+    max-height: 500px;
     overflow-y: auto;
     padding: 0px;
     margin: 0px;
     background-color: light-dark(var(--light-mode-background-color), var(--dark-mode-background-color));
+}
+.leaflet-popup-content {
+    margin: 20px 4px 4px 4px;
+    width: 260px !important;
 }
 
 /* Header */
@@ -38,17 +44,18 @@
 }
 .venue-marker-popup-title-container {
     display: flex;
-    align-items: center;
+    align-items: end;
     justify-content: space-between;
     width: 100%;
     border-bottom: solid 1px light-dark(var(--light-mode-secondary-color), var(--dark-mode-secondary-color));
     border-radius: 4px;
-    padding: 5px;
+    padding: 5px 5px 2px 5px;
+    margin-bottom: 2px;
 }
 .venue-marker-popup-title {
     flex: 1;
     text-decoration: none;
-    font-size: medium;
+    font-size: large;
     font-weight: bold;
     /* override leaflet css */
     color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color)) !important;
@@ -82,6 +89,7 @@
 
 /* Body */
 .venue-marker-popup-events-container {
+    width: 100%;
     overflow-y: auto;
     /* hide firefox scrollbar */
     scrollbar-width: none;
@@ -96,7 +104,7 @@
 }
 .venue-marker-popup-eventcard {
     position: relative;
-    width: 240px;
+    width: 100%;
     height: 264px;
     padding-left: 10px;
     margin-top: 5px;
@@ -126,6 +134,7 @@
     letter-spacing: -0.02em;
     line-height: 1.2;
     margin-bottom: 12px;
+    padding-right: 10px;
 }
 .venue-popup-event-info {
     display: flex;
