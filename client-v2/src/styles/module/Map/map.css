@@ -36,6 +36,7 @@
 .leaflet-popup-content {
     margin: 20px 4px 4px 4px;
     width: 260px !important;
+    height: fit-content;
 }
 
 /* Header */
