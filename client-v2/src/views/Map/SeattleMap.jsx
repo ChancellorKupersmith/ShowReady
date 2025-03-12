@@ -13,7 +13,7 @@ export const MapContextProvider = ({children}) => {
   const [center, setCenter] = useState({lat: 47.608013, lng: -122.3217481});
   const updateMapCenter = (lat, lng) => {
     console.log('hit')
-    const latOffset = (parseFloat(lat) + 0.0025); // lowering so entire popup is visible on small screens
+    const latOffset = (parseFloat(lat) + 0.00255); // lowering so entire popup is visible on small screens
     setCenter({ lat: latOffset, lng: lng });
   }
   const [zoom, setZoom] = useState(12);
@@ -26,7 +26,7 @@ export const MapContextProvider = ({children}) => {
     allVenues.forEach(v => {
       if(v.name == venueName) {
         setZoom(16);
-        const latOffset = (parseFloat(v.lat) + 0.0025); // lowering so entire popup is visible on small screens
+        const latOffset = (parseFloat(v.lat) + 0.00255); // lowering so entire popup is visible on small screens
         setCenter({ lat: latOffset, lng: v.lng });
         venueMarkers[v.name].openPopup();
       }
