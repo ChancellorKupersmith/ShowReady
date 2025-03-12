@@ -16,7 +16,7 @@ function App() {
 
   return (
     <Router>
-      <Suspense>
+      <Suspense fallback={<div>Loading...</div>}>
       <SpotifyContextProvider>
       <YouTubeContextProvider>
       <ThemeContextProvider>

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './Filter/FilterView';
 import './Songs/SongsView';
@@ -9,8 +8,9 @@ import SongsModal from './Songs/SongsView';
 import { useThemeData } from '../Home/Theme';
 
 const NavViewBtn = ({icon, route}) => {
-    const navigate = useNavigate();
-    const handleViewChange = () => navigate(route);
+    const handleViewChange = () => {
+        window.location.href = route;
+    };
 
     return (
         <li className='nav-view-btn'>
@@ -19,9 +19,7 @@ const NavViewBtn = ({icon, route}) => {
     );
 }
 
-const PlaceHolderBtn = ({icon, route}) => {
-    const navigate = useNavigate();
-    const handleViewChange = () => navigate(route);
+const PlaceHolderBtn = ({icon}) => {
     const handleOnClickAbout = () => {
         toast.warn('feature coming soon!', {
             autoClose: true
@@ -58,7 +56,7 @@ const NavBar = () => {
                     isSongsModalOpen={isSongsModalOpen}
                     setIsSongsModalOpen={setIsSongsModalOpen}
                 />
-                <PlaceHolderBtn icon={'About'} route={'/map'}/>
+                <PlaceHolderBtn icon={'About'}/>
             </ul>
         </div>
     );
