@@ -5,9 +5,9 @@ import querystring from "querystring";
 import dotenv from "dotenv";
 dotenv.config();
 
-const LOGIN_REDIRECT_URI = "https://showready.xyz/spotify/login_callback";
 const STATE_KEY = "spotify_auth_state";
 const PROD_CLIENT_REDIRECT_URI = "https://showready.xyz";
+const LOGIN_REDIRECT_URI = "https://showready.xyz/spotify/login_callback";
 // const PROD_CLIENT_REDIRECT_URI = 'http://localhost:3000/map';
 // const LOGIN_REDIRECT_URI = 'http://localhost:3000/spotify/login_callback';
 

@@ -18,9 +18,26 @@ const port = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, '../client-v2/dist')))
    .use(cookieParser())
    .use(cors({ 
-        origin: ['http://localhost:5173',`http://localhost:${port}`,'https://showready.xyz','https://accounts.spotify.com', 'https://api.spotify.com', 'https://spotify.com', 'https://accounts.google.com', 'https://www.googleapis.com', 'https://www.youtube.com'],
+        origin: [
+            'http://localhost:5173',
+            `http://localhost:${port}`,
+            'https://showready.xyz',
+            'https://accounts.spotify.com',
+            'https://api.spotify.com',
+            'https://spotify.com',
+            'https://accounts.google.com',
+            'https://www.googleapis.com',
+            'https://www.youtube.com'
+        ],
         credentials: true
     }));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client-v2/dist/index.html'));
+});
+
+app.get('/map', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client-v2/dist/map.html'));
+});
 
 // TODO: handle multiple err types: 400
 app.use((err, req, res, next) => {

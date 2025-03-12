@@ -1,5 +1,4 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import FMRadio from './FMRadio';
 import BetaAccess from './BetaAccess';
 import '../../styles/layout/Home/home.css';
@@ -29,8 +28,9 @@ const GitHubBtn = ({ theme = 'light' }) => {
 
 const HomeView = () => {
   const { theme } = useThemeData();
-  const navigate = useNavigate();
-  const handleViewChange = (route) => navigate(route);
+  const handleViewChange = (route) => {
+    window.location.href = route;
+  };
 
   return (
     <div id='l-view-container-home'  style={{ colorScheme: `${theme}`}}>
