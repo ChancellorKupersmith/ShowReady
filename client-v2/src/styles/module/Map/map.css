@@ -4,10 +4,8 @@
 }
 #mapUI {
     z-index: 0;
-    height: 100vh;
+    height: 100dvh;
     cursor: auto;
-    
-    /* border: solid red; */
 }
 .leaflet-popup-content-wrapper {
     color: light-dark(var(--light-mode-text-color), var(--dark-mode-text-color));
