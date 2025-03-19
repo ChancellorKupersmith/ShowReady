@@ -11,8 +11,7 @@ logfile
 
 vm/
 client/
-Notes/Aggregaion.txt
-Notes/Notes.txt
+Notes/
 **/dist/
 **/node_modules/
 **/__pycache__/
