@@ -11,7 +11,8 @@ logfile
 
 vm/
 client/
-Notes/
+Notes/Aggregaion.txt
+Notes/Notes.txt
 **/dist/
 **/node_modules/
 **/__pycache__/
@@ -20,7 +21,6 @@ Notes/
 **/eventsUrlScraper.py
 **/aggregatorShow.py
 **/YouTubeURLScraper.py
-Notes/TODO.txt
 
 DataAggregation/bin
 DataAggregation/logs
