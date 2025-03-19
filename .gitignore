@@ -1,6 +1,6 @@
 *.log
 *.cache
-*.txt
+**/*.txt
 .data/
 .idea/
 .direnv/
@@ -20,3 +20,10 @@ Notes/
 **/eventsUrlScraper.py
 **/aggregatorShow.py
 **/YouTubeURLScraper.py
+Notes/TODO.txt
+
+DataAggregation/bin
+DataAggregation/logs
+DataAggregation/obj
+*.nupkg
+*.snupkg

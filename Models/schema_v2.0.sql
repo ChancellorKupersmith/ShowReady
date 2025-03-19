@@ -1,3 +1,20 @@
+CREATE TABLE IF NOT EXISTS VenuesRaw (
+    ID SERIAL PRIMARY KEY,
+    Name VARCHAR(300),
+    VenueUrl VARCHAR(511),
+    VenueAddress VARCHAR(255),
+    City VARCHAR(100),
+    Hood VARCHAR(100),
+    Summary VARCHAR(6000),
+    EOUrl VARCHAR(511) UNIQUE,
+    Phone VARCHAR(20),
+    LAT NUMERIC(10, 7),
+    LNG NUMERIC(10, 7),
+    TMID VARCHAR(36) UNIQUE,
+    Source VARCHAR(600),
+    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Updated TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS Venues (
     ID SERIAL PRIMARY KEY,
     Name VARCHAR(300),
@@ -16,12 +33,35 @@ CREATE TABLE IF NOT EXISTS Venues (
     CONSTRAINT venues_unique_name_address UNIQUE(Name, VenueAddress)
 );
 
-CREATE TABLE IF NOT EXISTS Events (
+CREATE TABLE IF NOT EXISTS EventsRaw (
     ID SERIAL,
     Name VARCHAR(300) NOT NULL,
     Url VARCHAR(600),
     TicketsLink VARCHAR(600),
     Price VARCHAR(100),    
+    EventDate DATE NOT NULL,
+    EventTime VARCHAR(100),
+    AgeRestrictions VARCHAR(50),
+    Summary VARCHAR(6000),
+    EOUrl VARCHAR(600) UNIQUE,
+    EOImg VARCHAR(600),
+    TMID VARCHAR(36),
+    TMImg VARCHAR(600),
+    VenueID INT,
+    Source VARCHAR(600),
+    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Updated TIMESTAMP,
+    UNIQUE (TMID, EventDate),
+    PRIMARY KEY (ID, EventDate),
+    FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
+) PARTITION BY RANGE (EventDate);
+CREATE TABLE IF NOT EXISTS Events (
+    ID SERIAL,
+    Name VARCHAR(300) NOT NULL,
+    Url VARCHAR(600),
+    TicketsLink VARCHAR(600),
+    PriceMin FLOAT,
+    PriceMax FLOAT, 
     EventDate DATE NOT NULL,
     EventTime VARCHAR(100),
     AgeRestrictions VARCHAR(50),
@@ -33,12 +73,28 @@ CREATE TABLE IF NOT EXISTS Events (
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
     UNIQUE (TMID, EventDate),
-    UNIQUE (Name, EventDate),
+    UNIQUE (Name, EventDate, EventTime, VenueID),
     PRIMARY KEY (ID, EventDate),
     FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
 ) PARTITION BY RANGE (EventDate);
 CREATE INDEX joins_on_VenueID_Events ON Events (VenueID);
 
+CREATE TABLE IF NOT EXISTS ArtistsRaw (
+    ID SERIAL PRIMARY KEY,
+    Name VARCHAR(300) NOT NULL,
+    SpotifyExternalId VARCHAR(30),
+    SpotifyPopularity INT,
+    SpotifyImg VARCHAR(600),
+    LastFmUrl VARCHAR(600),
+    LastFmImg VARCHAR(600),
+    Website VARCHAR(600),
+    MBID VARCHAR(100),
+    TMID VARCHAR(36) UNIQUE,
+    TMImg VARCHAR(600),
+    Source VARCHAR(600),
+    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Updated TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS Artists (
     ID SERIAL PRIMARY KEY,
     Name VARCHAR(300) NOT NULL UNIQUE,
@@ -47,15 +103,15 @@ CREATE TABLE IF NOT EXISTS Artists (
     SpotifyImg VARCHAR(600),
     LastFmUrl VARCHAR(600) UNIQUE,
     LastFmImg VARCHAR(600),
-    Website VARCHAR(600),
-    MBID VARCHAR(100),
+    Website VARCHAR(600) UNIQUE,
+    MBID VARCHAR(100) UNIQUE,
     TMID VARCHAR(36) UNIQUE,
     TMImg VARCHAR(600),
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS Albums (
+CREATE TABLE IF NOT EXISTS AlbumsRaw (
     ID SERIAL PRIMARY KEY,
     Title VARCHAR(300) NOT NULL,
     SpotifyExternalId VARCHAR(30) UNIQUE,
@@ -64,18 +120,47 @@ CREATE TABLE IF NOT EXISTS Albums (
     ArtistID INT,
     SpotifyFound BOOLEAN,
     LastFmFound BOOLEAN,
+    Source VARCHAR(600),
+    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Updated TIMESTAMP,
+    FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE
+);
+CREATE TABLE IF NOT EXISTS Albums (
+    ID SERIAL PRIMARY KEY,
+    Title VARCHAR(300) NOT NULL,
+    SpotifyExternalId VARCHAR(30) UNIQUE,
+    SpotifyPopularity INT,
+    LastFmUrl VARCHAR(600) UNIQUE,
+    ArtistID INT,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS Genres (
-    ID SERIAL PRIMARY KEY,
-    Name CITEXT NOT NULL UNIQUE,
+CREATE TABLE IF NOT EXISTS SongsRaw (
+    ID SERIAL,
+    Title VARCHAR(300) NOT NULL,
+    ArtistID INT NOT NULL,
+    AlbumID INT,
+    AlbumTrackNum INT,
+    MBID VARCHAR(100),
+    SpotifyExternalId VARCHAR(30),
+    SpotifyPopularity INT,
+    SpotifyPreviewUrl VARCHAR(600),
+    LastFmUrl VARCHAR(600),
+    YTUrl VARCHAR(600),
+    -- used to identify if song has been scraped by youtube, Null if not attempted, true/false if url found
+    YTFound BOOLEAN,
+    Source VARCHAR(600),
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    Updated TIMESTAMP
-);
-
+    Updated TIMESTAMP,
+    UNIQUE (SpotifyExternalId, ArtistID),
+    UNIQUE (LastFmUrl, ArtistID),
+    UNIQUE (Title, ArtistID),
+    PRIMARY KEY (ID, ArtistID),
+    FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE,
+    FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL
+) PARTITION BY LIST (ArtistID);
 CREATE TABLE IF NOT EXISTS Songs (
     ID SERIAL,
     Title VARCHAR(300) NOT NULL,
@@ -100,6 +185,13 @@ CREATE TABLE IF NOT EXISTS Songs (
     FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL
 ) PARTITION BY LIST (ArtistID);
 CREATE INDEX joins_on_AlbumID_Songs ON Songs (AlbumID);
+
+CREATE TABLE IF NOT EXISTS Genres (
+    ID SERIAL PRIMARY KEY,
+    Name CITEXT NOT NULL UNIQUE,
+    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    Updated TIMESTAMP
+);
 
 CREATE TABLE IF NOT EXISTS EventsArtists (
     EventID INT,

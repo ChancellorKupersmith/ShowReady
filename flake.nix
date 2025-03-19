@@ -30,6 +30,7 @@
           selenium
           python-dotenv
           spotipy
+          pydantic
         ]);
       in {
         default = pkgs.mkShell rec {
@@ -38,16 +39,17 @@
             # pkgs.postgresql16
             pkgs.dart-sass
             pythonPackages
+            pkgs.dotnetCorePackages.dotnet_9.sdk
           ];
+
           GECKO_DRIVER_PATH = "${pkgs.geckodriver}/bin";
           packages = with pkgs; [
             node2nix nodejs nodePackages.pnpm yarn
             geckodriver
-            redis
+            dotnetCorePackages.dotnet_9.runtime
           ];
           shellHook = ''
-            chmod +x ./env_scripts/start_pg.sh
-            chmod +x ./env_scripts/stop_pg.sh
+            export PATH=${pkgs.dotnetCorePackages.dotnet_9.sdk}/bin:$PATH
           '';
         };
       });
