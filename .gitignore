@@ -8,7 +8,7 @@
 *.env
 *.dump
 logfile
-
+*.json
 vm/
 client/
 Notes/

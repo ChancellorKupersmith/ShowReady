@@ -81,18 +81,18 @@ namespace DaUtils
             [CallerLineNumber] int sourceLineNumber = 0
         ) => Log(LogEventLevel.Warning, msg, includeStackTrace, memberName, sourceFilePath, sourceLineNumber);
         public void Error(            
-            string msg, bool includeStackTrace = false,
+            string msg, bool includeStackTrace = true,
             [CallerMemberName] string memberName = "",
             [CallerFilePath] string sourceFilePath = "",
             [CallerLineNumber] int sourceLineNumber = 0,
             Exception? exception = null
-        ) => Log(LogEventLevel.Error, msg, includeStackTrace, memberName, sourceFilePath, sourceLineNumber, exception);
+        ) => Log(LogEventLevel.Error, $"{msg}; ExceptionMsg: {exception.Message}", includeStackTrace, memberName, sourceFilePath, sourceLineNumber, exception);
         public void Fatal(            
-            string msg, bool includeStackTrace = false,
+            string msg, bool includeStackTrace = true,
             [CallerMemberName] string memberName = "",
             [CallerFilePath] string sourceFilePath = "",
             [CallerLineNumber] int sourceLineNumber = 0,
             Exception? exception = null
-        ) => Log(LogEventLevel.Fatal, msg, includeStackTrace, memberName, sourceFilePath, sourceLineNumber, exception);
+        ) => Log(LogEventLevel.Fatal, $"{msg}; ExceptionMsg: {exception.Message}", includeStackTrace, memberName, sourceFilePath, sourceLineNumber, exception);
     }
 }
