@@ -11,12 +11,11 @@ namespace DaUtils
     /*  PostgresClient notes
     - Executes querys to multiple DBs to keep all updated: (I understand how weird this feature is and wouldn't be reasonable on a large team but I'm the solo dev on project so bite me)
         !!!WHEN DEVELOPING OR TESTING MAKE SURE DB_SYNC IS SET TO INTENDED TARGET!!!
-        Multiple DBs are targeted based on env variable DB_SYNC, this variable also dictates which relevant db rows to return.
-        - case(env = 'PROD'): sends queries to dev, prod dbs; returns prod db reader
-        - case(env = 'TEST'): sends queries to dev, test dbs; returns test db reader
-        - case(env = 'DEV'): sends queries to dev db; returns dev db reader
+        Multiple DBs are targeted based on config variable DB_SYNC, this variable also dictates which relevant db rows to return.
+        - case(DB_SYNC = 'PROD'): sends queries to dev, prod dbs; returns prod db reader
+        - case(DB_SYNC = 'TEST'): sends queries to dev, test dbs; returns test db reader
+        - case(DB_SYNC = 'DEV'): sends queries to dev db; returns dev db reader
     - Created credentials and pg connection class to enable db name trace logging without exposing sensitive credentials from connection strings
-    - private declaration ensures sensitive data in connection string is only readable from within PostgresClient class. (this is needed because Npgsql ConnectionString prop is public https://www.npgsql.org/doc/api/Npgsql.NpgsqlConnection.html)
     */
     public class PostgresClient
     {
@@ -54,15 +53,10 @@ namespace DaUtils
         }
         private readonly List<PgConnection> _connections;
         private readonly DaLogger _logger;
-        public PostgresClient(DaLogger logger)
+        public PostgresClient(DaLogger logger, IConfiguration config)
         {
             _logger = logger;
-            
             List<PostgresClient.Credentials> credentials = new List<Credentials>();
-            var builder = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("secrets.json", optional: false, reloadOnChange: true);
-            var config = builder.Build();
             switch(config["DB_SYNC"])
             {
                 // Appending order matters to ensure correct db reader is returned
@@ -120,7 +114,7 @@ namespace DaUtils
                 try
                 {
                     await pgConnection.Connection.OpenAsync();
-                    _logger.Debug($"Connected to pg db: {pgConnection.DB}");
+                    _logger.Debug($"Connected to pg dba: {pgConnection.DB}");
                 }
                 catch (Exception ex)
                 {
@@ -130,7 +124,8 @@ namespace DaUtils
         }
         private void Disconnet()
         {
-            _connections.Select(async pgConnection => {
+            foreach(PgConnection pgConnection in _connections)
+            {
                 try
                 {
                     pgConnection.Connection.Dispose();
@@ -140,12 +135,13 @@ namespace DaUtils
                 {
                     _logger.Error($"Failed to disconnect from pg db: {pgConnection.DB}", exception: ex);
                 }
-            });
+            }
         }
         public async Task Query(string query)
         {
             await ConnectAsync();
-            _connections.Select(async pgConnection => {
+            foreach(var pgConnection in _connections)
+            {
                 using (var command = new NpgsqlCommand(query, pgConnection.Connection))
                 {
                     try
@@ -158,7 +154,7 @@ namespace DaUtils
                         _logger.Error($"Failed to execute query for db: {pgConnection.DB}", exception: ex);
                     }
                 }
-            });
+            };
             Disconnet();
         }
         public async Task<NpgsqlDataReader> QueryRead(string query)
