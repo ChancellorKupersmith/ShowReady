@@ -6,11 +6,11 @@ CREATE TABLE IF NOT EXISTS VenuesRaw (
     City VARCHAR(100),
     Hood VARCHAR(100),
     Summary VARCHAR(6000),
-    EOUrl VARCHAR(511) UNIQUE,
+    EOUrl VARCHAR(511),
     Phone VARCHAR(20),
     LAT NUMERIC(10, 7),
     LNG NUMERIC(10, 7),
-    TMID VARCHAR(36) UNIQUE,
+    TMID VARCHAR(36),
     Source VARCHAR(600),
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP
@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS EventsRaw (
     Updated TIMESTAMP,
     UNIQUE (TMID, EventDate),
     PRIMARY KEY (ID, EventDate),
-    FOREIGN KEY (VenueID) REFERENCES Venues(ID) ON DELETE CASCADE
+    FOREIGN KEY (VenueID) REFERENCES VenuesRaw(ID) ON DELETE CASCADE
 ) PARTITION BY RANGE (EventDate);
 CREATE TABLE IF NOT EXISTS Events (
     ID SERIAL,
@@ -89,8 +89,11 @@ CREATE TABLE IF NOT EXISTS ArtistsRaw (
     LastFmImg VARCHAR(600),
     Website VARCHAR(600),
     MBID VARCHAR(100),
-    TMID VARCHAR(36) UNIQUE,
+    TMID VARCHAR(36),
     TMImg VARCHAR(600),
+    ITunesUrl VARCHAR(600),
+    Wiki VARCHAR(600),
+    Instagram VARCHAR(600),
     Source VARCHAR(600),
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP
@@ -107,6 +110,9 @@ CREATE TABLE IF NOT EXISTS Artists (
     MBID VARCHAR(100) UNIQUE,
     TMID VARCHAR(36) UNIQUE,
     TMImg VARCHAR(600),
+    ITunesUrl VARCHAR(600) UNIQUE,
+    Wiki VARCHAR(600) UNIQUE,
+    Instagram VARCHAR(600) UNIQUE,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP
 );
@@ -114,9 +120,9 @@ CREATE TABLE IF NOT EXISTS Artists (
 CREATE TABLE IF NOT EXISTS AlbumsRaw (
     ID SERIAL PRIMARY KEY,
     Title VARCHAR(300) NOT NULL,
-    SpotifyExternalId VARCHAR(30) UNIQUE,
+    SpotifyExternalId VARCHAR(30),
     SpotifyPopularity INT,
-    LastFmUrl VARCHAR(600) UNIQUE,
+    LastFmUrl VARCHAR(600),
     ArtistID INT,
     SpotifyFound BOOLEAN,
     LastFmFound BOOLEAN,
@@ -154,9 +160,6 @@ CREATE TABLE IF NOT EXISTS SongsRaw (
     Source VARCHAR(600),
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP,
-    UNIQUE (SpotifyExternalId, ArtistID),
-    UNIQUE (LastFmUrl, ArtistID),
-    UNIQUE (Title, ArtistID),
     PRIMARY KEY (ID, ArtistID),
     FOREIGN KEY (ArtistID) REFERENCES Artists(ID) ON DELETE CASCADE,
     FOREIGN KEY (AlbumID) REFERENCES Albums(ID) ON DELETE SET NULL
@@ -190,10 +193,23 @@ CREATE EXTENSION IF NOT EXISTS citext;
 CREATE TABLE IF NOT EXISTS Genres (
     ID SERIAL PRIMARY KEY,
     Name CITEXT NOT NULL UNIQUE,
+    Source VARCHAR(600),
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS EventsArtistsRaw (
+    EventID INT,
+    EventDate DATE,
+    ArtistID INT,
+    Source VARCHAR(600),
+    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (EventID, ArtistID),
+    FOREIGN KEY (EventID, EventDate) REFERENCES EventsRaw(ID, EventDate) ON DELETE CASCADE,
+    FOREIGN KEY (ArtistID) REFERENCES ArtistsRaw(ID) ON DELETE CASCADE
+);
+CREATE INDEX joins_on_EventID_EventsArtistsRaw ON EventsArtistsRaw (EventID);
+CREATE INDEX joins_on_ArtistID_EventsArtistsRaw ON EventsArtistsRaw (ArtistID);
 CREATE TABLE IF NOT EXISTS EventsArtists (
     EventID INT,
     EventDate DATE,
@@ -206,6 +222,17 @@ CREATE TABLE IF NOT EXISTS EventsArtists (
 CREATE INDEX joins_on_EventID_EventsArtists ON EventsArtists (EventID);
 CREATE INDEX joins_on_ArtistID_EventsArtists ON EventsArtists (ArtistID);
 
+CREATE TABLE IF NOT EXISTS ArtistsGenresRaw (
+    ArtistID INT,
+    GenreID INT,
+    Source VARCHAR(600),
+    Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (ArtistID, GenreID),
+    FOREIGN KEY (ArtistID) REFERENCES ArtistsRaw(ID) ON DELETE CASCADE,
+    FOREIGN KEY (GenreID) REFERENCES Genres(ID) ON DELETE CASCADE
+);
+CREATE INDEX joins_on_ArtistID_ArtistsGenresRaw ON ArtistsGenresRaw (ArtistID);
+CREATE INDEX joins_on_GenreID_ArtistsGenresRaw ON ArtistsGenresRaw (GenreID);
 CREATE TABLE IF NOT EXISTS ArtistsGenres (
     ArtistID INT,
     GenreID INT,
@@ -227,7 +254,7 @@ CREATE TABLE IF NOT EXISTS Errors (
     Active BOOLEAN DEFAULT TRUE,
     Created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Updated TIMESTAMP
-);
+);    Source VARCHAR(600),
 
 CREATE TABLE IF NOT EXISTS SpotifyPlaylists (
     ID SERIAL PRIMARY KEY,

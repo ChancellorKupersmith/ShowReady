@@ -50,6 +50,7 @@
           ];
           shellHook = ''
             export PATH=${pkgs.dotnetCorePackages.dotnet_9.sdk}/bin:$PATH
+            export DOTNET_ROOT=${pkgs.dotnetCorePackages.dotnet_9.sdk}/bin/dotnet
           '';
         };
       });

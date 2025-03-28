@@ -20,7 +20,7 @@ namespace DaUtils
         private readonly ILogger _logger;
         public DaLogger(string logFilename, LogLvl logLvl)
         {
-            string logFilePath = $"logs/{logFilename}";
+            var logFilePath = $"logs/{logFilename}";
             if (File.Exists(logFilePath))
             {
                 File.Delete(logFilePath);
@@ -47,17 +47,17 @@ namespace DaUtils
             }
 
             // remove path before DataAgggregation dir
-            string searchTerm = "DataAggregation";
-            int index = sourceFilePath.IndexOf(searchTerm);
+            var searchTerm = "DataAggregation";
+            var index = sourceFilePath.IndexOf(searchTerm);
             if(index != -1){
                 sourceFilePath = sourceFilePath.Substring(index);
             }
 
-            string stackTraceInfo = $"StackTrace: {sourceFilePath} - {memberName}() at line {sourceLineNumber}";
+            var stackTraceInfo = $"StackTrace: {sourceFilePath} - {memberName}() at line {sourceLineNumber}";
             _logger.Write(level, exception, $"{message}{Environment.NewLine}---- {stackTraceInfo}");
         }
         public void Verbose(
-            string msg, bool includeStackTrace = false,
+            string msg, bool includeStackTrace = true,
             [CallerMemberName] string memberName = "",
             [CallerFilePath] string sourceFilePath = "",
             [CallerLineNumber] int sourceLineNumber = 0
@@ -86,13 +86,13 @@ namespace DaUtils
             [CallerFilePath] string sourceFilePath = "",
             [CallerLineNumber] int sourceLineNumber = 0,
             Exception? exception = null
-        ) => Log(LogEventLevel.Error, $"{msg}; ExceptionMsg: {exception.Message}", includeStackTrace, memberName, sourceFilePath, sourceLineNumber, exception);
+        ) => Log(LogEventLevel.Error, $"{msg}; ExceptionMsg: {exception?.Message}", includeStackTrace, memberName, sourceFilePath, sourceLineNumber, exception);
         public void Fatal(            
             string msg, bool includeStackTrace = true,
             [CallerMemberName] string memberName = "",
             [CallerFilePath] string sourceFilePath = "",
             [CallerLineNumber] int sourceLineNumber = 0,
             Exception? exception = null
-        ) => Log(LogEventLevel.Fatal, $"{msg}; ExceptionMsg: {exception.Message}", includeStackTrace, memberName, sourceFilePath, sourceLineNumber, exception);
+        ) => Log(LogEventLevel.Fatal, $"{msg}; ExceptionMsg: {exception?.Message}", includeStackTrace, memberName, sourceFilePath, sourceLineNumber, exception);
     }
 }

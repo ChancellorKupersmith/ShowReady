@@ -1,15 +1,14 @@
-using Npgsql;
 using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 
-namespace DaUtils
+namespace DaUtils.DBs
 {
     /*  PostgresClient notes
-    - Executes querys to multiple DBs to keep all updated: (I understand how weird this feature is and wouldn't be reasonable on a large team but I'm the solo dev on project so bite me)
+    - Executes queries to multiple DBs to keep all updated: (I understand how weird this feature is and wouldn't be reasonable on a large team, but I'm the solo dev on project so bite me)
         !!!WHEN DEVELOPING OR TESTING MAKE SURE DB_SYNC IS SET TO INTENDED TARGET!!!
         Multiple DBs are targeted based on config variable DB_SYNC, this variable also dictates which relevant db rows to return.
         - case(DB_SYNC = 'PROD'): sends queries to dev, prod dbs; returns prod db reader
@@ -19,22 +18,17 @@ namespace DaUtils
     */
     public class PostgresClient
     {
-        private class Credentials : IDisposable
+        private class Credentials(string? db, string? host, string? user, string? password)
+            : IDisposable
         {
-            public string? DB;
-            public string? Host;
-            public string? User;
-            public string? Password;
-            public Credentials(string? db, string? host, string? user, string? password)
-            {
-                DB = db;
-                Host = host;
-                User = user;
-                Password = password;
-            }
+            public string? Db = db;
+            public string? Host = host;
+            public string? User = user;
+            public string? Password = password;
+
             public void Dispose()
             {
-                DB = null;
+                Db = null;
                 Host = null;
                 User = null;
                 Password = null;
@@ -42,12 +36,12 @@ namespace DaUtils
         }
         private class PgConnection
         {
-            public readonly string DB;
-            public NpgsqlConnection Connection;
-            public PgConnection(PostgresClient.Credentials credentials)
+            public readonly string Db;
+            public readonly NpgsqlConnection Connection;
+            public PgConnection(Credentials credentials)
             {
-                DB = credentials.DB != null ? credentials.DB : "None";
-                string connectionString = $"Host={credentials.Host};Database={credentials.DB};Username={credentials.User};Password={credentials.Password}";
+                Db = credentials.Db != null ? credentials.Db : "None";
+                var connectionString = $"Host={credentials.Host};Database={credentials.Db};Username={credentials.User};Password={credentials.Password}";
                 Connection = new NpgsqlConnection(connectionString);
             }
         }
@@ -56,18 +50,18 @@ namespace DaUtils
         public PostgresClient(DaLogger logger, IConfiguration config)
         {
             _logger = logger;
-            List<PostgresClient.Credentials> credentials = new List<Credentials>();
+            var credentials = new List<Credentials>();
             switch(config["DB_SYNC"])
             {
                 // Appending order matters to ensure correct db reader is returned
                 case "PROD":
-                    credentials.Add(new PostgresClient.Credentials(
+                    credentials.Add(new Credentials(
                         db: config["PROD_DB"],
                         host: config["PROD_DB_HOST"],
                         user: config["PROD_DB_USER"],
                         password: config["PROD_DB_PASSWORD"]
                     ));
-                    credentials.Add(new PostgresClient.Credentials(
+                    credentials.Add(new Credentials(
                         db: config["DEV_DB"],
                         host: config["DEV_DB_HOST"],
                         user: config["DEV_DB_USER"],
@@ -75,13 +69,13 @@ namespace DaUtils
                     ));
                     break;
                 case "TEST":
-                    credentials.Add(new PostgresClient.Credentials(
+                    credentials.Add(new Credentials(
                         db: config["TEST_DB"],
                         host: config["TEST_DB_HOST"],
                         user: config["TEST_DB_USER"],
                         password: config["TEST_DB_PASSWORD"]
                     ));
-                    credentials.Add(new PostgresClient.Credentials(
+                    credentials.Add(new Credentials(
                         db: config["DEV_DB"],
                         host: config["DEV_DB_HOST"],
                         user: config["DEV_DB_USER"],
@@ -89,7 +83,7 @@ namespace DaUtils
                     ));
                     break;
                 case "DEV":
-                    credentials.Add(new PostgresClient.Credentials(
+                    credentials.Add(new Credentials(
                         db: config["DEV_DB"],
                         host: config["DEV_DB_HOST"],
                         user: config["DEV_DB_USER"],
@@ -97,7 +91,7 @@ namespace DaUtils
                     ));
                     break;
                 default:
-                    _logger.Warn($"Invaild DB_SYNC: {config["DB_SYNC"]}");
+                    _logger.Warn($"Invalid DB_SYNC: {config["DB_SYNC"]}");
                     break;
             }
             
@@ -114,26 +108,26 @@ namespace DaUtils
                 try
                 {
                     await pgConnection.Connection.OpenAsync();
-                    _logger.Debug($"Connected to pg dba: {pgConnection.DB}");
+                    _logger.Debug($"Connected to pg dba: {pgConnection.Db}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"Failed to connect to pg db: {pgConnection.DB}", exception: ex);
+                    _logger.Error($"Failed to connect to pg db: {pgConnection.Db}", exception: ex);
                 }
             }));
         }
-        private void Disconnet()
+        private void Disconnect()
         {
-            foreach(PgConnection pgConnection in _connections)
+            foreach(var pgConnection in _connections)
             {
                 try
                 {
                     pgConnection.Connection.Dispose();
-                    _logger.Debug($"Disconnected from pg db: {pgConnection.DB}");
+                    _logger.Debug($"Disconnected from pg db: {pgConnection.Db}");
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error($"Failed to disconnect from pg db: {pgConnection.DB}", exception: ex);
+                    _logger.Error($"Failed to disconnect from pg db: {pgConnection.Db}", exception: ex);
                 }
             }
         }
@@ -142,42 +136,40 @@ namespace DaUtils
             await ConnectAsync();
             foreach(var pgConnection in _connections)
             {
-                using (var command = new NpgsqlCommand(query, pgConnection.Connection))
+                await using var command = new NpgsqlCommand(query, pgConnection.Connection);
+                try
                 {
-                    try
-                    {
-                        int numAffectedRows = await command.ExecuteNonQueryAsync();
-                        _logger.Verbose($"Affected {numAffectedRows} rows for db: {pgConnection.DB}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Error($"Failed to execute query for db: {pgConnection.DB}", exception: ex);
-                    }
+                    var numAffectedRows = await command.ExecuteNonQueryAsync();
+                    _logger.Verbose($"Affected {numAffectedRows} rows for db: {pgConnection.Db}");
                 }
-            };
-            Disconnet();
+                catch (Exception ex)
+                {
+                    _logger.Error($"Failed to execute query for db: {pgConnection.Db}", exception: ex);
+                }
+            }
+            Disconnect();
         }
         public async Task<NpgsqlDataReader> QueryRead(string query)
         {
             await ConnectAsync();
-            NpgsqlDataReader reader = await _connections.Select(async pgConnection => {
+            var reader = await _connections.Select(async pgConnection => {
                 using (var command = new NpgsqlCommand(query, pgConnection.Connection))
                 {
                     try
                     {
-                        NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+                        var reader = await command.ExecuteReaderAsync();
                         var rowsAffected = reader.RecordsAffected;
-                        _logger.Verbose($"Affected {rowsAffected} rows for db: {pgConnection.DB}");
+                        _logger.Verbose($"Affected {rowsAffected} rows for db: {pgConnection.Db}");
                         return reader;
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error($"Failed to execute query for db: {pgConnection.DB}", exception: ex);
+                        _logger.Error($"Failed to execute query for db: {pgConnection.Db}", exception: ex);
                         return null;
                     }
                 }
             }).FirstOrDefault();
-            Disconnet();
+            Disconnect();
             return reader;
         }
     }
