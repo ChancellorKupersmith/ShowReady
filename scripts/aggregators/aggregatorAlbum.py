@@ -19,7 +19,7 @@ def get_total_artists_fromDB():
         WHERE al.id IS NULL
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             total = db.query(query=select_query, fetchone=True)[0]
     except Exception as e:
         logger.error(f"ERROR fetching artists from db returning 0. {e}")
@@ -36,7 +36,7 @@ def get_artists_fromDB(page_size, offset):
         OFFSET {offset} LIMIT {page_size}
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             artists = [ Artist(id=row[0], name=row[1], lastfm_url=row[2], spotify_id=row[3]) for row in rows ]
             return artists
@@ -146,7 +146,7 @@ def save_albums_inDB(albums_to_save):
         RETURNING id, title, artistid
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             album_tuples = list(map(lambda a: a.to_tuple(), albums_to_save))
             rows = db.query(query=insert_query, data=album_tuples, fetchall=True)
             return { row[1]: Album(id=row[0], title=row[1], artistid=row[2]) for row in rows }
@@ -161,7 +161,7 @@ def save_errors_inDB(artists_not_found):
     """
     try:
         logger.info(f"errors: {artists_not_found}")
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             db.query(query=insert_query, data=artists_not_found)
     except Exception as e:
         logger.error(f"Error saving errors to db, {e}")
@@ -183,7 +183,7 @@ def save_genres_inDB(found_genres):
         unique_genres = set()
         for g in found_genres.values():
             unique_genres.add(g.name)
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             result = db.query(query=insert_query_genres, data=list(unique_genres), fetchall=True)
             db_genre_ids = { row[0]: row[1] for row in result }
     except Exception as e:
@@ -197,7 +197,7 @@ def save_genres_inDB(found_genres):
         artists_genres = []
         for genres in found_genres.values():
             artists_genres += [ (g.artist_id, db_genre_ids[g.name]) for g in genres ] 
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             db.query(query=insert_query_artistsgenres, data=artists_genres)
     except Exception as e:
         logger.error(f"Error saving ArtistsGenres to db: {e}")
@@ -209,7 +209,7 @@ def get_albums_fromDB():
         WHERE spotifyexternalid IS NOT NULL
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             return { row[0]: True for row in rows }
     except Exception as e:
@@ -225,9 +225,9 @@ async def main():
     for page in range(int(total / page_size)):
         artists = get_artists_fromDB(page_size, page * page_size)
         artists_and_albums = []
-        spotify_client = SpotifyClient(log=log)
+        spotify_client = SpotifyClient(logger=logger)
         await spotify_client.init_access_token()
-        lastfm_client = LastFmClient(log=log)
+        lastfm_client = LastFmClient(logger=logger)
         for artist in artists:
             found_albums, found_genres, errors = await find_albums(artist, spotify_client, lastfm_client)
             #  filter found albums from already found spotify ids, (choosing to filter spotify ids assuming less ids of spotify than lastfmurls), having to filter incase multiple artists share album

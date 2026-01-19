@@ -34,6 +34,7 @@ def timer_decorator(logger):
                 logger.debug(f"{func.__name__} took {end_time - start_time:.4f} seconds")
                 return result
         return wrapper
+    return actual_decorator
 
 class Logger:
     def __init__(self, name=None, log_file=None, lvl=logging.DEBUG):
@@ -76,6 +77,15 @@ class Logger:
         elif lvl == 1: logging.error(msg=msg)
         else: logging.warning(msg=msg)
 
+def HandleException(logger, error_msg, obj_type=None, obj_id=None, obj_json=None):
+    logger.error(error_msg)
+    insert_query = """
+        INSERT INTO Errors (ErrorMessage, ObjectType, ObjectID, ObjectContents)
+        VALUES (%s, %s, %s, %s)
+    """
+    with PostgresClient(logger=logger) as err_db:
+        err_db.query(query=insert_query, params=(error_msg, obj_type, obj_id, obj_json))
+
 db_config = {
     'dbname': os.getenv("PG_DB_NAME"),
     'host': os.getenv("PG_HOST"),
@@ -87,10 +97,10 @@ def closeConnectionPool():
     pg_pool.closeall()
 
 class PostgresClient:
-    def __init__(self, log=None):
+    def __init__(self, logger=None):
         self.connection = None
         self.cursor = None
-        self.log=log
+        self.logger=logger
     
     def __enter__(self):
         self.connection = pg_pool.getconn()
@@ -112,7 +122,7 @@ class PostgresClient:
                 execute_values(self.cursor, query, data)
                 self.connection.commit()
             elif params:
-                self.cursor.execute(query, (params,))
+                self.cursor.execute(query, params)
                 self.connection.commit()
             else:
                 self.cursor.execute(query)
@@ -124,15 +134,15 @@ class PostgresClient:
         except Exception as e:
             if self.connection:
                 self.connection.rollback()
-            self.log(1, f"Database error: {e}")
+            self.logger.error(f"Database error: {e}")
             raise
 
 class GoogleClient:
-    def __init__(self, log=None, rate_limit=0.006):
+    def __init__(self, logger=None, rate_limit=0.006):
         self.last_req_time = None
         self.base_url = "https://maps.googleapis.com/maps/api"
         self.apikey = os.getenv("GOOGLE_MAPS_API_KEY")
-        self.log = log
+        self.logger = logger
         self.rate_limit = rate_limit
     
     async def get(self, endpoint, params, max_retries=3):
@@ -147,23 +157,23 @@ class GoogleClient:
                     if elapsed < self.rate_limit:
                         time.sleep(self.rate_limit - elapsed)
                 async with httpx.AsyncClient() as client:
-                    self.log(0, f"Google API Request: {url}")
+                    self.logger.info(f"Google API Request: {url}")
                     response = await client.get(url)
                     self.last_req_time = time.time()
                     if response.status_code == 200:
                         return response
             except Exception as e:
-                self.log(1, f"ERROR: Failed to send google api request: {e}")
+                self.logger.error(f"ERROR: Failed to send google api request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
                 time.sleep(300)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class TicketMasterClient:
-    def __init__(self, log=None, rate_limit=0.3):
+    def __init__(self, logger=None, rate_limit=0.3):
         self.last_req_time = None
         self.base_url = "https://app.ticketmaster.com/discovery/v2"
         self.apikey = os.getenv("TICKET_MASTER_API_KEY")
-        self.log = log
+        self.logger = logger
         self.rate_limit = rate_limit
     
     async def get(self, endpoint, params, max_retries=3):
@@ -178,7 +188,7 @@ class TicketMasterClient:
                     if elapsed < self.rate_limit:
                         time.sleep(self.rate_limit - elapsed)
                 async with httpx.AsyncClient() as client:
-                    self.log(0, f"TicketMaster Request: {url}")
+                    self.logger.info(f"TicketMaster Request: {url}")
                     response = await client.get(url)
                     self.last_req_time = time.time()
                     if response.status_code == 200:
@@ -187,28 +197,28 @@ class TicketMasterClient:
                     if response.status_code == 429:
                         retry_after = response.headers.get("Rate-Limit-Reset")
                         if retry_after:
-                            self.log(1, f"Rate limit exceeded. Retry after {retry_after}")
+                            self.logger.error(f"Rate limit exceeded. Retry after {retry_after}")
                             raise Exception("RATE LIMIT EXCEEDED")
             except Exception as e:
-                self.log(1, f"ERROR: Failed to send ticketmaster request: {e}")
+                self.logger.error(f"ERROR: Failed to send ticketmaster request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
                 time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
 class LastFmClient:
-    def __init__(self, log=None):
+    def __init__(self, logger=None):
         self.last_req_time = None
         self.base_url = "http://ws.audioscrobbler.com/2.0/"
         self.api_resp_format = "&format=json"
         self.apikey = os.getenv("LASTFM_API_KEY")
-        self.log = log
+        self.logger = logger
 
     async def get(self, endpoint, params, max_retries=3):
         url_req = self.base_url + "?method=" + endpoint
         for p in params:
             url_req += f"&{p}"
         url_req += f"&{self.api_resp_format}&api_key={self.apikey}"
-        self.log(0, f"LastFM Request: {url_req}")
+        self.logger.info(f"LastFM Request: {url_req}")
         for attempt in range(max_retries):
             try:
                 if self.last_req_time is not None:
@@ -222,17 +232,17 @@ class LastFmClient:
                         return response
                     # Handle rate limiter
                     if response.status_code == 429:
-                        self.log(2, f"Rate limit exceeded, headers: {pformat(dict(response.headers))}")
+                        self.logger.warning(f"Rate limit exceeded, headers: {pformat(dict(response.headers))}")
                         retry_after = response.headers.get("retry-after")
                         if retry_after:
                             wait_time = int(retry_after) / 1000
-                            self.log(2, f"Rate limit exceeded. Retrying after {wait_time} secs...")
+                            self.logger.warning(f"Rate limit exceeded. Retrying after {wait_time} secs...")
                             await asyncio.sleep(wait_time)
                         else:
-                            self.log(1, f"Rate limit exceeded. but retry-after header not found.")
+                            self.logger.error(f"Rate limit exceeded. but retry-after header not found.")
                             raise Exception("RATE LIMIT EXCEEDED")
             except Exception as e:
-                self.log(1, f"ERROR: Failed to send lastfm request: {e}")
+                self.logger.error(f"ERROR: Failed to send lastfm request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
                 time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
@@ -261,7 +271,7 @@ class SpotifyClient:
         if response.status_code == 200:
             self.access_token = response.json()['access_token']
         else:
-            self.log(1, f'Error fetching access token, Status code {response.status_code}: {response.text}')
+            self.logger.error(f'Error fetching access token, Status code {response.status_code}: {response.text}')
 
     async def get(self, endpoint, params=None, max_retries=3):
         url = self.base_url + endpoint
@@ -278,7 +288,7 @@ class SpotifyClient:
                     if elapsed < 3:
                         time.sleep(3 - elapsed)
                 async with httpx.AsyncClient() as client:
-                    self.log(0, f"Spotify Request: {url}")
+                    self.logger.info(f"Spotify Request: {url}")
                     response = await client.get(url, headers=headers)
                     self.last_req_time = time.time()
                     if response.status_code == 200:
@@ -288,119 +298,119 @@ class SpotifyClient:
                         retry_after = response.headers.get("retry-after")
                         if retry_after:
                             wait_time = int(retry_after)
-                            self.log(2, f"Rate limit exceeded. Retrying after {wait_time} secs...")
+                            self.logger.warning(f"Rate limit exceeded. Retrying after {wait_time} secs...")
                             await asyncio.sleep(wait_time)
                         else:
-                            self.log(1, f"Rate limit exceeded. but retry-after header not found.")
+                            self.logger.error(f"Rate limit exceeded. but retry-after header not found.")
                             raise Exception("RATE LIMIT EXCEEDED")
                     # Handle expired access token
                     elif response.status_code == 401:
                         await self.init_access_token()
             except Exception as e:
-                self.log(1, f"ERROR: Failed to send spotify request: {e}")
+                self.logger.error(f"ERROR: Failed to send spotify request: {e}")
                 # wifi will randomly drop, tcp connection timeout issues, wait for reconnection
                 time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
-class Artist:
-    def __init__(self, id=None, name=None, lastfm_url=None, lastfm_img=None, spotify_id=None, spotify_popular=None, spotify_img=None, dictionary=None, tm_id=None, tm_img=None, website=None, mb_id=None):
-        if dictionary is None:
-            self.id = id
-            self.name = name
-            self.lastfm_url = lastfm_url
-            self.lastfm_img = lastfm_img
-            self.spotify_id = spotify_id
-            self.spotify_popular = spotify_popular
-            self.spotify_img = spotify_img
-            self.tm_id = tm_id
-            self.tm_img = tm_img
-            self.website = website
-            self.mb_id = mb_id
-        else:
-            for key, value in dictionary.items():
-                setattr(self, key, value)
+# class Artist:
+#     def __init__(self, id=None, name=None, lastfm_url=None, lastfm_img=None, spotify_id=None, spotify_popular=None, spotify_img=None, dictionary=None, tm_id=None, tm_img=None, website=None, mb_id=None):
+#         if dictionary is None:
+#             self.id = id
+#             self.name = name
+#             self.lastfm_url = lastfm_url
+#             self.lastfm_img = lastfm_img
+#             self.spotify_id = spotify_id
+#             self.spotify_popular = spotify_popular
+#             self.spotify_img = spotify_img
+#             self.tm_id = tm_id
+#             self.tm_img = tm_img
+#             self.website = website
+#             self.mb_id = mb_id
+#         else:
+#             for key, value in dictionary.items():
+#                 setattr(self, key, value)
     
-    def asdict(self):
-        return {
-            'name': self.name,
-            'lastfm_url': self.lastfm_url,
-            'spotify_id': self.spotify_id,
-            'spotify_popular': self.spotify_popular,
-        }
+#     def asdict(self):
+#         return {
+#             'name': self.name,
+#             'lastfm_url': self.lastfm_url,
+#             'spotify_id': self.spotify_id,
+#             'spotify_popular': self.spotify_popular,
+#         }
 
-    # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorArtist.save_artists_to_db() !!!
-    def to_tuple(self):
-        return (self.name, self.spotify_id, self.spotify_popular, self.lastfm_url)
+#     # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorArtist.save_artists_to_db() !!!
+#     def to_tuple(self):
+#         return (self.name, self.spotify_id, self.spotify_popular, self.lastfm_url)
 
-class Album:
-    def __init__(self, id=None, title=None, spotifyexternalid=None, spotifypopularity=None, lastfmurl=None, artistid=None, genres=None):
-        self.id = id
-        self.title = title
-        self.spotify_id = spotifyexternalid
-        self.spotify_popular = spotifypopularity
-        self.lastfm_url = lastfmurl
-        self.artist_id = artistid
-        self.genres = genres
+# class Album:
+#     def __init__(self, id=None, title=None, spotifyexternalid=None, spotifypopularity=None, lastfmurl=None, artistid=None, genres=None):
+#         self.id = id
+#         self.title = title
+#         self.spotify_id = spotifyexternalid
+#         self.spotify_popular = spotifypopularity
+#         self.lastfm_url = lastfmurl
+#         self.artist_id = artistid
+#         self.genres = genres
 
-    # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorAlbum.save_albums_to_db() !!!
-    def to_tuple(self):
-        return (self.title, self.spotify_id, self.lastfm_url, self.artist_id)
+#     # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorAlbum.save_albums_to_db() !!!
+#     def to_tuple(self):
+#         return (self.title, self.spotify_id, self.lastfm_url, self.artist_id)
 
-class Song:
-    def __init__(self, title=None, artistid=None, albumid=None, albumtracknum=None, spotifyexternalid=None, spotifypopularity=None, spotifypreviewurl=None, lastfmurl=None, yturl=None, mbid=None, id=None):
-        self.title = title
-        self.artist_id = artistid
-        self.album_id = albumid
-        self.track_num = albumtracknum
-        self.spotify_id = spotifyexternalid
-        self.spotify_popular = spotifypopularity
-        self.spotify_preview_url = spotifypreviewurl
-        self.lastfm_url = lastfmurl
-        self.yt_url = yturl
-        self.mbid = mbid
-        self.id = id
+# class Song:
+#     def __init__(self, title=None, artistid=None, albumid=None, albumtracknum=None, spotifyexternalid=None, spotifypopularity=None, spotifypreviewurl=None, lastfmurl=None, yturl=None, mbid=None, id=None):
+#         self.title = title
+#         self.artist_id = artistid
+#         self.album_id = albumid
+#         self.track_num = albumtracknum
+#         self.spotify_id = spotifyexternalid
+#         self.spotify_popular = spotifypopularity
+#         self.spotify_preview_url = spotifypreviewurl
+#         self.lastfm_url = lastfmurl
+#         self.yt_url = yturl
+#         self.mbid = mbid
+#         self.id = id
 
-    def __hash__(self):
-        return hash((self.title, self.artist_id))
+#     def __hash__(self):
+#         return hash((self.title, self.artist_id))
         
-    def __eq__(self, other):
-        return (self.title, self.artist_id) == (other.title, other.artist_id)
+#     def __eq__(self, other):
+#         return (self.title, self.artist_id) == (other.title, other.artist_id)
 
-    def to_tuple(self):
-        # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorSong.save_songs_to_db() !!!
-        return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url)
+#     def to_tuple(self):
+#         # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorSong.save_songs_to_db() !!!
+#         return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url)
 
-class Event:
-    def __init__(self, id=None, name=None, url=None, event_date=None, event_time=None, summary=None, age_restrictions=None, venue_id=None, tm_id=None, tm_img=None, price=None, tickets_link=None, eo_img=None):
-        self.id = id
-        self.name = name
-        self.url = url
-        self.date = event_date
-        self.time = event_time
-        self.summary = summary
-        self.age_restrictions = age_restrictions
-        self.venue_id = venue_id
-        self.tm_id = tm_id
-        self.price = price
-        self.tickets_link = tickets_link
-        self.eo_img = eo_img
-        self.tm_img = tm_img
+# class Event:
+#     def __init__(self, id=None, name=None, url=None, event_date=None, event_time=None, summary=None, age_restrictions=None, venue_id=None, tm_id=None, tm_img=None, price=None, tickets_link=None, eo_img=None):
+#         self.id = id
+#         self.name = name
+#         self.url = url
+#         self.date = event_date
+#         self.time = event_time
+#         self.summary = summary
+#         self.age_restrictions = age_restrictions
+#         self.venue_id = venue_id
+#         self.tm_id = tm_id
+#         self.price = price
+#         self.tickets_link = tickets_link
+#         self.eo_img = eo_img
+#         self.tm_img = tm_img
 
-class Venue:
-    def __init__(self, id=None, name=None, venue_url=None, venue_address=None, hood=None, summary=None, eo_url=None, phone=None, lat=None, lng=None, tm_id=None):
-        self.id = id
-        self.name = name
-        self.venue_url = venue_url
-        self.venue_address = venue_address
-        self.hood= hood
-        self.summary = summary
-        self.eo_url = eo_url
-        self.phone = phone
-        self.lat = lat
-        self.lng = lng
-        self.tm_id = tm_id
+# class Venue:
+#     def __init__(self, id=None, name=None, venue_url=None, venue_address=None, hood=None, summary=None, eo_url=None, phone=None, lat=None, lng=None, tm_id=None):
+#         self.id = id
+#         self.name = name
+#         self.venue_url = venue_url
+#         self.venue_address = venue_address
+#         self.hood= hood
+#         self.summary = summary
+#         self.eo_url = eo_url
+#         self.phone = phone
+#         self.lat = lat
+#         self.lng = lng
+#         self.tm_id = tm_id
 
-class Genre:
+# class Genre:
     def __init__(self, id=None, name=None, artistid=None, albumid=None, eventid=None, eventdate=None, venueid=None):
         self.id = id
         self.name = name

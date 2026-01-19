@@ -20,7 +20,7 @@ def get_total_artists_fromDB():
         WHERE s.id IS NULL;
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             res = db.query(query=select_query, fetchone=True)
             total = res[0]
     except Exception as e:
@@ -39,7 +39,7 @@ def get_artists_fromDB(page_size, offset):
         LIMIT {page_size} OFFSET {offset} 
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             artists = list(map(lambda row: Artist(id=row[0], name=row[1]), rows))
     except Exception as e:
@@ -98,7 +98,7 @@ def create_partitions(artist_ids):
     ]
     # Join all partition creation queries into one to reduce overhead
     combined_query = "\n".join(partition_queries)
-    with PostgresClient(log=log) as db:
+    with PostgresClient(logger=logger) as db:
         db.query(query=combined_query)
 
 
@@ -115,7 +115,7 @@ def save_songs_inDB(songs_to_save):
     try:
         artist_ids = gather_artist_ids(songs_to_save)
         create_partitions(artist_ids)
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             song_tuples = list(map(lambda s: (s.title, s.artist_id, s.lastfm_url, s.mbid), songs_to_save))
             if len(song_tuples) > 0:  
                 db.query(query=insert_query, data=song_tuples)
@@ -126,7 +126,7 @@ def save_songs_inDB(songs_to_save):
 
 async def main():
     print('Running LastFM song aggregator')
-    client = client = LastFmClient(log=log)
+    client = client = LastFmClient(logger=logger)
     total_artists = get_total_artists_fromDB()
     logger.info(f"total artists: {total_artists}")
     page_size = 20

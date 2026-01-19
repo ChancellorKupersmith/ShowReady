@@ -5,9 +5,6 @@ import logging
 import urllib.parse
 from aggregatorUtils import *
 from datetime import datetime, timedelta
-# from selenium import webdriver
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.firefox.options import Options
 
 current_path = os.getcwd()
 log_filename = datetime.now().strftime('aggregatorShowTM_%Y%m%d_%H%M%S.log')
@@ -24,7 +21,7 @@ async def tm_event_aggr():
             WHERE tmid IS NOT NULL
         """
         try:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 rows = db.query(query=select_query, fetchall=True)
                 tm_venues = { row[1].lower(): Venue(id=row[0], name=row[1], tm_id=row[2]) for row in rows }
         except Exception as e:
@@ -46,7 +43,7 @@ async def tm_event_aggr():
         """
         select_query = "SELECT Name, ID, TMID FROM Venues"
         try:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 result = db.query(query=select_query, fetchall=True)
                 existing_db_tm_venues = {row[2]: True for row in result}
                 save_venues = [(v.name, v.tm_id, v.venue_address, v.lng, v.lat) for v in new_venues.values() if existing_db_tm_venues.get(v.tm_id) is None]
@@ -89,11 +86,11 @@ async def tm_event_aggr():
         select_query = f"SELECT tmid, id, eventdate FROM Events WHERE tmid = ANY(%s) ORDER BY eventdate ASC"
         select_existing_query = f"SELECT tmid, eventdate FROM Events WHERE tmid = ANY(%s)"
         try:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 # filter out already existing tm events
                 evs = events_to_save.values()
                 event_tmids_ids = { ev[0].tm_id: Event(name=ev[0].name, event_date=ev[0].date) for ev in evs}
-                existing_tm_events_rows = db.query(query=select_existing_query, params=[key for key in event_tmids_ids.keys()], fetchall=True)
+                existing_tm_events_rows = db.query(query=select_existing_query, params=([key for key in event_tmids_ids.keys()],), fetchall=True)
                 existing_tm_ids = [row[0] for row in existing_tm_events_rows]
                 existing_tm_dates = [row[1] for row in existing_tm_events_rows]
                 new_events = [(ev[0].namec, ev[0].tm_id, ev[0].tm_img, ev[0].date, ev[0].time, ev[0].price, venueIDs.get(ev[1].name.lower())) for ev in evs if ev[0].tm_id not in existing_tm_ids]
@@ -109,7 +106,7 @@ async def tm_event_aggr():
                 else:
                     logger.warning( 'No new updated event dates found')
                 # get all event ids for event artist join table
-                rows = db.query(query=select_query, params=[key for key in event_tmids_ids.keys()], fetchall=True)
+                rows = db.query(query=select_query, params=([key for key in event_tmids_ids.keys()],), fetchall=True)
                 for row in rows:
                     event = event_tmids_ids.get(row[0])
                     if event is not None:
@@ -152,7 +149,7 @@ async def tm_event_aggr():
         select_allIDs_query = f"SELECT tmid, id FROM Artists WHERE tmid = ANY(%s)"
         artist_tmids_ids = {}
         try:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 a_vals = []
                 # ensure all lastfm urls are unique (convert http to https to reduce duplicates)
                 found_lfms = {}
@@ -170,7 +167,7 @@ async def tm_event_aggr():
 
                 artist_tmids_ids = { a.tm_id: Artist(name=a.name) for a in a_vals }
                 # filter out existing tmid artists
-                existing_artists_rows = db.query(query=select_existing_query, params=[ key for key in artist_tmids_ids.keys() ], fetchall=True)
+                existing_artists_rows = db.query(query=select_existing_query, params=([ key for key in artist_tmids_ids.keys() ],), fetchall=True)
                 existing_artists_tmids = [ row[0] for row in existing_artists_rows ]
                 new_artists = [ (a.name, a.tm_id, a.tm_img, a.website, a.mb_id) for a in a_vals if a.tm_id not in existing_artists_tmids ] # if a.tm_id not in existing_artists_tmids
                 logger.info( f'NEW ARTISTS FOUND: {len(new_artists)}')
@@ -180,7 +177,7 @@ async def tm_event_aggr():
                 else:
                     logger.warning( 'No new artists found')
                 # get all artist ids for event artist join table
-                rows = db.query(query=select_allIDs_query, params=[ key for key in artist_tmids_ids.keys() ], fetchall=True)
+                rows = db.query(query=select_allIDs_query, params=([ key for key in artist_tmids_ids.keys() ],), fetchall=True)
                 for row in rows:
                     artist = artist_tmids_ids.get(row[0])
                     if artist is not None:
@@ -225,7 +222,7 @@ async def tm_event_aggr():
                     artist_error += 1
                 if a_id is not None and e_id is not None:
                     try:
-                        with PostgresClient(log=log) as db:
+                        with PostgresClient(logger=logger) as db:
                             db.query(query=insert_query, data=[(e_id, e_date, a_id)])
                             new_artist_events.append((e_id, e_date, a_id))
                             success += 1
@@ -257,7 +254,7 @@ async def tm_event_aggr():
                     unique_genres.add(genre)
             genre_names = [(name,) for name in unique_genres]
             logger.info( f"genre_names: {genre_names}")
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 if genre_names:
 
                     result = db.query(insert_query_genres, data=genre_names, fetchall=True)
@@ -288,7 +285,7 @@ async def tm_event_aggr():
                         logger.warning( f'Failed to add tm_artist({artist_tmid}) db id for genre: {g} - {e}')
             logger.info( f'successful genres found: {len(join_artists_genres)}')
             if join_artists_genres:
-                with PostgresClient(log=log) as db:
+                with PostgresClient(logger=logger) as db:
                     db.query(insert_query_artistsgenres, data=join_artists_genres)
         except Exception as e:
             logger.error( f"Error in parent func saving new genres to db, {e}")
@@ -382,7 +379,7 @@ async def tm_event_aggr():
             new_genres structure: { artist_tmid: { Genre, } }
             events_artists structure: [ (event_tmid, artist_tmid) ]
         """
-        client = TicketMasterClient(log=log)
+        client = TicketMasterClient(logger=logger)
         events = {}
         new_venues = {}
         new_artists = {}
@@ -391,7 +388,7 @@ async def tm_event_aggr():
         today = datetime.now()
         yesterday = today - timedelta(days=1)
         # Scrape 1000 upcoming events from seattle (purpose: get events and potentially new ticketmaster venues)
-        for page in range(1):
+        for page in range(5):
             try:
                 params = [ f"city=Seattle", "size=200", f"page={page}", "classificationName=music", f"startDateTime={urllib.parse.quote(yesterday.strftime('%Y-%m-%dT%H:%M:%SZ'))}" ]
                 resp = await client.get('/events.json?', params)

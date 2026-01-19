@@ -20,7 +20,7 @@ def get_total_albums_fromDB():
         WHERE s.id IS NULL AND a.spotifyexternalid IS NOT NULL
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             res = db.query(query=select_query, fetchone=True)
             total = res[0]
             logger.info(f"total new albums: {total}")
@@ -41,7 +41,7 @@ def get_albums_fromDB(page_size, offset):
         LIMIT {page_size} OFFSET {offset}
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             albums = { row[1]: Album(id=row[0], spotifyexternalid=row[1], artistid=row[2], title=row[3]) for row in rows }
     except Exception as e:
@@ -63,7 +63,7 @@ def create_partitions(artist_ids):
     ]
     # Join all partition creation queries into one to reduce overhead
     combined_query = "\n".join(partition_queries)
-    with PostgresClient(log=log) as db:
+    with PostgresClient(logger=logger) as db:
         db.query(query=combined_query)
 
 @timer_decorator(logger)
@@ -81,7 +81,7 @@ def save_songs_inDB(songs_to_save):
     try:
         artist_ids = gather_artist_ids(songs_to_save)
         create_partitions(artist_ids)
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             song_tuples = [ (s.title, s.artist_id, s.album_id, s.track_num, s.spotify_id, s.spotify_preview_url) for s in songs_to_save ]
             if len(song_tuples) > 0:
                 db.query(query=insert_query, data=song_tuples)
@@ -100,7 +100,7 @@ def update_songs_inDB(songs_to_update):
         WHERE title = %s and artistid = %s
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             song_tuples = [ (s.album_id, s.track_num, s.spotify_id, s.spotify_popular, s.spotify_preview_url, s.title, s.artist_id) for s in songs_to_update ]
             if len(song_tuples) > 0:
                 db.query(executemany=True, query=update_query, data=song_tuples)
@@ -117,7 +117,7 @@ def save_genres_inDB(album_genres):
         VALUES %s
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             genre_tuples = [ (g.name, g.artist_id, g.album_id) for g in album_genres ]
             if len(genre_tuples) > 0:
                 db.query(query=insert_query, data=genre_tuples)
@@ -137,7 +137,7 @@ def save_errors_inDB(errors):
     """
     try:
         if len(errors) > 0:
-            with PostgresClient(log=log) as db:
+            with PostgresClient(logger=logger) as db:
                 db.query(query=insert_query, data=errors)
     except Exception as e:
         logger.error(f"Error saving errors to db, {e}")
@@ -152,7 +152,7 @@ def update_albums_inDB(albums_to_update):
             spotifypopularity = EXCLUDED.spotifypopularity
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             update_tuples = [ (a.title, a.id, a.spotify_popular) for a in albums_to_update ]
             logger.info(f"Update Tuples: {update_tuples}")
             db.query(query=update_query, data=update_tuples)
@@ -230,7 +230,7 @@ def get_existing_songs():
         SELECT title, artistid FROM songs
     """
     try:
-        with PostgresClient(log=log) as db:
+        with PostgresClient(logger=logger) as db:
             rows = db.query(query=select_query, fetchall=True)
             titles = { row[0]: True for row in rows }
             artist_ids = { row[1]: True for row in rows }
@@ -242,7 +242,7 @@ def get_existing_songs():
 
 async def main():
     print('Running spotify song aggregator')
-    client = SpotifyClient(log=log)
+    client = SpotifyClient(logger=logger)
     await client.init_access_token()
     total_albums = get_total_albums_fromDB()
     logger.info(f'total: {total_albums}')
