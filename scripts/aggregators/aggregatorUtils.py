@@ -312,103 +312,103 @@ class SpotifyClient:
                 time.sleep(120)
         raise Exception(f"RETRIES EXCEEDED > {max_retries}")
 
-# class Artist:
-#     def __init__(self, id=None, name=None, lastfm_url=None, lastfm_img=None, spotify_id=None, spotify_popular=None, spotify_img=None, dictionary=None, tm_id=None, tm_img=None, website=None, mb_id=None):
-#         if dictionary is None:
-#             self.id = id
-#             self.name = name
-#             self.lastfm_url = lastfm_url
-#             self.lastfm_img = lastfm_img
-#             self.spotify_id = spotify_id
-#             self.spotify_popular = spotify_popular
-#             self.spotify_img = spotify_img
-#             self.tm_id = tm_id
-#             self.tm_img = tm_img
-#             self.website = website
-#             self.mb_id = mb_id
-#         else:
-#             for key, value in dictionary.items():
-#                 setattr(self, key, value)
+class Artist:
+    def __init__(self, id=None, name=None, lastfm_url=None, lastfm_img=None, spotify_id=None, spotify_popular=None, spotify_img=None, dictionary=None, tm_id=None, tm_img=None, website=None, mb_id=None):
+        if dictionary is None:
+            self.id = id
+            self.name = name
+            self.lastfm_url = lastfm_url
+            self.lastfm_img = lastfm_img
+            self.spotify_id = spotify_id
+            self.spotify_popular = spotify_popular
+            self.spotify_img = spotify_img
+            self.tm_id = tm_id
+            self.tm_img = tm_img
+            self.website = website
+            self.mb_id = mb_id
+        else:
+            for key, value in dictionary.items():
+                setattr(self, key, value)
     
-#     def asdict(self):
-#         return {
-#             'name': self.name,
-#             'lastfm_url': self.lastfm_url,
-#             'spotify_id': self.spotify_id,
-#             'spotify_popular': self.spotify_popular,
-#         }
+    def asdict(self):
+        return {
+            'name': self.name,
+            'lastfm_url': self.lastfm_url,
+            'spotify_id': self.spotify_id,
+            'spotify_popular': self.spotify_popular,
+        }
 
-#     # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorArtist.save_artists_to_db() !!!
-#     def to_tuple(self):
-#         return (self.name, self.spotify_id, self.spotify_popular, self.lastfm_url)
+    # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorArtist.save_artists_to_db() !!!
+    def to_tuple(self):
+        return (self.name, self.spotify_id, self.spotify_popular, self.lastfm_url)
 
-# class Album:
-#     def __init__(self, id=None, title=None, spotifyexternalid=None, spotifypopularity=None, lastfmurl=None, artistid=None, genres=None):
-#         self.id = id
-#         self.title = title
-#         self.spotify_id = spotifyexternalid
-#         self.spotify_popular = spotifypopularity
-#         self.lastfm_url = lastfmurl
-#         self.artist_id = artistid
-#         self.genres = genres
+class Album:
+    def __init__(self, id=None, title=None, spotifyexternalid=None, spotifypopularity=None, lastfmurl=None, artistid=None, genres=None):
+        self.id = id
+        self.title = title
+        self.spotify_id = spotifyexternalid
+        self.spotify_popular = spotifypopularity
+        self.lastfm_url = lastfmurl
+        self.artist_id = artistid
+        self.genres = genres
 
-#     # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorAlbum.save_albums_to_db() !!!
-#     def to_tuple(self):
-#         return (self.title, self.spotify_id, self.lastfm_url, self.artist_id)
+    # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorAlbum.save_albums_to_db() !!!
+    def to_tuple(self):
+        return (self.title, self.spotify_id, self.lastfm_url, self.artist_id)
 
-# class Song:
-#     def __init__(self, title=None, artistid=None, albumid=None, albumtracknum=None, spotifyexternalid=None, spotifypopularity=None, spotifypreviewurl=None, lastfmurl=None, yturl=None, mbid=None, id=None):
-#         self.title = title
-#         self.artist_id = artistid
-#         self.album_id = albumid
-#         self.track_num = albumtracknum
-#         self.spotify_id = spotifyexternalid
-#         self.spotify_popular = spotifypopularity
-#         self.spotify_preview_url = spotifypreviewurl
-#         self.lastfm_url = lastfmurl
-#         self.yt_url = yturl
-#         self.mbid = mbid
-#         self.id = id
+class Song:
+    def __init__(self, title=None, artistid=None, albumid=None, albumtracknum=None, spotifyexternalid=None, spotifypopularity=None, spotifypreviewurl=None, lastfmurl=None, yturl=None, mbid=None, id=None):
+        self.title = title
+        self.artist_id = artistid
+        self.album_id = albumid
+        self.track_num = albumtracknum
+        self.spotify_id = spotifyexternalid
+        self.spotify_popular = spotifypopularity
+        self.spotify_preview_url = spotifypreviewurl
+        self.lastfm_url = lastfmurl
+        self.yt_url = yturl
+        self.mbid = mbid
+        self.id = id
 
-#     def __hash__(self):
-#         return hash((self.title, self.artist_id))
+    def __hash__(self):
+        return hash((self.title, self.artist_id))
         
-#     def __eq__(self, other):
-#         return (self.title, self.artist_id) == (other.title, other.artist_id)
+    def __eq__(self, other):
+        return (self.title, self.artist_id) == (other.title, other.artist_id)
 
-#     def to_tuple(self):
-#         # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorSong.save_songs_to_db() !!!
-#         return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url)
+    def to_tuple(self):
+        # !!! ORDER OF VALUES IN TUPLE MUST MATCH PSQL QUERY ORDER IN aggregatorSong.save_songs_to_db() !!!
+        return (self.title, self.artist_id, self.album_id, self.track_num, self.spotify_id, self.spotify_preview_url)
 
-# class Event:
-#     def __init__(self, id=None, name=None, url=None, event_date=None, event_time=None, summary=None, age_restrictions=None, venue_id=None, tm_id=None, tm_img=None, price=None, tickets_link=None, eo_img=None):
-#         self.id = id
-#         self.name = name
-#         self.url = url
-#         self.date = event_date
-#         self.time = event_time
-#         self.summary = summary
-#         self.age_restrictions = age_restrictions
-#         self.venue_id = venue_id
-#         self.tm_id = tm_id
-#         self.price = price
-#         self.tickets_link = tickets_link
-#         self.eo_img = eo_img
-#         self.tm_img = tm_img
+class Event:
+    def __init__(self, id=None, name=None, url=None, event_date=None, event_time=None, summary=None, age_restrictions=None, venue_id=None, tm_id=None, tm_img=None, price=None, tickets_link=None, eo_img=None):
+        self.id = id
+        self.name = name
+        self.url = url
+        self.date = event_date
+        self.time = event_time
+        self.summary = summary
+        self.age_restrictions = age_restrictions
+        self.venue_id = venue_id
+        self.tm_id = tm_id
+        self.price = price
+        self.tickets_link = tickets_link
+        self.eo_img = eo_img
+        self.tm_img = tm_img
 
-# class Venue:
-#     def __init__(self, id=None, name=None, venue_url=None, venue_address=None, hood=None, summary=None, eo_url=None, phone=None, lat=None, lng=None, tm_id=None):
-#         self.id = id
-#         self.name = name
-#         self.venue_url = venue_url
-#         self.venue_address = venue_address
-#         self.hood= hood
-#         self.summary = summary
-#         self.eo_url = eo_url
-#         self.phone = phone
-#         self.lat = lat
-#         self.lng = lng
-#         self.tm_id = tm_id
+class Venue:
+    def __init__(self, id=None, name=None, venue_url=None, venue_address=None, hood=None, summary=None, eo_url=None, phone=None, lat=None, lng=None, tm_id=None):
+        self.id = id
+        self.name = name
+        self.venue_url = venue_url
+        self.venue_address = venue_address
+        self.hood= hood
+        self.summary = summary
+        self.eo_url = eo_url
+        self.phone = phone
+        self.lat = lat
+        self.lng = lng
+        self.tm_id = tm_id
 
 # class Genre:
     def __init__(self, id=None, name=None, artistid=None, albumid=None, eventid=None, eventdate=None, venueid=None):

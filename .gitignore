@@ -29,3 +29,4 @@ DataAggregation/obj
 **/bin/
 **/obj/
 **/logs/
+**.user

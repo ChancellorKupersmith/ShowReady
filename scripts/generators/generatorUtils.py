@@ -109,7 +109,7 @@ class PostgresClient:
                 execute_values(self.cursor, query, data)
                 self.connection.commit()
             elif params:
-                self.cursor.execute(query, (params,))
+                self.cursor.execute(query, params)
                 self.connection.commit()
             else:
                 self.cursor.execute(query)

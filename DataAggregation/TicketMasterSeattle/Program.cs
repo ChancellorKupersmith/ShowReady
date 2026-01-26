@@ -25,9 +25,9 @@ class Program
 
             var tmClientProxy = new ApiClientProxy(logger, Constants.TicketMaster.PipeName);
             // Scrape 1000 upcoming events from seattle (purpose: get events and potentially new ticketmaster venues)
-            var pageSize = "10";
+            var pageSize = "200";
             var yesterday = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-ddTHH:mm:ssZ");
-            for (var page = 0; page < 2; page++)
+            for (var page = 0; page < 5; page++)
             {
                 var tmRequest = new ApiRequest
                 {
@@ -68,16 +68,12 @@ class Program
                 
                 foreach (var apiEvent in tmResponse.Embedded?.Events)
                 {
-                    logger.Info($"Number of events: {tmResponse.Embedded?.Events.Count}");
+                    logger.Debug($"Number of events: {tmResponse.Embedded?.Events.Count}");
                     var newEvent = Mapper.MapToDatabaseTableEvent(apiEvent);
                     var newVenues = Mapper.MapToDatabaseTableVenues(apiEvent);
                     var newArtists = Mapper.MapToDatabaseTableArtists(apiEvent);
                     var newGenres = Mapper.MapToDatabaseTableGenres(apiEvent);
 
-                    logger.Info($"Adding ({newEvent.Name}-{newEvent.EventDate}) to Events");
-                    logger.Info($"Venue Check: {newVenues.FirstOrDefault()?.Name}");
-                    logger.Info($"Artist Check: {newArtists.FirstOrDefault()?.Name}");
-                    logger.Info($"Genre Check: {newGenres.FirstOrDefault()?.Name}");
                     events[$"{newEvent.Name}-{newEvent.EventDate}"] = (newEvent, newVenues, newArtists, newGenres);
                     uniqueVenues.UnionWith(newVenues);
                     uniqueArtists.UnionWith(newArtists);
@@ -87,10 +83,10 @@ class Program
                 // insert
                 var pgClient = new PostgresClient(logger, config);
                 // insert venues, artists, genres
-                await pgClient.Query("SELECT COUNT(*) FROM ArtistsRaw;");
+                // await pgClient.Query("SELECT COUNT(*) FROM ArtistsRaw;");
                 // add venueIds EventsRaw
                 // insert EventsRaw
-                // foreach
+                
             }
         }
         catch (Exception ex)
